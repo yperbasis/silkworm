@@ -15,8 +15,12 @@ Copyright 2019 Ethereum Foundation
    limitations under the License.
 ]]
 
-cmake_minimum_required (VERSION 3.5)
-project (Silkworm)
-set (CMAKE_CXX_STANDARD 17)
-add_subdirectory (src)
-add_subdirectory (test)
+find_package (Catch2 REQUIRED)
+include_directories (${Silkworm_SOURCE_DIR}/src
+                     ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
+add_executable (tests rlp.cpp)
+target_link_libraries (tests silkworm Catch2::Catch2)
+
+include (CTest)
+include (Catch)
+catch_discover_tests (tests)

@@ -18,6 +18,7 @@
 #define SILKWORM_RLP_HPP_
 
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -33,8 +34,15 @@ using Item = std::variant<std::string, List>;
 struct ItemWrapper {
   Item _data;
 
-  template <typename... T>
-  ItemWrapper(T&&... x) : _data{std::forward<T>(x)...} {}
+  // http://ericniebler.com/2013/08/07/universal-references-and-the-copy-constructo/
+  // https://stackoverflow.com/questions/13296461/imperfect-forwarding-with-variadic-templates
+
+  template <typename A, typename B>
+  using disable_if_same_or_derived =
+      std::enable_if_t<!std::is_base_of_v<A, std::remove_reference_t<B>>>;
+
+  template <typename U, typename X = disable_if_same_or_derived<ItemWrapper, U>>
+  ItemWrapper(U&& u) : _data(std::forward<U>(u)) {}
 };
 }  // namespace impl
 

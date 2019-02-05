@@ -26,7 +26,13 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
     REQUIRE(encode("dog") ==
             "\x83"
             "dog");
-    // REQUIRE(encode(List{"cat", "dog"}) == "\xc8\x83""cat""\x83""dog");
+
+    REQUIRE(encode(List{"cat", "dog"}) ==
+            "\xc8\x83"
+            "cat"
+            "\x83"
+            "dog");
+
     // TODO: other examples
   }
 

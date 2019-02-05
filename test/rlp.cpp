@@ -33,7 +33,22 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
             "\x83"
             "dog");
 
-    // TODO: other examples
+    REQUIRE(encode("") == "\x80");
+    REQUIRE(encode(List{}) == "\xc0");
+
+    // TODO: big endian integers, incl. 0
+
+    REQUIRE(encode("\x00") == "\x00");
+    REQUIRE(encode("\x0f") == "\x0f");
+    REQUIRE(encode("\x04\x00") == "\x82\x04\x00");
+
+    REQUIRE(encode(List{List{}, List{List{}}, List{List{}, List{List{}}}}) ==
+            "\xc7\xc0\xc1\xc0\xc3\xc0\xc1\xc0");
+
+    REQUIRE(
+        encode("Lorem ipsum dolor sit amet, consectetur adipisicing elit") ==
+        "\xb8\x38"
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit");
   }
 
   // TODO: decode tests

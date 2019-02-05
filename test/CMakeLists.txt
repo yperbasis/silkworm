@@ -18,7 +18,9 @@ Copyright 2019 Ethereum Foundation
 find_package (Catch2 REQUIRED)
 include_directories (${Silkworm_SOURCE_DIR}/src
                      ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
-add_executable (tests rlp.cpp)
+
+file (GLOB Silkworm_TEST_SRC "*.cpp")
+add_executable (tests ${Silkworm_TEST_SRC})
 target_link_libraries (tests silkworm Catch2::Catch2)
 
 include (CTest)

@@ -25,7 +25,9 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
   using namespace silkworm::rlp;
 
   SECTION("encode examples") {
-    REQUIRE(encode("dog") == "\x83""dog");
+    REQUIRE(encode("dog") ==
+            "\x83"
+            "dog");
     // REQUIRE(encode(List{"cat", "dog"}) == "\xc8\x83""cat""\x83""dog");
     // TODO: other examples
   }

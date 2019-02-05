@@ -18,12 +18,12 @@
 
 namespace silkworm::rlp {
 
-std::string encode(const Item&) {
+std::string encode(const Item &) {
   // TODO: implement
   return "";
 }
 
-Item decode(const std::string&) {
+Item decode(const std::string &) {
   // TODO: implement
   return "";
 }

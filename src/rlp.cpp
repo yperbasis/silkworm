@@ -16,8 +16,6 @@
 
 #include "rlp.hpp"
 
-#include <stdint.h>
-
 namespace {
 using namespace silkworm::rlp;
 
@@ -25,10 +23,8 @@ std::string encode_length(uint64_t len, char offset) {
   if (len < 56) {
     return {static_cast<char>(len + offset)};
   } else {
-    // TODO: implement
-    // BL = to_binary(L)
-    // return chr(len(BL) + offset + 55) + BL
-    return "";
+    auto bl = to_binary(len);
+    return static_cast<char>(bl.length() + offset + 55) + bl;
   }
 }
 }  // namespace
@@ -55,5 +51,12 @@ std::string encode(const Item& var) {
 Item decode(const std::string&) {
   // TODO: implement
   return "";
+}
+
+std::string to_binary(uint64_t x) {
+  if (x == 0)
+    return "";
+  else
+    return to_binary(x / 256) + static_cast<char>(x % 256);
 }
 }  // namespace silkworm::rlp

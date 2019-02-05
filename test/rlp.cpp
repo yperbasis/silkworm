@@ -35,9 +35,7 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
 
     REQUIRE(encode("") == "\x80");
     REQUIRE(encode(List{}) == "\xc0");
-
-    // TODO: big endian integers, incl. 0
-
+    REQUIRE(encode(to_binary(0)) == "\x80");
     REQUIRE(encode("\x00") == "\x00");
     REQUIRE(encode("\x0f") == "\x0f");
     REQUIRE(encode("\x04\x00") == "\x82\x04\x00");

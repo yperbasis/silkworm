@@ -17,6 +17,7 @@
 #ifndef SILKWORM_RLP_HPP_
 #define SILKWORM_RLP_HPP_
 
+#include <stdint.h>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -50,6 +51,8 @@ using impl::Item, impl::List;
 
 std::string encode(const Item&);
 Item decode(const std::string&);
+
+std::string to_binary(uint64_t);
 }  // namespace silkworm::rlp
 
 #endif  // SILKWORM_RLP_HPP_

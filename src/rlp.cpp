@@ -27,29 +27,28 @@ std::string encode_length(uint64_t len, char offset) {
     return static_cast<char>(bl.length() + offset + 55) + bl;
   }
 }
+
+struct encoder : public boost::static_visitor<std::string> {
+  std::string operator()(const std::string& input) const {
+    if (input.length() == 1 && static_cast<int>(input[0]) < 0x80)
+      return input;
+    else
+      return encode_length(input.length(), 0x80) + input;
+  }
+
+  std::string operator()(const List& input) const {
+    std::string output;
+    for (const auto& item : input) {
+      output += encode(item);
+    }
+    return encode_length(output.length(), 0xc0) + output;
+  }
+};
 }  // namespace
 
 namespace silkworm::rlp {
 
-std::string encode(const Item& var) {
-  return std::visit(
-      [](auto&& input) {
-        using T = std::decay_t<decltype(input)>;
-        if constexpr (std::is_same_v<T, std::string>) {
-          if (input.length() == 1 && input[0] < 0x80)
-            return input;
-          else
-            return encode_length(input.length(), 0x80) + input;
-        } else {
-          std::string output;
-          for (const auto& item : input) {
-            output += encode(item.data);
-          }
-          return encode_length(output.length(), 0xc0) + output;
-        }
-      },
-      var);
-}
+std::string encode(const Item& x) { return boost::apply_visitor(encoder(), x); }
 
 Item decode(const std::string&) {
   // TODO: implement

@@ -19,33 +19,17 @@
 
 #include <stdint.h>
 #include <string>
-#include <type_traits>
-#include <utility>
-#include <variant>
 #include <vector>
+
+#include <boost/variant.hpp>
 
 // https://github.com/ethereum/wiki/wiki/RLP
 namespace silkworm::rlp {
 
-// TODO use boost::make_recursive_variant instead of this shite
-// https://vittorioromeo.info/index/blog/variants_lambdas_part_2.html
-namespace impl {
-struct ItemWrapper;
-
-using List = std::vector<ItemWrapper>;
-using Item = std::variant<std::string, List>;
-
-struct ItemWrapper {
-  Item data;
-
-  template <typename... Ts,
-            typename = std::enable_if_t<!std::disjunction_v<
-                std::is_same<std::decay_t<Ts>, ItemWrapper>...> > >
-  ItemWrapper(Ts&&... xs) : data(std::forward<Ts>(xs)...) {}
-};
-}  // namespace impl
-
-using impl::Item, impl::List;
+using Item =
+    boost::make_recursive_variant<std::string,
+                                  std::vector<boost::recursive_variant_>>::type;
+using List = std::vector<Item>;
 
 std::string encode(const Item&);
 Item decode(const std::string&);

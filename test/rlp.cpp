@@ -55,7 +55,7 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
     // The encoded integer 1024 ('\x04\x00') = [ 0x82, 0x04, 0x00 ]
     REQUIRE(encode("\x04\x00"s) == "\x82\x04\x00"s);
 
-    // TODO use boost::make_recursive_variant instead of this hack
+    // List{List{}} would trigger the copy constructor
     List listOfOne;
     listOfOne.push_back(List{});
 

@@ -15,4 +15,7 @@ Copyright 2019 Ethereum Foundation
    limitations under the License.
 ]]
 
+find_package (Boost REQUIRED)
+include_directories (${Boost_INCLUDE_DIRS})
+
 add_library (silkworm rlp.cpp rlp.hpp)

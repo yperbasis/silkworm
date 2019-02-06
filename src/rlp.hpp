@@ -26,6 +26,9 @@
 
 // https://github.com/ethereum/wiki/wiki/RLP
 namespace silkworm::rlp {
+
+// TODO use boost::make_recursive_variant instead of this shite
+// https://vittorioromeo.info/index/blog/variants_lambdas_part_2.html
 namespace impl {
 struct ItemWrapper;
 
@@ -33,17 +36,12 @@ using List = std::vector<ItemWrapper>;
 using Item = std::variant<std::string, List>;
 
 struct ItemWrapper {
-  Item _data;
+  Item data;
 
-  // http://ericniebler.com/2013/08/07/universal-references-and-the-copy-constructo/
-  // https://stackoverflow.com/questions/13296461/imperfect-forwarding-with-variadic-templates
-
-  template <typename A, typename B>
-  using disable_if_same_or_derived =
-      std::enable_if_t<!std::is_base_of_v<A, std::remove_reference_t<B>>>;
-
-  template <typename U, typename X = disable_if_same_or_derived<ItemWrapper, U>>
-  ItemWrapper(U&& u) : _data(std::forward<U>(u)) {}
+  template <typename... Ts,
+            typename = std::enable_if_t<!std::disjunction_v<
+                std::is_same<std::decay_t<Ts>, ItemWrapper>...> > >
+  ItemWrapper(Ts&&... xs) : data(std::forward<Ts>(xs)...) {}
 };
 }  // namespace impl
 

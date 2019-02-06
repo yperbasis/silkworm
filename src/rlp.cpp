@@ -23,7 +23,7 @@ std::string encode_length(uint64_t len, char offset) {
   if (len < 56) {
     return {static_cast<char>(len + offset)};
   } else {
-    auto bl = to_binary(len);
+    const auto bl = to_binary(len);
     return static_cast<char>(bl.length() + offset + 55) + bl;
   }
 }
@@ -41,8 +41,11 @@ std::string encode(const Item& var) {
           else
             return encode_length(input.length(), 0x80) + input;
         } else {
-          // TODO: implement
-          return std::string{};
+          std::string output;
+          for (const auto& item : input) {
+            output += encode(item.data);
+          }
+          return encode_length(output.length(), 0xc0) + output;
         }
       },
       var);

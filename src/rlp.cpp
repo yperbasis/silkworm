@@ -19,6 +19,19 @@
 namespace {
 using namespace silkworm::rlp;
 
+// https://www.boost.org/doc/libs/1_69_0/doc/html/variant/tutorial.html#variant.tutorial.binary-visitation
+struct comparator : public boost::static_visitor<bool> {
+  template <typename T, typename U>
+  bool operator()(const T&, const U&) const {
+    return false;  // cannot compare different types
+  }
+
+  template <typename T>
+  bool operator()(const T& lhs, const T& rhs) const {
+    return lhs == rhs;
+  }
+};
+
 std::string encode_length(uint64_t len, char offset) {
   if (len < 56) {
     return {static_cast<char>(len + offset)};
@@ -60,5 +73,9 @@ std::string to_binary(uint64_t x) {
     return "";
   else
     return to_binary(x / 256) + static_cast<char>(x % 256);
+}
+
+bool are_equal(const Item& lhs, const Item& rhs) {
+  return boost::apply_visitor(comparator(), lhs, rhs);
 }
 }  // namespace silkworm::rlp

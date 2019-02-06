@@ -31,6 +31,9 @@ using Item =
                                   std::vector<boost::recursive_variant_>>::type;
 using List = std::vector<Item>;
 
+// operator== doesn't compile with Xcode 10 for some reason
+bool are_equal(const Item&, const Item&);
+
 std::string encode(const Item&);
 Item decode(const std::string&);
 

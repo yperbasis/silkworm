@@ -70,6 +70,9 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
         encode("Lorem ipsum dolor sit amet, consectetur adipisicing elit") ==
         "\xb8\x38"
         "Lorem ipsum dolor sit amet, consectetur adipisicing elit");
+
+    // a single byte outside of the [0x00, 0x7f] range
+    REQUIRE(encode(to_binary(0x90)) == "\x81\x90");
   }
 
   // TODO: decode tests, incl bad inputs

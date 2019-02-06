@@ -30,7 +30,7 @@ std::string encode_length(uint64_t len, char offset) {
 
 struct encoder : public boost::static_visitor<std::string> {
   std::string operator()(const std::string& input) const {
-    if (input.length() == 1 && static_cast<int>(input[0]) < 0x80)
+    if (input.length() == 1 && static_cast<unsigned>(input[0]) < 0x80)
       return input;
     else
       return encode_length(input.length(), 0x80) + input;

@@ -1,8 +1,6 @@
-#[[
-Copyright 2019 Ethereum Foundation
+#[[Copyright 2019 Ethereum Foundation
 
-    Licensed under the Apache License,
-    Version 2.0(the "License");
+   Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
@@ -15,14 +13,14 @@ Copyright 2019 Ethereum Foundation
    limitations under the License.
 ]]
 
-find_package (Catch2 REQUIRED)
-include_directories (${Silkworm_SOURCE_DIR}/src
-                     ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
+find_package(Catch2 REQUIRED)
+include_directories(${Silkworm_SOURCE_DIR}/src
+                    ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
 
-file (GLOB Silkworm_TEST_SRC "*.cpp")
-add_executable (tests ${Silkworm_TEST_SRC})
-target_link_libraries (tests silkworm Catch2::Catch2)
+file(GLOB Silkworm_TEST_SRC "*.cpp")
+add_executable(tests ${Silkworm_TEST_SRC})
+target_link_libraries(tests silkworm Catch2::Catch2)
 
-include (CTest)
-include (Catch)
-catch_discover_tests (tests)
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)

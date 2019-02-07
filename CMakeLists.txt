@@ -1,8 +1,6 @@
-#[[
-Copyright 2019 Ethereum Foundation
+#[[Copyright 2019 Ethereum Foundation
 
-    Licensed under the Apache License,
-    Version 2.0(the "License");
+   Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
@@ -15,8 +13,16 @@ Copyright 2019 Ethereum Foundation
    limitations under the License.
 ]]
 
-cmake_minimum_required (VERSION 3.5)
-project (Silkworm)
-set (CMAKE_CXX_STANDARD 17)
-add_subdirectory (src)
-add_subdirectory (test)
+cmake_minimum_required(VERSION 3.5)
+project(Silkworm)
+
+set(CMAKE_CXX_STANDARD 17)
+# https://stackoverflow.com/questions/2368811/how-to-set-warning-level-in-cmake
+if(MSVC)
+  add_compile_options(/W4 /WX)
+else(MSVC)
+  add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif(MSVC)
+
+add_subdirectory(src)
+add_subdirectory(test)

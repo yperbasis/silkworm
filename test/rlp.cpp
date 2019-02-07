@@ -79,5 +79,5 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
     }
   }
 
-  // TODO: bad inputs
+  // TODO: bad inputs, positive integers with leading zeroes
 }

@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <boost/variant.hpp>
@@ -35,7 +36,7 @@ using List = std::vector<Item>;
 bool are_equal(const Item&, const Item&);
 
 std::string encode(const Item&);
-Item decode(const std::string&);
+Item decode(std::string_view);
 
 std::string to_binary(uint64_t);
 }  // namespace silkworm::rlp

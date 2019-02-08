@@ -1,4 +1,4 @@
-#[[
+/*
    Copyright 2019 Ethereum Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +12,18 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-]]
+*/
+#ifndef SILKWORM_UTIL_HPP_
+#define SILKWORM_UTIL_HPP_
 
-find_package(Catch2 REQUIRED)
-include_directories(${Silkworm_SOURCE_DIR}/src
-                    ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
+#include <string>
+#include <string_view>
 
-file(GLOB Silkworm_TEST_SRC "*.cpp")
-add_executable(tests ${Silkworm_TEST_SRC})
-target_link_libraries(tests silkworm Catch2::Catch2)
+namespace silkworm {
 
-include(CTest)
-include(Catch)
-catch_discover_tests(tests)
+std::string bytes_to_hex_string(std::string_view);
+std::string hex_string_to_bytes(std::string_view);
+
+}  // namespace silkworm
+
+#endif  // SILKWORM_UTIL_HPP_

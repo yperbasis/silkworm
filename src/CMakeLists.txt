@@ -1,4 +1,5 @@
-#[[Copyright 2019 Ethereum Foundation
+#[[
+   Copyright 2019 Ethereum Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,4 +16,5 @@
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
-add_library(silkworm rlp.cpp rlp.hpp)
+file(GLOB Silkworm_SRC "*.h" "*.hpp" "*.c" "*.cpp")
+add_library(silkworm ${Silkworm_SRC})

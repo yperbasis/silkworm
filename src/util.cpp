@@ -1,4 +1,4 @@
-#[[
+/*
    Copyright 2019 Ethereum Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +12,28 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-]]
+*/
 
-find_package(Catch2 REQUIRED)
-include_directories(${Silkworm_SOURCE_DIR}/src
-                    ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
+#include "util.hpp"
 
-file(GLOB Silkworm_TEST_SRC "*.cpp")
-add_executable(tests ${Silkworm_TEST_SRC})
-target_link_libraries(tests silkworm Catch2::Catch2)
+#include <iterator>
 
-include(CTest)
-include(Catch)
-catch_discover_tests(tests)
+#include <boost/algorithm/hex.hpp>
+
+namespace silkworm {
+
+std::string bytes_to_hex_string(std::string_view in) {
+  std::string res;
+  res.reserve(in.size() * 2);
+  boost::algorithm::hex_lower(in.begin(), in.end(), std::back_inserter(res));
+  return res;
+}
+
+std::string hex_string_to_bytes(std::string_view in) {
+  std::string res;
+  res.reserve(in.size() / 2);
+  boost::algorithm::unhex(in.begin(), in.end(), std::back_inserter(res));
+  return res;
+}
+
+}  // namespace silkworm

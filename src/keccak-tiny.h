@@ -1,4 +1,4 @@
-#[[
+/*
    Copyright 2019 Ethereum Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +12,23 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-]]
+*/
 
-find_package(Catch2 REQUIRED)
-include_directories(${Silkworm_SOURCE_DIR}/src
-                    ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
+#ifndef SILKWORM_KECCAK_TINY_H_
+#define SILKWORM_KECCAK_TINY_H_
 
-file(GLOB Silkworm_TEST_SRC "*.cpp")
-add_executable(tests ${Silkworm_TEST_SRC})
-target_link_libraries(tests silkworm Catch2::Catch2)
+#include <stddef.h>
+#include <stdint.h>
 
-include(CTest)
-include(Catch)
-catch_discover_tests(tests)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
+int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // SILKWORM_KECCAK_TINY_H_

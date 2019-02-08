@@ -33,6 +33,7 @@ using Item =
 using List = std::vector<Item>;
 
 // operator== doesn't compile with Xcode 10 for some reason
+// TODO: submit a bugreport to boost
 bool are_equal(const Item&, const Item&);
 
 std::string encode(const Item&);

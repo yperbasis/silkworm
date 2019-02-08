@@ -137,12 +137,6 @@ static inline int hash(uint8_t* out, size_t outlen,
   return 0;
 }
 
-/*** Helper macros to define SHA3 and SHAKE instances. ***/
-#define defshake(bits)                                            \
-  int shake##bits(uint8_t* out, size_t outlen,                    \
-                  const uint8_t* in, size_t inlen) {              \
-    return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x1f);  \
-  }
 #define defsha3(bits)                                             \
   int sha3_##bits(uint8_t* out, size_t outlen,                    \
                   const uint8_t* in, size_t inlen) {              \

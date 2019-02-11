@@ -25,9 +25,9 @@
 #include "keccak.hpp"
 
 // TODO sync research:
-// 0. in-memory single-machine PoC with ~1m dust accounts
+// 0. single-machine in-memory PoC with ~1m dust accounts
 // 1. database with ~100m dust accounts
-// 2. network layer
+// 2. network layer, p2p
 // 3. real protocol
 // 4. proof checking
 // 5. smart contract storage
@@ -38,6 +38,7 @@ namespace silkworm::sync {
 
 using Nibble = char;
 
+// GetLeaves
 struct Request {
   int32_t block = -1;
   std::vector<Nibble> prefix;
@@ -49,7 +50,7 @@ enum Error {
 };
 
 struct Leaf {
-  std::vector<Nibble> midfix;
+  std::vector<Nibble> suffix;  // prefix + suffix = hash(key)
   std::string value;
 };
 

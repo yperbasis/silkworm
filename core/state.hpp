@@ -17,7 +17,6 @@
 #ifndef SILKWORM_STATE_HPP_
 #define SILKWORM_STATE_HPP_
 
-#include <stdint.h>
 #include <vector>
 
 #include <boost/move/utility_core.hpp>
@@ -34,7 +33,7 @@ class State {
   BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
 
   struct Node {
-    std::array<UInt256, 16> hash;
+    std::array<Hash, 16> hash;
     std::array<int32_t, 16> block = {-1, -1, -1, -1, -1, -1, -1, -1,
                                      -1, -1, -1, -1, -1, -1, -1, -1};
   };

@@ -23,7 +23,7 @@
 
 #include <boost/move/utility_core.hpp>
 
-#include "keccak.hpp"
+#include "common.hpp"
 
 namespace silkworm {
 
@@ -31,7 +31,7 @@ class DbBucket {
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(DbBucket)
 
-  std::map<UInt256, std::string> data_;
+  std::map<Hash, std::string> data_;
 };
 
 }  // namespace silkworm

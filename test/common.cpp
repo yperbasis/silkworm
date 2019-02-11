@@ -14,26 +14,14 @@
    limitations under the License.
 */
 
-#include "util.hpp"
+#include "common.hpp"
 
-#include <iterator>
+#include <catch2/catch.hpp>
 
-#include <boost/algorithm/hex.hpp>
+TEST_CASE("Hex string") {
+  using namespace silkworm;
+  using namespace std::string_literals;
 
-namespace silkworm {
-
-std::string bytes_to_hex_string(std::string_view in) {
-  std::string res;
-  res.reserve(in.size() * 2);
-  boost::algorithm::hex_lower(in.begin(), in.end(), std::back_inserter(res));
-  return res;
+  REQUIRE(bytes_to_hex_string("\x09\xf1\x00\xa0"s) == "09f100a0");
+  REQUIRE(hex_string_to_bytes("09f100a0") == "\x09\xf1\x00\xa0"s);
 }
-
-std::string hex_string_to_bytes(std::string_view in) {
-  std::string res;
-  res.reserve(in.size() / 2);
-  boost::algorithm::unhex(in.begin(), in.end(), std::back_inserter(res));
-  return res;
-}
-
-}  // namespace silkworm

@@ -13,17 +13,27 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-#ifndef SILKWORM_UTIL_HPP_
-#define SILKWORM_UTIL_HPP_
 
-#include <string>
-#include <string_view>
+#include "common.hpp"
+
+#include <iterator>
+
+#include <boost/algorithm/hex.hpp>
 
 namespace silkworm {
 
-std::string bytes_to_hex_string(std::string_view);
-std::string hex_string_to_bytes(std::string_view);
+std::string bytes_to_hex_string(std::string_view in) {
+  std::string res;
+  res.reserve(in.size() * 2);
+  boost::algorithm::hex_lower(in.begin(), in.end(), std::back_inserter(res));
+  return res;
+}
+
+std::string hex_string_to_bytes(std::string_view in) {
+  std::string res;
+  res.reserve(in.size() / 2);
+  boost::algorithm::unhex(in.begin(), in.end(), std::back_inserter(res));
+  return res;
+}
 
 }  // namespace silkworm
-
-#endif  // SILKWORM_UTIL_HPP_

@@ -20,8 +20,6 @@
 
 #include <catch2/catch.hpp>
 
-#include "util.hpp"
-
 TEST_CASE("Keccak") {
   using namespace silkworm;
 

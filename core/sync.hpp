@@ -17,12 +17,11 @@
 #ifndef SILKWORM_SYNC_HPP_
 #define SILKWORM_SYNC_HPP_
 
-#include <stdint.h>
 #include <string>
 #include <variant>
 #include <vector>
 
-#include "keccak.hpp"
+#include "common.hpp"
 
 // TODO sync research:
 // 0. single-machine in-memory PoC with ~1m dust accounts
@@ -56,7 +55,7 @@ struct Leaf {
 
 struct Proof {
   uint16_t mask;
-  std::vector<UInt256> hashes;  // hashes.size() == #bits(mask)
+  std::vector<Hash> hashes;  // hashes.size() == #bits(mask)
 };
 
 struct Reply {

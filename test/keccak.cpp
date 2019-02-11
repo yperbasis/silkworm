@@ -25,17 +25,11 @@
 TEST_CASE("Keccak") {
   using namespace silkworm;
 
-  // https://github.com/ethereum/wiki/wiki/JSON-RPC#web3_sha3
-  SECTION("example") {
-    std::string input = "68656c6c6f20776f726c64";
-    std::string expected_hex =
-        "47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad";
+  SECTION("examples") {
+    REQUIRE(keccak("") == kEmptyStringHash);
 
-    std::array<uint8_t, 32> actual_bytes = keccak(hex_string_to_bytes(input));
-
-    std::string actual_hex = bytes_to_hex_string(std::string_view(
-        reinterpret_cast<const char*>(actual_bytes.data()), 32));
-
-    REQUIRE(actual_hex == expected_hex);
+    REQUIRE(  // https://github.com/ethereum/wiki/wiki/JSON-RPC#web3_sha3
+        keccak(hex_string_to_bytes("68656c6c6f20776f726c64")) ==
+        "47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad"_x32);
   }
 }

@@ -24,7 +24,7 @@
 
 #include "keccak.hpp"
 
-// TODO sync researh:
+// TODO sync research:
 // 0. in-memory single-machine PoC with ~1m dust accounts
 // 1. database with ~100m dust accounts
 // 2. network layer

@@ -25,5 +25,5 @@ else(MSVC)
   add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif(MSVC)
 
-add_subdirectory(src)
+add_subdirectory(core)
 add_subdirectory(test)

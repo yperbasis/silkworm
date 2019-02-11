@@ -15,7 +15,7 @@
 ]]
 
 find_package(Catch2 REQUIRED)
-include_directories(${Silkworm_SOURCE_DIR}/src
+include_directories(${Silkworm_SOURCE_DIR}/core
                     ${Catch2_INTERFACE_INCLUDE_DIRECTORIES})
 
 file(GLOB Silkworm_TEST_SRC "*.cpp")

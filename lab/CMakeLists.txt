@@ -1,4 +1,4 @@
-/*
+#[[
    Copyright 2019 Ethereum Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,10 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+]]
 
-#ifndef SILKWORM_CORE_KECCAK_TINY_H_
-#define SILKWORM_CORE_KECCAK_TINY_H_
+include_directories(${Silkworm_SOURCE_DIR}/core)
 
-#include <stddef.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif  // SILKWORM_CORE_KECCAK_TINY_H_
+file(GLOB Silkworm_LAB_SRC "*.hpp" "*.cpp")
+add_executable(sync_emulator ${Silkworm_LAB_SRC})
+target_link_libraries(sync_emulator silkworm)

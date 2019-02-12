@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_RLP_HPP_
-#define SILKWORM_RLP_HPP_
+#ifndef SILKWORM_CORE_RLP_HPP_
+#define SILKWORM_CORE_RLP_HPP_
 
 #include <stdint.h>
 #include <string>
@@ -28,7 +28,7 @@
 namespace silkworm::rlp {
 
 using Item =
-    boost::make_recursive_variant<std::string,
+    boost::make_recursive_variant<std::string,  // TODO string_view
                                   std::vector<boost::recursive_variant_>>::type;
 using List = std::vector<Item>;
 
@@ -42,4 +42,4 @@ Item decode(std::string_view);
 std::string to_binary(uint64_t);
 }  // namespace silkworm::rlp
 
-#endif  // SILKWORM_RLP_HPP_
+#endif  // SILKWORM_CORE_RLP_HPP_

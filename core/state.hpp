@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_STATE_HPP_
-#define SILKWORM_STATE_HPP_
+#ifndef SILKWORM_CORE_STATE_HPP_
+#define SILKWORM_CORE_STATE_HPP_
 
 #include <vector>
 
@@ -27,7 +27,10 @@ namespace silkworm {
 
 class State {
   explicit State(DbBucket& db, unsigned level)
-      : db_(db), level_(level), chunks_(16ll << level) {}
+      : db_(db), level_(level), chunks_(16ll << level) {
+    // TODO build the chunks from the database
+    // (calculate hashes w/o extension nodes to start with)
+  }
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
@@ -45,4 +48,4 @@ class State {
 
 }  // namespace silkworm
 
-#endif  // SILKWORM_STATE_HPP_
+#endif  // SILKWORM_CORE_STATE_HPP_

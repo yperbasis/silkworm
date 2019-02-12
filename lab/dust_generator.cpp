@@ -14,21 +14,14 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_KECCAK_TINY_H_
-#define SILKWORM_CORE_KECCAK_TINY_H_
+#include "dust_generator.hpp"
 
-#include <stddef.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-
-#ifdef __cplusplus
+namespace silkworm::lab {
+void DustGenerator::generate(uint64_t num_accounts) {
+  for (uint64_t i = 0; i < num_accounts; ++i) {
+    Account account;  // TODO random balance less than 1 Finney
+    Address address;  // TODO account address
+    state_db_.put(keccak(byte_view(address)), to_rlp(account));
+  }
 }
-#endif
-
-#endif  // SILKWORM_CORE_KECCAK_TINY_H_
+}  // namespace silkworm::lab

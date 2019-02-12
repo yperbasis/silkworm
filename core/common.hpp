@@ -13,15 +13,19 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-#ifndef SILKWORM_COMMON_HPP_
-#define SILKWORM_COMMON_HPP_
+#ifndef SILKWORM_CORE_COMMON_HPP_
+#define SILKWORM_CORE_COMMON_HPP_
 
 #include <stdint.h>
 #include <array>
 #include <string>
 #include <string_view>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 namespace silkworm {
+
+using BigInt = boost::multiprecision::cpp_int;
 
 std::string bytes_to_hex_string(std::string_view);
 std::string hex_string_to_bytes(std::string_view);
@@ -42,6 +46,17 @@ inline Hash operator"" _x32(const char* in, std::size_t n) {
 
 using Address = std::array<uint8_t, 20>;
 
+template <std::size_t N>
+std::string_view byte_view(const std::array<uint8_t, N>& a) {
+  return std::string_view(reinterpret_cast<const char*>(a.data()), N);
+}
+
+using Nibble = char;
+
+static constexpr auto kSzabo = 1'000'000'000'000ull;
+static constexpr auto kFinney = kSzabo * 1000;
+static constexpr auto kEther = kFinney * 1000;
+
 }  // namespace silkworm
 
-#endif  // SILKWORM_COMMON_HPP_
+#endif  // SILKWORM_CORE_COMMON_HPP_

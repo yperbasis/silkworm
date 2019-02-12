@@ -14,21 +14,22 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_KECCAK_TINY_H_
-#define SILKWORM_CORE_KECCAK_TINY_H_
+#ifndef SILKWORM_CORE_ACCOUNT_HPP_
+#define SILKWORM_CORE_ACCOUNT_HPP_
 
-#include <stddef.h>
-#include <stdint.h>
+#include "keccak.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace silkworm {
 
-int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
+struct Account {
+  uint64_t nonce = 0;
+  BigInt balance = 0;
+  Hash storage = kEmptyStringHash;
+  Hash code = kEmptyStringHash;
+};
 
-#ifdef __cplusplus
-}
-#endif
+std::string to_rlp(const Account&);
 
-#endif  // SILKWORM_CORE_KECCAK_TINY_H_
+}  // namespace silkworm
+
+#endif  // SILKWORM_CORE_ACCOUNT_HPP_

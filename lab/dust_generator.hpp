@@ -14,21 +14,22 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_KECCAK_TINY_H_
-#define SILKWORM_CORE_KECCAK_TINY_H_
+#ifndef SILKWORM_LAB_DUST_GENERATOR_HPP_
+#define SILKWORM_LAB_DUST_GENERATOR_HPP_
 
-#include <stddef.h>
-#include <stdint.h>
+#include "account.hpp"
+#include "db_bucket.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace silkworm::lab {
 
-int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
+class DustGenerator {
+ public:
+  void generate(uint64_t num_accounts);
 
-#ifdef __cplusplus
-}
-#endif
+ private:
+  DbBucket state_db_;
+};
 
-#endif  // SILKWORM_CORE_KECCAK_TINY_H_
+}  // namespace silkworm::lab
+
+#endif  // SILKWORM_LAB_DUST_GENERATOR_HPP_

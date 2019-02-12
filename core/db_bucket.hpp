@@ -14,11 +14,12 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_DB_BUCKET_HPP_
-#define SILKWORM_DB_BUCKET_HPP_
+#ifndef SILKWORM_CORE_DB_BUCKET_HPP_
+#define SILKWORM_CORE_DB_BUCKET_HPP_
 
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/move/utility_core.hpp>
@@ -28,6 +29,15 @@
 namespace silkworm {
 
 class DbBucket {
+ public:
+  DbBucket() = default;
+
+  void put(Hash key, std::string val) {
+    data_.insert_or_assign(std::move(key), std::move(val));
+  }
+
+  // TODO return a range (Eric Niebler's?) for prefix
+
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(DbBucket)
 
@@ -36,4 +46,4 @@ class DbBucket {
 
 }  // namespace silkworm
 
-#endif  // SILKWORM_DB_BUCKET_HPP_
+#endif  // SILKWORM_CORE_DB_BUCKET_HPP_

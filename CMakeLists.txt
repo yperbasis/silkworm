@@ -26,4 +26,5 @@ else(MSVC)
 endif(MSVC)
 
 add_subdirectory(core)
+add_subdirectory(lab)
 add_subdirectory(test)

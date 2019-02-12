@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_SYNC_HPP_
-#define SILKWORM_SYNC_HPP_
+#ifndef SILKWORM_CORE_SYNC_HPP_
+#define SILKWORM_CORE_SYNC_HPP_
 
 #include <string>
 #include <variant>
@@ -35,12 +35,11 @@
 
 namespace silkworm::sync {
 
-using Nibble = char;
-
 // GetLeaves
 struct Request {
   int32_t block = -1;
   std::vector<Nibble> prefix;
+  uint8_t start_proof_from = 0;  // start_proof_from < prefix.size()
 };
 
 enum Error {
@@ -61,9 +60,9 @@ struct Proof {
 struct Reply {
   int32_t block = 0;
   std::vector<Proof> proofs;  // proofs.size() == prefix.size()
-  std::vector<Leaf> leaves;
+  std::vector<Leaf> leaves;   // ordered by suffix / hash(key)
 };
 
 }  // namespace silkworm::sync
 
-#endif  // SILKWORM_SYNC_HPP_
+#endif  // SILKWORM_CORE_SYNC_HPP_

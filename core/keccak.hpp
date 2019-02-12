@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_KECCAK_HPP_
-#define SILKWORM_KECCAK_HPP_
+#ifndef SILKWORM_CORE_KECCAK_HPP_
+#define SILKWORM_CORE_KECCAK_HPP_
 
 #include <algorithm>
 #include <stdexcept>
@@ -28,7 +28,7 @@ namespace silkworm {
 static const Hash kEmptyStringHash =
     "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"_x32;
 
-Hash keccak(std::string_view in) {
+inline Hash keccak(std::string_view in) {
   Hash out;
   // https://stackoverflow.com/questions/10151834/why-cant-i-static-cast-between-char-and-unsigned-char
   sha3_256(out.data(), 32, reinterpret_cast<const uint8_t*>(in.data()),
@@ -36,7 +36,7 @@ Hash keccak(std::string_view in) {
   return out;
 }
 
-std::array<uint8_t, 64> keccak512(std::string_view in) {
+inline std::array<uint8_t, 64> keccak512(std::string_view in) {
   std::array<uint8_t, 64> out;
   // https://stackoverflow.com/questions/10151834/why-cant-i-static-cast-between-char-and-unsigned-char
   sha3_512(out.data(), 64, reinterpret_cast<const uint8_t*>(in.data()),
@@ -46,4 +46,4 @@ std::array<uint8_t, 64> keccak512(std::string_view in) {
 
 }  // namespace silkworm
 
-#endif  // SILKWORM_KECCAK_HPP_
+#endif  // SILKWORM_CORE_KECCAK_HPP_

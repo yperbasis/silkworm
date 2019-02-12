@@ -14,21 +14,19 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_KECCAK_TINY_H_
-#define SILKWORM_CORE_KECCAK_TINY_H_
+#include "account.hpp"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <iterator>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "rlp.hpp"
 
-int sha3_256(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
-int sha3_512(uint8_t* out, size_t outlen, const uint8_t* in, size_t inlen);
+namespace silkworm {
 
-#ifdef __cplusplus
+std::string to_rlp(const Account& in) {
+  std::string balance_bytes;
+  export_bits(in.balance, std::back_inserter(balance_bytes), 8);
+  const rlp::List list = {rlp::to_binary(in.nonce), balance_bytes};
+  // TODO storage & code
+  return rlp::encode(list);
 }
-#endif
-
-#endif  // SILKWORM_CORE_KECCAK_TINY_H_
+}  // namespace silkworm

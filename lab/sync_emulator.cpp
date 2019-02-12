@@ -20,6 +20,7 @@
 
 #include "dust_generator.hpp"
 
+static const unsigned kSeed = 3548264823;
 static const auto kInitialAccounts = 1'000'000;
 // static const auto kNewAccountsPerBlock = 1000;
 // static const auto kBlocks = 10;
@@ -30,7 +31,8 @@ int main() {
   using namespace silkworm::lab;
 
   auto time0 = microsec_clock::local_time();
-  DustGenerator dust_gen;
+  RNG rng(kSeed);
+  DustGenerator dust_gen(rng);
   dust_gen.generate(kInitialAccounts);
   auto time1 = microsec_clock::local_time();
   std::cout << "Dust accounts generated in " << time1 - time0 << std::endl;

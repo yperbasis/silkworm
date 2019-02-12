@@ -30,11 +30,15 @@ using BigInt = boost::multiprecision::cpp_int;
 std::string bytes_to_hex_string(std::string_view);
 std::string hex_string_to_bytes(std::string_view);
 
-using Hash = std::array<uint8_t, 32>;
+static constexpr size_t kAddressBytes = 20;
+using Address = std::array<uint8_t, kAddressBytes>;
+
+static constexpr size_t kHashBytes = 32;
+using Hash = std::array<uint8_t, kHashBytes>;
 
 // unsigned 32 byte hex literal
 inline Hash operator"" _x32(const char* in, std::size_t n) {
-  if (n != 64) {
+  if (n != 32 * 2) {
     throw std::invalid_argument("expected 64 hex characters");
   }
 
@@ -44,10 +48,8 @@ inline Hash operator"" _x32(const char* in, std::size_t n) {
   return array;
 }
 
-using Address = std::array<uint8_t, 20>;
-
 template <std::size_t N>
-std::string_view byte_view(const std::array<uint8_t, N>& a) {
+inline std::string_view byte_view(const std::array<uint8_t, N>& a) {
   return std::string_view(reinterpret_cast<const char*>(a.data()), N);
 }
 

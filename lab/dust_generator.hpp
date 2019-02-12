@@ -17,17 +17,23 @@
 #ifndef SILKWORM_LAB_DUST_GENERATOR_HPP_
 #define SILKWORM_LAB_DUST_GENERATOR_HPP_
 
+#include <random>
+
 #include "account.hpp"
 #include "db_bucket.hpp"
 
 namespace silkworm::lab {
 
+using RNG = std::minstd_rand;
+
 class DustGenerator {
  public:
+  explicit DustGenerator(RNG& rng) : rng_(rng) {}
   void generate(uint64_t num_accounts);
 
  private:
   DbBucket state_db_;
+  RNG& rng_;
 };
 
 }  // namespace silkworm::lab

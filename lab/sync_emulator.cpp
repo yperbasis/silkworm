@@ -21,6 +21,7 @@
 #include "dust_generator.hpp"
 
 static const unsigned kSeed = 3548264823;
+
 static const auto kInitialAccounts = 1'000'000;
 // static const auto kNewAccountsPerBlock = 1000;
 // static const auto kBlocks = 10;

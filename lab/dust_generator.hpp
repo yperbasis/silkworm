@@ -24,7 +24,7 @@
 
 namespace silkworm::lab {
 
-using RNG = std::minstd_rand;
+using RNG = std::mt19937;
 
 class DustGenerator {
  public:

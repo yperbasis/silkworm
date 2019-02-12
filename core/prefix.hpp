@@ -51,10 +51,8 @@ class Prefix {
 
   Hash padded() const {
     Hash array;
-    std::copy(bytes_.begin(), bytes_.end(), array.begin());
-    for (auto i = bytes_.size(); i < kHashBytes; ++i) {
-      array[i] = 0;
-    }
+    auto it = std::copy(bytes_.begin(), bytes_.end(), array.begin());
+    std::fill(it, array.end(), 0);
     return array;
   }
 

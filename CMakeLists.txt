@@ -17,6 +17,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(Silkworm)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 # https://stackoverflow.com/questions/2368811/how-to-set-warning-level-in-cmake
 if(MSVC)

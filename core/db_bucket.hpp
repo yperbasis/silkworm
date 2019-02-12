@@ -25,23 +25,30 @@
 #include <boost/move/utility_core.hpp>
 
 #include "common.hpp"
+#include "prefix.hpp"
 
 namespace silkworm {
 
 class DbBucket {
  public:
+  using Map = std::map<Hash, std::string>;
+  using ConstIterator = Map::const_iterator;
+  using Range = std::pair<ConstIterator, ConstIterator>;
+
   DbBucket() = default;
 
   void put(Hash key, std::string val) {
     data_.insert_or_assign(std::move(key), std::move(val));
   }
 
-  // TODO return a range (Eric Niebler's?) for prefix
+  Range prefix_range(const Prefix&) const;
+
+  ConstIterator not_found() const { return data_.end(); }
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(DbBucket)
 
-  std::map<Hash, std::string> data_;
+  Map data_;
 };
 
 }  // namespace silkworm

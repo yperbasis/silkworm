@@ -53,7 +53,7 @@ inline std::string_view byte_view(const std::array<uint8_t, N>& a) {
   return std::string_view(reinterpret_cast<const char*>(a.data()), N);
 }
 
-using Nibble = char;
+using Nibble = uint8_t;
 
 static constexpr auto kSzabo = 1'000'000'000'000ull;
 static constexpr auto kFinney = kSzabo * 1000;

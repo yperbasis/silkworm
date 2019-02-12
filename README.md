@@ -1,6 +1,6 @@
 # Silkworm
 
-Silkwork is an experimental playground for Ethereum 1x research.
+Silkworm is an experimental playground for Ethereum 1x research.
 If things go well, it might morph into a grown C++17 Ethereum client with the Apache licence.
 
 # Code Style

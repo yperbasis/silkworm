@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "common.hpp"
+#include "prefix.hpp"
 
 // TODO sync research:
 // 0. single-machine in-memory PoC with ~1m dust accounts
@@ -38,7 +39,7 @@ namespace silkworm::sync {
 // GetLeaves
 struct Request {
   int32_t block = -1;
-  std::vector<Nibble> prefix;
+  Prefix prefix;
   uint8_t start_proof_from = 0;  // start_proof_from < prefix.size()
 };
 
@@ -48,19 +49,16 @@ enum Error {
 };
 
 struct Leaf {
-  std::vector<Nibble> suffix;  // prefix + suffix = hash(key)
+  Prefix suffix;  // prefix + suffix = hash(key)
   std::string value;
-};
-
-struct Proof {
-  uint16_t mask;
-  std::vector<Hash> hashes;  // hashes.size() == #bits(mask)
 };
 
 struct Reply {
   int32_t block = 0;
-  std::vector<Proof> proofs;  // proofs.size() == prefix.size()
-  std::vector<Leaf> leaves;   // ordered by suffix / hash(key)
+  std::vector<uint16_t> mask;  // mask.size() == prefix.size()
+  std::vector<Hash> proofs;    // hashes for non-zero nibbles in mask[0],
+                               // then non-zero nibbles in mask[1], ...
+  std::vector<Leaf> leaves;    // ordered by suffix / hash(key)
 };
 
 }  // namespace silkworm::sync

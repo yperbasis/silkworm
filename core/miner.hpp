@@ -14,38 +14,26 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_STATE_HPP_
-#define SILKWORM_CORE_STATE_HPP_
+#ifndef SILKWORM_CORE_MINER_HPP_
+#define SILKWORM_CORE_MINER_HPP_
 
-#include <vector>
-
-#include <boost/move/utility_core.hpp>
-
-#include "db_bucket.hpp"
+#include "account.hpp"
+#include "node.hpp"
 
 namespace silkworm {
 
-class State {
+class Miner : public Node {
  public:
-  explicit State(DbBucket& db, unsigned level)
-      : db_(db), chunks_(16ll << level) {}
+  Miner(DbBucket& db, uint32_t block_height) : Node(db, block_height) {}
 
-  void init_from_db(uint32_t block_height);
+  void start_block();
 
- private:
-  BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
+  // TODO prohibit creation of non-zero balance accounts ex nihilo
+  void create_account(const Address&, const Account&);
 
-  struct Node {
-    std::array<Hash, 16> hash;
-    std::array<int32_t, 16> block = {-1, -1, -1, -1, -1, -1, -1, -1,
-                                     -1, -1, -1, -1, -1, -1, -1, -1};
-  };
-
-  DbBucket& db_;
-  // unsigned level_;
-  std::vector<Node> chunks_;
+  void seal_block();
 };
 
 }  // namespace silkworm
 
-#endif  // SILKWORM_CORE_STATE_HPP_
+#endif  // SILKWORM_CORE_MINER_HPP_

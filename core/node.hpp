@@ -14,38 +14,36 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_STATE_HPP_
-#define SILKWORM_CORE_STATE_HPP_
+#ifndef SILKWORM_CORE_NODE_HPP_
+#define SILKWORM_CORE_NODE_HPP_
 
-#include <vector>
-
-#include <boost/move/utility_core.hpp>
+#include <optional>
+#include <variant>
 
 #include "db_bucket.hpp"
+#include "state.hpp"
+#include "sync.hpp"
 
 namespace silkworm {
 
-class State {
+class Node {
  public:
-  explicit State(DbBucket& db, unsigned level)
-      : db_(db), chunks_(16ll << level) {}
+  static constexpr auto kStateLevel = 5u;
 
-  void init_from_db(uint32_t block_height);
+  Node(DbBucket& db, uint32_t block_height) : state_(db, kStateLevel) {
+    state_.init_from_db(block_height);
+  }
+
+  void sync();
+
+  std::optional<uint32_t> synced_block() const;
+
+  std::variant<sync::Reply, sync::Error> get_leaves(sync::Request);
 
  private:
-  BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
-
-  struct Node {
-    std::array<Hash, 16> hash;
-    std::array<int32_t, 16> block = {-1, -1, -1, -1, -1, -1, -1, -1,
-                                     -1, -1, -1, -1, -1, -1, -1, -1};
-  };
-
-  DbBucket& db_;
-  // unsigned level_;
-  std::vector<Node> chunks_;
+  State state_;
 };
 
 }  // namespace silkworm
 
-#endif  // SILKWORM_CORE_STATE_HPP_
+#endif  // SILKWORM_CORE_NODE_HPP_

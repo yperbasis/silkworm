@@ -40,7 +40,7 @@ namespace silkworm::sync {
 struct Request {
   int32_t block = -1;
   Prefix prefix;
-  uint8_t start_proof_from = 0;  // start_proof_from < prefix.size()
+  uint8_t start_proof_from = 0;  // start_proof_from <= prefix.size
 };
 
 enum Error {
@@ -49,16 +49,22 @@ enum Error {
 };
 
 struct Leaf {
-  Prefix suffix;  // prefix + suffix = hash(key)
+  std::string hash_key;
   std::string value;
 };
 
 struct Reply {
+  // must be >= request.block
   int32_t block = 0;
-  std::vector<uint16_t> mask;  // mask.size() == prefix.size()
-  std::vector<Hash> proofs;    // hashes for non-zero nibbles in mask[0],
-                               // then non-zero nibbles in mask[1], ...
-  std::vector<Leaf> leaves;    // ordered by suffix / hash(key)
+
+  // If block = request.block
+  // proof.size = prefix.size - start_proof_from
+  // else if block > request.block
+  // proof.size = prefix.size
+  std::vector<std::array<Hash, 16>> proof;
+
+  // must be ordered by hash_key
+  std::vector<Leaf> leaves;
 };
 
 }  // namespace silkworm::sync

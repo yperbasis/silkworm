@@ -14,28 +14,17 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_LAB_DUST_GENERATOR_HPP_
-#define SILKWORM_LAB_DUST_GENERATOR_HPP_
+#include "state.hpp"
+#include "keccak.hpp"
+#include "rlp.hpp"
 
-#include <random>
+namespace silkworm {
 
-#include "account.hpp"
+void State::init_from_db(uint32_t block_height) {
+  // TODO build the chunks from the database
+  // (calculate hashes w/o extension nodes to start with)
+  db_.put(kEmptyStringHash,
+          rlp::to_binary(block_height));  // TODO remove this shite
+}
 
-namespace silkworm::lab {
-
-using RNG = std::mt19937;
-
-class DustGenerator {
- public:
-  explicit DustGenerator(RNG& rng) : rng_(rng) {}
-
-  Address random_address();
-  Account random_account();
-
- private:
-  RNG& rng_;
-};
-
-}  // namespace silkworm::lab
-
-#endif  // SILKWORM_LAB_DUST_GENERATOR_HPP_
+}  // namespace silkworm

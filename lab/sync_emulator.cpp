@@ -18,7 +18,10 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "db_bucket.hpp"
 #include "dust_generator.hpp"
+#include "keccak.hpp"
+#include "miner.hpp"
 
 static const unsigned kSeed = 3548264823;
 
@@ -29,12 +32,21 @@ static const auto kInitialAccounts = 1'000'000;
 
 int main() {
   using namespace boost::posix_time;
+  using namespace silkworm;
   using namespace silkworm::lab;
 
+  const auto current_block = 7212230;
+
   auto time0 = microsec_clock::local_time();
+  DbBucket big_state;
   RNG rng(kSeed);
   DustGenerator dust_gen(rng);
-  dust_gen.generate(kInitialAccounts);
+  for (auto i = 0u; i < kInitialAccounts; ++i) {
+    Hash key = keccak(byte_view(dust_gen.random_address()));
+    std::string val = to_rlp(dust_gen.random_account());
+    big_state.put(key, val);
+  }
+  Miner miner(big_state, current_block);
   auto time1 = microsec_clock::local_time();
   std::cout << "Dust accounts generated in " << time1 - time0 << std::endl;
 

@@ -41,6 +41,7 @@ std::string encode(const Item&);
 Item decode(std::string_view);
 
 std::string to_binary(uint64_t);
+uint64_t to_integer(std::string_view b);
 }  // namespace silkworm::rlp
 
 #endif  // SILKWORM_CORE_RLP_HPP_

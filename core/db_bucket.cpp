@@ -18,7 +18,7 @@
 
 namespace silkworm {
 
-DbBucket::Range DbBucket::prefix_range(const Prefix& p) const {
+DbBucket::Range DbBucket::leaves(const Prefix& p) const {
   auto lb = data_.lower_bound(p.padded());
   auto next = p.next();
   if (!next) {

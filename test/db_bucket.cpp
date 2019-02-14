@@ -20,7 +20,7 @@
 
 using namespace silkworm;
 
-TEST_CASE("Database prefix_range") {
+TEST_CASE("Database leaves by prefix") {
   Hash key1 =
       "15d2460186f7233c927e7002dcc703c0e500b653ca3227363333aa089d1745ec"_x32;
   Hash key2 =
@@ -36,12 +36,12 @@ TEST_CASE("Database prefix_range") {
   db.put(key4, "bar");
   db.put(key3, "kittie");
 
-  auto r1 = db.prefix_range("0ffdf"_prefix);
-  REQUIRE(r1.first == db.not_found());
+  auto r1 = db.leaves("0ffdf"_prefix);
+  REQUIRE(r1.first == r1.second);
 
-  auto r2 = db.prefix_range("15d246"_prefix);
+  auto r2 = db.leaves("15d246"_prefix);
   auto it = r2.first;
-  REQUIRE(it != db.not_found());
+  REQUIRE(it != r2.second);
   REQUIRE(it->first == key1);
   REQUIRE(it->second == "val");
   ++it;
@@ -49,11 +49,10 @@ TEST_CASE("Database prefix_range") {
   ++it;
   REQUIRE(it == r2.second);
 
-  auto r3 = db.prefix_range("fffff"_prefix);
+  auto r3 = db.leaves("fffff"_prefix);
   it = r3.first;
-  REQUIRE(it != db.not_found());
+  REQUIRE(it != r2.second);
   REQUIRE(it->first == key4);
   ++it;
   REQUIRE(it == r3.second);
-  REQUIRE(r3.second == db.not_found());
 }

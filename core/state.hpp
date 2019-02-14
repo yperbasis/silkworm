@@ -28,7 +28,7 @@ namespace silkworm {
 class State {
  public:
   explicit State(DbBucket& db, unsigned level)
-      : db_(db), chunks_(16ll << level) {}
+      : db_(db), level_(level), chunks_(1ull << (level * 4)) {}
 
   void init_from_db(uint32_t block_height);
 
@@ -42,7 +42,7 @@ class State {
   };
 
   DbBucket& db_;
-  // unsigned level_;
+  unsigned level_;
   std::vector<Node> chunks_;
 };
 

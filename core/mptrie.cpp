@@ -14,27 +14,23 @@
    limitations under the License.
 */
 
-#include "state.hpp"
+#include "mptrie.hpp"
 
 #include "keccak.hpp"
-#include "mptrie.hpp"
-#include "rlp.hpp"
 
 namespace silkworm {
 
-void State::init_from_db(uint32_t block_height) {
-  auto prefix = Prefix(level_ + 1);
-  for (unsigned i = 0; i < chunks_.size(); ++i) {
-    for (unsigned j = 0; j < 16; ++j) {
-      const auto leaves = db_.leaves(prefix);
-      Hash hash = hash_of_leaves(level_ + 1, leaves);
-      chunks_[i].hash[j] = hash;
-      chunks_[i].block[j] = block_height;
-      if (prefix.next()) {
-        prefix = *prefix.next();
-      }
-    }
+Hash hash_of_leaves(uint8_t, DbBucket::Range range) {
+  if (range.first == range.second) {
+    return kEmptyStringHash;
   }
+  // TODO implement properly
+  std::string joint_leaves;
+  joint_leaves.reserve(kHashBytes * 1000);
+  for (auto it = range.first; it != range.second; ++it) {
+    joint_leaves += byte_view(keccak(it->second));
+  }
+  return keccak(joint_leaves);
 }
 
 }  // namespace silkworm

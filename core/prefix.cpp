@@ -18,31 +18,48 @@
 
 #include <iterator>
 
+#include "rlp.hpp"
+
 namespace silkworm {
 
+Prefix::Prefix(size_t size, uint64_t val) : val_(val), size_(size) {
+  if (size > 16) {
+    throw std::length_error(
+        "only prefixes up to 16 nibbles are currently supported");
+  }
+  const auto shift = 64 - size * 4;
+  if (val << shift) {
+    throw std::invalid_argument("non-zero padding");
+  }
+}
+
+Hash Prefix::padded() const {
+  Hash array;
+  for (unsigned i = 0; i < 8; ++i) {
+    array[i] = (val_ << (8 * i)) >> (8 * 7);
+  }
+  for (unsigned i = 8; i < kHashBytes; ++i) {
+    array[i] = 0;
+  }
+  return array;
+}
+
 std::optional<Prefix> Prefix::next() const {
-  BigInt next_int;
-  import_bits(next_int, bytes_.begin(), bytes_.end(), 8);
-  next_int += odd_ ? 16 : 1;
-
-  std::string next_str;
-  next_str.reserve(bytes_.size());
-  export_bits(next_int, std::back_inserter(next_str), 8);
-
-  if (next_str.size() > bytes_.size())
+  const auto shift = 64 - size_ * 4;
+  uint64_t next = val_ + (1ull << shift);
+  if (next == 0) {
     return {};
-  else
-    return Prefix{next_str, odd_};
+  } else {
+    return Prefix(size_, next);
+  }
 }
 
 Prefix operator"" _prefix(const char* in, std::size_t n) {
-  const bool odd = n % 2;
-  std::string str(in, n);
-  if (odd) {
-    str += '0';
-  }
-  std::string bytes = hex_string_to_bytes(str);
-  return {bytes, odd};
+  std::string str(8 * 2, '0');
+  std::copy_n(in, n, str.begin());
+  const std::string bytes = hex_string_to_bytes(str);
+  uint64_t val = rlp::to_integer(bytes);
+  return Prefix{n, val};
 }
 
 }  // namespace silkworm

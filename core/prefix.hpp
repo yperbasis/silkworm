@@ -27,42 +27,30 @@ namespace silkworm {
 
 class Prefix {
  public:
-  Prefix(std::string bytes, bool odd) : bytes_(std::move(bytes)), odd_(odd) {}
+  explicit Prefix(size_t size, uint64_t val = 0);
 
-  size_t size() const { return bytes_.size() * 2 - odd_; }
+  size_t size() const { return size_; }
 
-  Nibble operator[](size_t pos) const {
-    uint8_t byte = bytes_[pos / 2];
-    if (pos % 2)
-      return byte & 0x0f;
-    else
-      return byte >> 4;
-  }
+  Nibble operator[](size_t pos) const { return (val_ << (pos * 4)) >> 60; }
 
-  void set(size_t pos, Nibble val) {
-    uint8_t byte = bytes_[pos / 2];
-    if (pos % 2)
-      bytes_[pos / 2] = (byte & 0xf0) + val;
-    else
-      bytes_[pos / 2] = (byte & 0x0f) + (val << 4);
+  void set(size_t pos, Nibble x) {
+    const auto shift = 60 - pos * 4;
+    val_ = (val_ & ~(0xfull << shift)) + (static_cast<uint64_t>(x) << shift);
   }
 
   std::optional<Prefix> next() const;
 
-  Hash padded() const {
-    Hash array;
-    auto it = std::copy(bytes_.begin(), bytes_.end(), array.begin());
-    std::fill(it, array.end(), 0);
-    return array;
-  }
+  Hash padded() const;
+
+  friend Prefix operator"" _prefix(const char* in, std::size_t n);
 
   friend inline bool operator==(const Prefix& a, const Prefix& b) {
-    return a.odd_ == b.odd_ && a.bytes_ == b.bytes_;
+    return a.val_ == b.val_ && a.size_ == b.size_;
   }
 
  private:
-  std::string bytes_;
-  bool odd_ = false;
+  uint64_t val_ = 0;
+  size_t size_ = 0;
 };
 
 inline bool operator!=(const Prefix& a, const Prefix& b) { return !(a == b); }

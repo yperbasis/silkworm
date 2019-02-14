@@ -41,9 +41,7 @@ class DbBucket {
     data_.insert_or_assign(std::move(key), std::move(val));
   }
 
-  Range prefix_range(const Prefix&) const;
-
-  ConstIterator not_found() const { return data_.end(); }
+  Range leaves(const Prefix&) const;
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(DbBucket)

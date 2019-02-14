@@ -14,27 +14,19 @@
    limitations under the License.
 */
 
-#include "state.hpp"
+#ifndef SILKWORM_CORE_MPTRIE_HPP_
+#define SILKWORM_CORE_MPTRIE_HPP_
 
-#include "keccak.hpp"
-#include "mptrie.hpp"
-#include "rlp.hpp"
+#include "common.hpp"
+#include "db_bucket.hpp"
+
+// Things related to the Modified Merkle Patricia Trie
+// https://github.com/ethereum/wiki/wiki/Patricia-Tree
 
 namespace silkworm {
 
-void State::init_from_db(uint32_t block_height) {
-  auto prefix = Prefix(level_ + 1);
-  for (unsigned i = 0; i < chunks_.size(); ++i) {
-    for (unsigned j = 0; j < 16; ++j) {
-      const auto leaves = db_.leaves(prefix);
-      Hash hash = hash_of_leaves(level_ + 1, leaves);
-      chunks_[i].hash[j] = hash;
-      chunks_[i].block[j] = block_height;
-      if (prefix.next()) {
-        prefix = *prefix.next();
-      }
-    }
-  }
-}
+Hash hash_of_leaves(uint8_t level, DbBucket::Range);
 
 }  // namespace silkworm
+
+#endif  // SILKWORM_CORE_MPTRIE_HPP_

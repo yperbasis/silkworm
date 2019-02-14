@@ -62,14 +62,6 @@ struct Encoder : public boost::static_visitor<std::string> {
   }
 };
 
-uint64_t to_integer(std::string_view b) {
-  uint64_t res = 0;
-  for (char c : b) {
-    res = res * 256 + c;
-  }
-  return res;
-}
-
 struct DecodedLength {
   size_t data_len = 0;
   bool is_str = false;
@@ -170,6 +162,14 @@ std::string to_binary(uint64_t x) {
     return "";
   else
     return to_binary(x / 256) + static_cast<char>(x % 256);
+}
+
+uint64_t to_integer(std::string_view b) {
+  uint64_t res = 0;
+  for (uint8_t c : b) {
+    res = res * 0x100 + c;
+  }
+  return res;
 }
 
 bool are_equal(const Item& lhs, const Item& rhs) {

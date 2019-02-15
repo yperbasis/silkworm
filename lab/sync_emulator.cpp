@@ -52,9 +52,14 @@ int main() {
 
   DbBucket leecher_state;
   Node leecher(leecher_state, {});
-  leecher.sync(miner);
+  auto stats = leecher.sync(miner);
   auto time2 = microsec_clock::local_time();
   std::cout << "Sync done in " << time2 - time1 << std::endl;
+  std::cout << "#requests           " << stats.num_requests << std::endl;
+  std::cout << "request total bytes " << stats.request_total_bytes << std::endl;
+  std::cout << "#replies            " << stats.num_replies << std::endl;
+  std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
+  std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
 
   // a) TODO spawn leechers in separate threads
   // b) TODO mine kBlocks with kNewAccountsPerBlock

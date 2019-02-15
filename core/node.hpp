@@ -38,8 +38,7 @@ class Node {
   }
 
   // TODO multiple peers
-  // TODO sync stats
-  void sync(const Node& peer);
+  sync::Stats sync(const Node& peer);
 
   // TODO storage sync
   std::variant<sync::Reply, sync::Error> get_state_leaves(

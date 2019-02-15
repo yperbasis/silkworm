@@ -28,18 +28,26 @@ struct AlwaysFalse : std::false_type {};
 
 namespace silkworm {
 
-void Node::sync(const Node& peer) {
+sync::Stats Node::sync(const Node& peer) {
   // TODO error handling, incl resend of timed-out request
   // TODO separate the wheat from the chaff (good vs bad peers)
   // TODO storage sync
   auto& state = state_;
+  sync::Stats stats;
   // TODO buffered request/reply dequeue?
   while (auto request = state.next_sync_request()) {
+    ++stats.num_requests;
+    stats.request_total_bytes += request->byte_size();
     auto reply = peer.get_state_leaves(*request);
     std::visit(
-        [&state](auto&& arg) {
+        [&state, &stats](auto&& arg) {
           using T = std::decay_t<decltype(arg)>;
           if constexpr (std::is_same_v<T, sync::Reply>) {
+            ++stats.num_replies;
+            stats.reply_total_bytes += arg.byte_size();
+            if (arg.leaves) {
+              stats.reply_total_leaves += arg.leaves->size();
+            }
             state.process_sync_data(arg);
           } else if constexpr (std::is_same_v<T, sync::Error>) {
             std::cerr << "sync error " << arg << std::endl;
@@ -50,6 +58,7 @@ void Node::sync(const Node& peer) {
         },
         reply);
   }
+  return stats;
 }
 
 }  // namespace silkworm

@@ -53,6 +53,10 @@ struct Request {
   std::optional<Hash> hash_of_leaves;
 
   explicit Request(Prefix prefix) : prefix{prefix} {}
+
+  size_t byte_size() const {
+    return sizeof(this) + (hash_of_leaves ? kHashBytes : 0);
+  }
 };
 
 enum Error {
@@ -86,9 +90,26 @@ struct Reply {
   std::optional<std::vector<Leaf>> leaves;  // must be ordered by hash_key
 
   Reply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
+
+  size_t byte_size() const {
+    static const auto leaf_size = sizeof(Leaf) + 80;
+    auto sz = sizeof(this) + proof.size() * 16 * kHashBytes;
+    if (leaves) {
+      sz += leaves->size() * leaf_size;
+    }
+    return sz;
+  }
 };
 
 // TODO (potentially) delta request & reply
+
+struct Stats {
+  uint64_t num_requests = 0;
+  uint64_t request_total_bytes = 0;
+  uint64_t num_replies = 0;
+  uint64_t reply_total_bytes = 0;
+  uint64_t reply_total_leaves = 0;
+};
 
 }  // namespace silkworm::sync
 

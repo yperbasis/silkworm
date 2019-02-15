@@ -22,28 +22,39 @@
 #include <boost/move/utility_core.hpp>
 
 #include "db_bucket.hpp"
+#include "sync.hpp"
 
 namespace silkworm {
 
 class State {
  public:
-  explicit State(DbBucket& db, unsigned level)
-      : db_(db), level_(level), chunks_(1ull << (level * 4)) {}
+  State(DbBucket& db, unsigned level);
 
-  void init_from_db(uint32_t block_height);
+  unsigned level() const { return tree_.size() - 1; }
+
+  void init_from_db(uint32_t data_valid_for_block);
+
+  std::variant<sync::Reply, sync::Error> get_leaves(const sync::Request&) const;
+
+  std::optional<sync::Request> next_sync_request();
+
+  void process_sync_data(const sync::Reply&);
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
 
   struct Node {
     std::array<Hash, 16> hash;
-    std::array<int32_t, 16> block = {-1, -1, -1, -1, -1, -1, -1, -1,
-                                     -1, -1, -1, -1, -1, -1, -1, -1};
+    uint16_t have_data = 0;  // bits
+    uint32_t block = 0;
   };
 
   DbBucket& db_;
-  unsigned level_;
-  std::vector<Node> chunks_;
+
+  // TODO unify with mptrie
+  std::vector<std::vector<Node>> tree_;
+
+  uint64_t sync_request_cursor_ = 0;
 };
 
 }  // namespace silkworm

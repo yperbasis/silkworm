@@ -17,6 +17,7 @@
 #ifndef SILKWORM_CORE_SYNC_HPP_
 #define SILKWORM_CORE_SYNC_HPP_
 
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -38,34 +39,56 @@ namespace silkworm::sync {
 
 // GetLeaves
 struct Request {
-  int32_t block = -1;
+  // request all leaves with this prefix
   Prefix prefix;
-  uint8_t start_proof_from = 0;  // start_proof_from <= prefix.size
+
+  // only applies if respond.block = request.block
+  // otherwise full proof is required
+  uint8_t start_proof_from = 0;  // <= prefix.size
+
+  // may not respond with older data
+  std::optional<uint32_t> block;
+
+  // known hash(leaves), allows to avoid re-sending the same leaves
+  std::optional<Hash> hash_of_leaves;
+
+  explicit Request(Prefix prefix) : prefix{prefix} {}
 };
 
 enum Error {
   kDontHaveData = 1,
-  kTooManyLeaves = 2,
+  kTooManyLeaves = 2,  // TODO how many is too many?
 };
 
 struct Leaf {
-  std::string hash_key;
+  Hash hash_key;
   std::string value;
 };
 
+inline bool operator==(const Leaf& a, const Leaf& b) {
+  return a.hash_key == b.hash_key && a.value == b.value;
+}
+
 struct Reply {
+  // must = request.prefix
+  Prefix prefix;
+
   // must be >= request.block
-  int32_t block = 0;
+  uint32_t block = 0;
 
   // If block = request.block
   // proof.size = prefix.size - start_proof_from
-  // else if block > request.block
+  // else if block > request.block || request.block not set
   // proof.size = prefix.size
   std::vector<std::array<Hash, 16>> proof;
 
-  // must be ordered by hash_key
-  std::vector<Leaf> leaves;
+  // don't send leaves if hash(leaves) = request.hash, but send proof anyway
+  std::optional<std::vector<Leaf>> leaves;  // must be ordered by hash_key
+
+  Reply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
 };
+
+// TODO (potentially) delta request & reply
 
 }  // namespace silkworm::sync
 

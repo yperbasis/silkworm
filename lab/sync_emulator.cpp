@@ -50,6 +50,12 @@ int main() {
   auto time1 = microsec_clock::local_time();
   std::cout << "Dust accounts generated in " << time1 - time0 << std::endl;
 
+  DbBucket leecher_state;
+  Node leecher(leecher_state, {});
+  leecher.sync(miner);
+  auto time2 = microsec_clock::local_time();
+  std::cout << "Sync done in " << time2 - time1 << std::endl;
+
   // a) TODO spawn leechers in separate threads
   // b) TODO mine kBlocks with kNewAccountsPerBlock
   // c) TODO wait for leechers to finish sync

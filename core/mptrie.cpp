@@ -24,7 +24,7 @@ Hash hash_of_leaves(uint8_t, DbBucket::Range range) {
   if (range.first == range.second) {
     return kEmptyStringHash;
   }
-  // TODO implement properly
+  // TODO implement properly (extension nodes, etc)
   std::string joint_leaves;
   joint_leaves.reserve(kHashBytes * 1000);
   for (auto it = range.first; it != range.second; ++it) {

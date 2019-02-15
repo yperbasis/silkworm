@@ -31,6 +31,8 @@ class Prefix {
 
   size_t size() const { return size_; }
 
+  uint64_t val() const { return val_; }
+
   Nibble operator[](size_t pos) const { return (val_ << (pos * 4)) >> 60; }
 
   void set(size_t pos, Nibble x) {
@@ -49,8 +51,8 @@ class Prefix {
   }
 
  private:
-  uint64_t val_ = 0;
   size_t size_ = 0;
+  uint64_t val_ = 0;
 };
 
 inline bool operator!=(const Prefix& a, const Prefix& b) { return !(a == b); }

@@ -30,15 +30,22 @@ class Node {
  public:
   static constexpr auto kStateLevel = 5u;
 
-  Node(DbBucket& db, uint32_t block_height) : state_(db, kStateLevel) {
-    state_.init_from_db(block_height);
+  Node(DbBucket& db, std::optional<uint32_t> data_valid_for_block)
+      : state_(db, kStateLevel) {
+    if (data_valid_for_block) {
+      state_.init_from_db(*data_valid_for_block);
+    }
   }
 
-  void sync();
+  // TODO multiple peers
+  // TODO sync stats
+  void sync(const Node& peer);
 
-  std::optional<uint32_t> synced_block() const;
-
-  std::variant<sync::Reply, sync::Error> get_leaves(sync::Request);
+  // TODO storage sync
+  std::variant<sync::Reply, sync::Error> get_state_leaves(
+      sync::Request request) const {
+    return state_.get_leaves(request);
+  }
 
  private:
   State state_;

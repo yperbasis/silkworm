@@ -24,7 +24,8 @@ namespace silkworm {
 
 class Miner : public Node {
  public:
-  Miner(DbBucket& db, uint32_t block_height) : Node(db, block_height) {}
+  Miner(DbBucket& db, std::optional<uint32_t> block_height)
+      : Node(db, block_height) {}
 
   void start_block();
 

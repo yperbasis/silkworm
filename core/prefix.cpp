@@ -22,12 +22,12 @@
 
 namespace silkworm {
 
-Prefix::Prefix(size_t size, uint64_t val) : val_(val), size_(size) {
+Prefix::Prefix(size_t size, uint64_t val) : size_(size), val_(val) {
   if (size > 16) {
     throw std::length_error(
         "only prefixes up to 16 nibbles are currently supported");
   }
-  const auto shift = 64 - size * 4;
+  const auto shift = 64u - size * 4;
   if (val << shift) {
     throw std::invalid_argument("non-zero padding");
   }

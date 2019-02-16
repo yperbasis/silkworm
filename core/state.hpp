@@ -17,6 +17,7 @@
 #ifndef SILKWORM_CORE_STATE_HPP_
 #define SILKWORM_CORE_STATE_HPP_
 
+#include <bitset>
 #include <vector>
 
 #include <boost/move/utility_core.hpp>
@@ -44,17 +45,33 @@ class State {
   BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
 
   struct Node {
+    int32_t block = -1;  // -1 means not fully initialized yet
+    std::bitset<16> empty = std::bitset<16>{}.flip();
     std::array<Hash, 16> hash;
-    uint16_t have_data = 0;  // bits
-    uint32_t block = 0;
+    std::bitset<16> leaves_in_db;
   };
 
   DbBucket& db_;
 
   // TODO unify with mptrie
+  // TODO invariant: parent.block >= child.block if parent.block != -1
   std::vector<std::vector<Node>> tree_;
 
-  uint64_t sync_request_cursor_ = 0;
+  std::optional<Prefix> sync_request_cursor_;
+
+  const Node& node(unsigned level, Prefix prefix) const {
+    return tree_[level][prefix.val() >> (64 - level * 4)];
+  }
+
+  Node& node(unsigned level, Prefix prefix) {
+    return const_cast<Node&>(
+        static_cast<const State*>(this)->node(level, prefix));
+  }
+
+  Node& root() { return tree_[0][0]; }
+  const Node& root() const { return tree_[0][0]; }
+
+  unsigned consistent_path_depth(Prefix) const;
 };
 
 }  // namespace silkworm

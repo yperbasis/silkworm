@@ -25,7 +25,7 @@
 
 static const unsigned kSeed = 3548264823;
 
-static const auto kInitialAccounts = 1'000'000;
+static const auto kInitialAccounts = 2'000'000;
 // static const auto kNewAccountsPerBlock = 1000;
 // static const auto kBlocks = 10;
 // static const auto kLeechers = 15;
@@ -60,6 +60,10 @@ int main() {
   std::cout << "#replies            " << stats.num_replies << std::endl;
   std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
   std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
+
+  double leaf_bytes = stats.reply_total_leaves * sync::kLeafSize;
+  double overhead = stats.reply_total_bytes / leaf_bytes - 1;
+  std::cout << "reply overhead " << static_cast<int>(overhead * 100) << "%\n";
 
   // a) TODO spawn leechers in separate threads
   // b) TODO mine kBlocks with kNewAccountsPerBlock

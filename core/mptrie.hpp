@@ -17,16 +17,21 @@
 #ifndef SILKWORM_CORE_MPTRIE_HPP_
 #define SILKWORM_CORE_MPTRIE_HPP_
 
+#include <array>
+#include <bitset>
+
 #include "common.hpp"
 #include "db_bucket.hpp"
 
 // Things related to the Modified Merkle Patricia Trie
 // https://github.com/ethereum/wiki/wiki/Patricia-Tree
 
-namespace silkworm {
+namespace silkworm::mptrie {
 
 Hash hash_of_leaves(uint8_t level, DbBucket::Range);
 
-}  // namespace silkworm
+Hash branch_node_hash(std::bitset<16> empty, const std::array<Hash, 16>& hash);
+
+}  // namespace silkworm::mptrie
 
 #endif  // SILKWORM_CORE_MPTRIE_HPP_

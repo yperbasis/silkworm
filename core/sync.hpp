@@ -17,6 +17,7 @@
 #ifndef SILKWORM_CORE_SYNC_HPP_
 #define SILKWORM_CORE_SYNC_HPP_
 
+#include <bitset>
 #include <optional>
 #include <string>
 #include <variant>
@@ -69,9 +70,17 @@ struct Leaf {
   std::string value;
 };
 
+// a reasonable approximation for dust accounts
+static constexpr size_t kLeafSize = sizeof(Leaf) + 80;
+
 inline bool operator==(const Leaf& a, const Leaf& b) {
   return a.hash_key == b.hash_key && a.value == b.value;
 }
+
+struct Proof {
+  std::bitset<16> empty = std::bitset<16>{}.flip();
+  std::array<Hash, 16> hash;
+};
 
 struct Reply {
   // must = request.prefix
@@ -84,7 +93,7 @@ struct Reply {
   // proof.size = prefix.size - start_proof_from
   // else if block > request.block || request.block not set
   // proof.size = prefix.size
-  std::vector<std::array<Hash, 16>> proof;
+  std::vector<Proof> proof;
 
   // don't send leaves if hash(leaves) = request.hash, but send proof anyway
   std::optional<std::vector<Leaf>> leaves;  // must be ordered by hash_key
@@ -92,10 +101,9 @@ struct Reply {
   Reply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
 
   size_t byte_size() const {
-    static const auto leaf_size = sizeof(Leaf) + 80;
-    auto sz = sizeof(this) + proof.size() * 16 * kHashBytes;
+    auto sz = sizeof(this) + proof.size() * sizeof(Proof);
     if (leaves) {
-      sz += leaves->size() * leaf_size;
+      sz += leaves->size() * kLeafSize;
     }
     return sz;
   }

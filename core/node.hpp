@@ -28,7 +28,8 @@ namespace silkworm {
 
 class Node {
  public:
-  static constexpr auto kStateLevel = 5u;
+  // TODO optimal phase 1 & phase 2 sync levels based on #accounts
+  static constexpr auto kStateLevel = 4u;
 
   Node(DbBucket& db, std::optional<uint32_t> data_valid_for_block)
       : state_(db, kStateLevel) {

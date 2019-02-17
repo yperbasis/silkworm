@@ -25,7 +25,7 @@
 
 static const unsigned kSeed = 3548264823;
 
-static const auto kInitialAccounts = 2'000'000;
+static const auto kInitialAccounts = 1'000'000;
 // static const auto kNewAccountsPerBlock = 1000;
 // static const auto kBlocks = 10;
 // static const auto kLeechers = 15;
@@ -34,6 +34,20 @@ int main() {
   using namespace boost::posix_time;
   using namespace silkworm;
   using namespace silkworm::lab;
+
+  sync::Hints hints;
+
+  std::cout << "Hints for " << hints.num_leaves * 1e-6
+            << "M dust accounts with reply size <~ "
+            << hints.approx_max_reply_size / 1024 << "KB:\n";
+  std::cout << "depth to fit in memory ("
+            << hints.max_memory / (1024 * 1024 * 1024) << "GB) "
+            << hints.depth_to_fit_in_memory() << std::endl;
+  std::cout << "fine grained depth           " << hints.fine_grained_depth()
+            << std::endl;
+  std::cout << "optimal phase 1 prefix size  "
+            << hints.optimal_phase1_prefix_size() << std::endl
+            << std::endl;
 
   const auto current_block = 7212230;
 

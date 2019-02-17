@@ -48,7 +48,7 @@ class State {
     int32_t block = -1;  // -1 means not fully initialized yet
     std::bitset<16> empty = std::bitset<16>{}.flip();
     std::array<Hash, 16> hash;
-    std::bitset<16> leaves_in_db;
+    std::bitset<16> leaves_in_db;  // TODO revisit
   };
 
   DbBucket& db_;

@@ -28,15 +28,8 @@ namespace silkworm {
 
 class Node {
  public:
-  // TODO optimal phase 1 & phase 2 sync levels based on #accounts
-  static constexpr auto kStateLevel = 4u;
-
-  Node(DbBucket& db, std::optional<uint32_t> data_valid_for_block)
-      : state_(db, kStateLevel) {
-    if (data_valid_for_block) {
-      state_.init_from_db(*data_valid_for_block);
-    }
-  }
+  Node(DbBucket& db, const sync::Hints&,
+       std::optional<uint32_t> data_valid_for_block);
 
   // TODO multiple peers
   sync::Stats sync(const Node& peer);

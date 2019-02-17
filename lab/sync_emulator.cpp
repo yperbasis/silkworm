@@ -23,6 +23,8 @@
 #include "keccak.hpp"
 #include "miner.hpp"
 
+using namespace silkworm;
+
 static const unsigned kSeed = 3548264823;
 
 static const auto kInitialAccounts = 1'000'000;
@@ -30,13 +32,7 @@ static const auto kInitialAccounts = 1'000'000;
 // static const auto kBlocks = 10;
 // static const auto kLeechers = 15;
 
-int main() {
-  using namespace boost::posix_time;
-  using namespace silkworm;
-  using namespace silkworm::lab;
-
-  sync::Hints hints;
-
+void print_hints(const sync::Hints& hints) {
   std::cout << "Hints for " << hints.num_leaves * 1e-6
             << "M dust accounts with reply size <~ "
             << hints.approx_max_reply_size / 1024 << "KB:\n";
@@ -45,9 +41,23 @@ int main() {
             << hints.depth_to_fit_in_memory() << std::endl;
   std::cout << "fine grained depth           " << hints.fine_grained_depth()
             << std::endl;
-  std::cout << "optimal phase 1 prefix size  "
-            << hints.optimal_phase1_prefix_size() << std::endl
+  std::cout << "optimal phase 1 depth        " << hints.optimal_phase1_depth()
             << std::endl;
+  const double phase1_overhead = hints.phase1_reply_overhead();
+  std::cout << "phase 1 reply overhead       " << std::setprecision(2)
+            << phase1_overhead * 100 << "%\n\n";
+}
+
+int main() {
+  using namespace boost::posix_time;
+
+  using namespace silkworm::lab;
+
+  sync::Hints hints;
+  print_hints(hints);
+
+  hints.num_leaves = kInitialAccounts;
+  print_hints(hints);
 
   const auto current_block = 7212230;
 
@@ -60,12 +70,12 @@ int main() {
     std::string val = to_rlp(dust_gen.random_account());
     big_state.put(key, val);
   }
-  Miner miner(big_state, current_block);
+  Miner miner(big_state, hints, current_block);
   auto time1 = microsec_clock::local_time();
-  std::cout << "Dust accounts generated in " << time1 - time0 << std::endl;
+  std::cout << "Dust accounts generated in " << time1 - time0 << "\n\n";
 
   DbBucket leecher_state;
-  Node leecher(leecher_state, {});
+  Node leecher(leecher_state, hints, {});
   auto stats = leecher.sync(miner);
   auto time2 = microsec_clock::local_time();
   std::cout << "Sync done in " << time2 - time1 << std::endl;
@@ -77,7 +87,8 @@ int main() {
 
   double leaf_bytes = stats.reply_total_leaves * sync::kLeafSize;
   double overhead = stats.reply_total_bytes / leaf_bytes - 1;
-  std::cout << "reply overhead " << static_cast<int>(overhead * 100) << "%\n";
+  std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
+            << "%\n";
 
   // a) TODO spawn leechers in separate threads
   // b) TODO mine kBlocks with kNewAccountsPerBlock

@@ -28,6 +28,15 @@ struct AlwaysFalse : std::false_type {};
 
 namespace silkworm {
 
+Node::Node(DbBucket& db, const sync::Hints& hints,
+           std::optional<uint32_t> data_valid_for_block)
+    : state_{db, std::min(hints.optimal_phase1_depth(),
+                          hints.depth_to_fit_in_memory())} {
+  if (data_valid_for_block) {
+    state_.init_from_db(*data_valid_for_block);
+  }
+}
+
 sync::Stats Node::sync(const Node& peer) {
   // TODO error handling, incl resend of timed-out request
   // TODO separate the wheat from the chaff (good vs bad peers)

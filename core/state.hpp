@@ -29,9 +29,9 @@ namespace silkworm {
 
 class State {
  public:
-  State(DbBucket& db, unsigned level);
+  State(DbBucket& db, unsigned depth);
 
-  unsigned level() const { return tree_.size() - 1; }
+  unsigned depth() const { return tree_.size(); }
 
   void init_from_db(uint32_t data_valid_for_block);
 

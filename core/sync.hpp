@@ -56,7 +56,7 @@ struct Request {
   explicit Request(Prefix prefix) : prefix{prefix} {}
 
   size_t byte_size() const {
-    return sizeof(this) + (hash_of_leaves ? kHashBytes : 0);
+    return sizeof(*this) + (hash_of_leaves ? kHashBytes : 0);
   }
 };
 
@@ -101,7 +101,7 @@ struct Reply {
   Reply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
 
   size_t byte_size() const {
-    auto sz = sizeof(this) + proof.size() * sizeof(Proof);
+    auto sz = sizeof(*this) + proof.size() * sizeof(Proof);
     if (leaves) {
       sz += leaves->size() * kLeafSize;
     }
@@ -135,7 +135,8 @@ struct Hints {
 
   // not taking depth_to_fit_in_memory into account
   unsigned fine_grained_depth() const;  // ~1 leaf per bottom hash
-  unsigned optimal_phase1_prefix_size() const;
+  unsigned optimal_phase1_depth() const;
+  double phase1_reply_overhead() const;  // over warp sync
 
   static uint64_t num_tree_nodes(unsigned depth) {
     return ((1ull << (4 * depth)) - 1) / 15;

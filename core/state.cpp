@@ -25,22 +25,22 @@
 
 namespace silkworm {
 
-State::State(DbBucket& db, unsigned level)
-    : db_(db), tree_(level + 1), sync_request_cursor_(Prefix{level + 1}) {
-  if (level > 15) {
-    throw std::length_error("level is too deep");
+State::State(DbBucket& db, unsigned depth)
+    : db_(db), tree_(depth), sync_request_cursor_(Prefix{depth}) {
+  if (depth > 15) {
+    throw std::length_error("too deep");
   }
 
-  for (unsigned i = 0; i <= level; ++i) {
+  for (unsigned i = 0; i < depth; ++i) {
     tree_[i].resize(1ull << (i * 4));
   }
 }
 
 void State::init_from_db(uint32_t data_valid_for_block) {
-  auto prefix = Prefix(level() + 1);
+  auto prefix = Prefix(depth());
 
-  for (uint64_t i = 0; i < tree_[level()].size(); ++i) {
-    auto& nodes = tree_[level()];
+  for (uint64_t i = 0; i < tree_.back().size(); ++i) {
+    auto& nodes = tree_.back();
 
     for (unsigned j = 0; j < 16; ++j) {
       const auto leaves = db_.leaves(prefix);
@@ -49,7 +49,7 @@ void State::init_from_db(uint32_t data_valid_for_block) {
       nodes[i].empty[j] = empty;
 
       if (!empty) {
-        nodes[i].hash[j] = mptrie::hash_of_leaves(level() + 1, leaves);
+        nodes[i].hash[j] = mptrie::hash_of_leaves(depth(), leaves);
         nodes[i].leaves_in_db[j] = true;
       }
 
@@ -64,7 +64,7 @@ void State::init_from_db(uint32_t data_valid_for_block) {
     }
   }
 
-  for (int lvl = static_cast<int>(level()) - 1; lvl >= 0; --lvl) {
+  for (int lvl = static_cast<int>(depth()) - 2; lvl >= 0; --lvl) {
     auto& nodes = tree_[lvl];
 
     for (uint64_t i = 0; i < nodes.size(); ++i) {
@@ -96,18 +96,17 @@ unsigned State::consistent_path_depth(Prefix prefix) const {
 std::variant<sync::Reply, sync::Error> State::get_leaves(
     const sync::Request& request) const {
   const auto prefix = request.prefix;
-  if (prefix.size() != level() + 1) {
-    throw std::runtime_error(
-        "TODO prefix.size() != level() + 1 not implemented yet");
+  if (prefix.size() != depth()) {
+    throw std::runtime_error("TODO prefix.size != depth not implemented yet");
   }
 
   if (consistent_path_depth(prefix) != prefix.size()) {
     return sync::kDontHaveData;
   }
 
-  const Node& x = node(level(), prefix);
+  const Node& x = node(depth() - 1, prefix);
 
-  const Nibble last_nibble = prefix[level()];
+  const Nibble last_nibble = prefix[depth() - 1];
   if (!x.empty[last_nibble] && !x.leaves_in_db[last_nibble]) {
     return sync::kDontHaveData;
   }
@@ -122,7 +121,7 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
   const bool full_proof = rb < x.block;
   const unsigned proof_start = full_proof ? 0 : request.start_proof_from;
 
-  for (unsigned i = proof_start; i <= level(); ++i) {
+  for (unsigned i = proof_start; i < depth(); ++i) {
     const auto& y = node(i, prefix);
     reply.proof.push_back(sync::Proof{y.empty, y.hash});
   }
@@ -158,8 +157,8 @@ std::optional<sync::Request> State::next_sync_request() {
 
   request.start_proof_from = consistent_path_depth(prefix);
 
-  const auto& nd = node(level(), prefix);
-  const Nibble x = prefix[level()];
+  const auto& nd = node(depth() - 1, prefix);
+  const Nibble x = prefix[depth() - 1];
   if (!nd.empty[x] && nd.leaves_in_db[x]) {
     request.hash_of_leaves = nd.hash[x];
   }
@@ -172,14 +171,13 @@ std::optional<sync::Request> State::next_sync_request() {
 
 void State::process_sync_data(const sync::Reply& reply) {
   const auto prefix = reply.prefix;
-  if (prefix.size() != level() + 1) {
-    throw std::runtime_error(
-        "TODO prefix.size() != level() + 1 not implemented yet");
+  if (prefix.size() != depth()) {
+    throw std::runtime_error("TODO prefix.size != depth not implemented yet");
   }
 
   int32_t rb = reply.block;
 
-  auto& last_node = node(level(), prefix);
+  auto& last_node = node(depth() - 1, prefix);
 
   if (last_node.block > rb) {
     return;  // old reply
@@ -210,7 +208,7 @@ void State::process_sync_data(const sync::Reply& reply) {
     db_.put(x.hash_key, x.value);
   }
 
-  const auto last_nibble = prefix[level()];
+  const auto last_nibble = prefix[depth() - 1];
   last_node.leaves_in_db[last_nibble] = !last_node.empty[last_nibble];
 }
 

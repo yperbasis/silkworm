@@ -44,6 +44,8 @@ class Prefix {
 
   Hash padded() const;
 
+  bool matches(const Hash&) const;
+
   friend Prefix operator"" _prefix(const char* in, std::size_t n);
 
   friend inline bool operator==(const Prefix& a, const Prefix& b) {

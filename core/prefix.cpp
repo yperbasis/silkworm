@@ -33,6 +33,20 @@ Prefix::Prefix(size_t size, uint64_t val) : size_(size), val_(val) {
   }
 }
 
+bool Prefix::matches(const Hash& hash) const {
+  for (unsigned i = 0; i < size_ / 2; ++i) {
+    const uint8_t byte = (val_ << (8 * i)) >> (8 * 7);
+    if (byte != hash[i]) {
+      return false;
+    }
+  }
+  if (size_ % 2 == 0) {
+    return true;
+  }
+  Nibble last_nibble = (*this)[size_ - 1];
+  return (hash[size_ / 2] >> 4) == last_nibble;
+}
+
 Hash Prefix::padded() const {
   Hash array;
   for (unsigned i = 0; i < 8; ++i) {

@@ -36,10 +36,10 @@ TEST_CASE("Database leaves by prefix") {
   db.put(key4, "bar");
   db.put(key3, "kittie");
 
-  auto r1 = db.leaves("0ffdf"_prefix);
+  const auto r1 = db.leaves("0ffdf"_prefix);
   REQUIRE(r1.first == r1.second);
 
-  auto r2 = db.leaves("15d246"_prefix);
+  const auto r2 = db.leaves("15d246"_prefix);
   auto it = r2.first;
   REQUIRE(it != r2.second);
   REQUIRE(it->first == key1);
@@ -49,10 +49,21 @@ TEST_CASE("Database leaves by prefix") {
   ++it;
   REQUIRE(it == r2.second);
 
-  auto r3 = db.leaves("fffff"_prefix);
-  it = r3.first;
-  REQUIRE(it != r2.second);
+  const auto r3 = db.leaves("15d247"_prefix);
+  REQUIRE(r3.first != r3.second);
+
+  const auto r4 = db.leaves("fffff"_prefix);
+  it = r4.first;
+  REQUIRE(it != r4.second);
   REQUIRE(it->first == key4);
   ++it;
-  REQUIRE(it == r3.second);
+  REQUIRE(it == r4.second);
+
+  db.erase("15d24"_prefix);
+  const auto r5 = db.leaves("15d246"_prefix);
+  REQUIRE(r5.first == r5.second);
+  const auto r6 = db.leaves("15d247"_prefix);
+  REQUIRE(r6.first == r6.second);
+  const auto r7 = db.leaves("fffff"_prefix);
+  REQUIRE(r7.first != r7.second);
 }

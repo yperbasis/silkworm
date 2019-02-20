@@ -41,6 +41,8 @@ class DbBucket {
     data_.insert_or_assign(std::move(key), std::move(val));
   }
 
+  void erase(const Prefix&);
+
   Range leaves(const Prefix&) const;
 
  private:

@@ -34,4 +34,9 @@ DbBucket::Range DbBucket::leaves(const Prefix& p) const {
   }
 }
 
+void DbBucket::erase(const Prefix& p) {
+  const auto range = leaves(p);
+  data_.erase(range.first, range.second);
+}
+
 }  // namespace silkworm

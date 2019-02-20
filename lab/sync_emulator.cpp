@@ -36,15 +36,16 @@ void print_hints(const sync::Hints& hints) {
   std::cout << "Hints for " << hints.num_leaves * 1e-6
             << "M dust accounts with reply size <~ "
             << hints.approx_max_reply_size / 1024 << "KB:\n";
-  std::cout << "depth to fit in memory ("
-            << hints.max_memory / (1024 * 1024 * 1024) << "GB) "
-            << hints.depth_to_fit_in_memory() << std::endl;
-  std::cout << "fine grained depth           " << hints.fine_grained_depth()
+  const auto mem_depth = hints.depth_to_fit_in_memory();
+  std::cout << "depth to fit in memory " << mem_depth << " ("
+            << std::setprecision(3)
+            << hints.tree_size_in_bytes(mem_depth) * 1e-6 << " MB)\n";
+  std::cout << "fine grained depth     " << hints.fine_grained_depth()
             << std::endl;
-  std::cout << "optimal phase 1 depth        " << hints.optimal_phase1_depth()
+  std::cout << "optimal phase 1 depth  " << hints.optimal_phase1_depth()
             << std::endl;
   const double phase1_overhead = hints.phase1_reply_overhead();
-  std::cout << "phase 1 reply overhead       " << std::setprecision(2)
+  std::cout << "phase 1 reply overhead " << std::setprecision(2)
             << phase1_overhead * 100 << "%\n\n";
 }
 

@@ -43,9 +43,9 @@ TEST_CASE("Even prefix") {
   prefix.set(4, 0xe);
   REQUIRE(prefix == "0ad7e4"_prefix);
 
-  REQUIRE(*(prefix.next()) == "0ad7e5"_prefix);
-  REQUIRE(*("0ad7ff"_prefix.next()) == "0ad800"_prefix);
-  REQUIRE(!"ffffff"_prefix.next());
+  REQUIRE(++prefix == "0ad7e5"_prefix);
+  REQUIRE(++"0ad7ff"_prefix == "0ad800"_prefix);
+  REQUIRE(++"ffffff"_prefix == "000000"_prefix);
 }
 
 TEST_CASE("Odd prefix") {
@@ -70,7 +70,7 @@ TEST_CASE("Odd prefix") {
   prefix.set(4, 0xe);
   REQUIRE(prefix == "0ad7e"_prefix);
 
-  REQUIRE(*(prefix.next()) == "0ad7f"_prefix);
-  REQUIRE(*("0ad7f"_prefix.next()) == "0ad80"_prefix);
-  REQUIRE(!"fffff"_prefix.next());
+  REQUIRE(++prefix == "0ad7f"_prefix);
+  REQUIRE(++prefix == "0ad80"_prefix);
+  REQUIRE(++"fffff"_prefix == "00000"_prefix);
 }

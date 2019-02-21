@@ -18,14 +18,15 @@
 
 namespace silkworm {
 
-DbBucket::Range DbBucket::leaves(const Prefix& p) const {
+DbBucket::Range DbBucket::leaves(Prefix p) const {
   auto lb = data_.lower_bound(p.padded());
-  auto next = p.next();
-  if (!next) {
+
+  ++p;
+  if (p.val() == 0) {
     return {lb, data_.end()};
   }
 
-  Hash next_hash = next->padded();
+  Hash next_hash = p.padded();
 
   if (lb->first >= next_hash) {
     return {data_.end(), data_.end()};
@@ -34,7 +35,7 @@ DbBucket::Range DbBucket::leaves(const Prefix& p) const {
   }
 }
 
-void DbBucket::erase(const Prefix& p) {
+void DbBucket::erase(Prefix p) {
   const auto range = leaves(p);
   data_.erase(range.first, range.second);
 }

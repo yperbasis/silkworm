@@ -24,14 +24,22 @@ namespace {
 // https://en.cppreference.com/w/cpp/utility/variant/visit
 template <class T>
 struct AlwaysFalse : std::false_type {};
+
+unsigned depth(const silkworm::sync::Hints& hints) {
+  return std::min(hints.fine_grained_depth(), hints.depth_to_fit_in_memory());
+}
+
+unsigned phase1_depth(const silkworm::sync::Hints& hints) {
+  return std::min(hints.optimal_phase1_depth(), depth(hints));
+}
+
 }  // namespace
 
 namespace silkworm {
 
 Node::Node(DbBucket& db, const sync::Hints& hints,
            std::optional<uint32_t> data_valid_for_block)
-    : state_{db, std::min(hints.optimal_phase1_depth(),
-                          hints.depth_to_fit_in_memory())} {
+    : state_{db, depth(hints), phase1_depth(hints)} {
   if (data_valid_for_block) {
     state_.init_from_db(*data_valid_for_block);
   }
@@ -40,7 +48,6 @@ Node::Node(DbBucket& db, const sync::Hints& hints,
 sync::Stats Node::sync(const Node& peer) {
   // TODO error handling, incl resend of timed-out request
   // TODO separate the wheat from the chaff (good vs bad peers)
-  // TODO storage sync
   auto& state = state_;
   sync::Stats stats;
   // TODO buffered request/reply dequeue?

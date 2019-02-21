@@ -65,18 +65,12 @@ enum Error {
   kTooManyLeaves = 2,  // TODO how many is too many?
 };
 
-struct Leaf {
-  Hash hash_key;
-  std::string value;
-};
+using Leaf = std::pair<Hash, std::string>;
 
 // a reasonable approximation for dust accounts
 static constexpr size_t kLeafSize = sizeof(Leaf) + 80;
 
-inline bool operator==(const Leaf& a, const Leaf& b) {
-  return a.hash_key == b.hash_key && a.value == b.value;
-}
-
+// TODO: extension/leaf nodes
 struct Proof {
   std::bitset<16> empty = std::bitset<16>{}.flip();
   std::array<Hash, 16> hash;
@@ -96,7 +90,8 @@ struct Reply {
   std::vector<Proof> proof;
 
   // don't send leaves if hash(leaves) = request.hash, but send proof anyway
-  std::optional<std::vector<Leaf>> leaves;  // must be ordered by hash_key
+  std::optional<std::vector<Leaf>>
+      leaves;  // must be strictly ordered by hash_key
 
   Reply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
 

@@ -21,12 +21,13 @@
 using namespace silkworm;
 
 TEST_CASE("State sync") {
-  const auto stateLevel = 2u;
+  const auto depth = 3u;
+  const auto phase1_depth = 2u;
 
   const auto block = 74;
 
   DbBucket leecher_db;
-  State leecher(leecher_db, stateLevel);
+  State leecher(leecher_db, depth, phase1_depth);
 
   SECTION("frozen block") {
     auto request = leecher.next_sync_request();
@@ -49,7 +50,7 @@ TEST_CASE("State sync") {
     hash[29] = '\x0b';
     seeder_db.put(hash, "teh DAO");
 
-    State seeder(seeder_db, stateLevel);
+    State seeder(seeder_db, depth, phase1_depth);
     seeder.init_from_db(block);
 
     const auto reply_wrapper = seeder.get_leaves(*request);
@@ -63,10 +64,10 @@ TEST_CASE("State sync") {
     REQUIRE(leaves.size() == 2);
 
     // check the leaves are sorted
-    REQUIRE(leaves[0].hash_key[29] == '\x0b');
-    REQUIRE(leaves[0].value == "teh DAO");
-    REQUIRE(leaves[1].hash_key[29] == '\x19');
-    REQUIRE(leaves[1].value == "crypto kitties");
+    REQUIRE(leaves[0].first[29] == '\x0b');
+    REQUIRE(leaves[0].second == "teh DAO");
+    REQUIRE(leaves[1].first[29] == '\x19');
+    REQUIRE(leaves[1].second == "crypto kitties");
 
     leecher.process_sync_data(reply);
     // leecher turning into seeder

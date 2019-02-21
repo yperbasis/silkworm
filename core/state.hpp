@@ -29,7 +29,7 @@ namespace silkworm {
 
 class State {
  public:
-  State(DbBucket& db, unsigned depth);
+  State(DbBucket& db, unsigned depth, unsigned phase1_depth);
 
   unsigned depth() const { return tree_.size(); }
 
@@ -48,7 +48,10 @@ class State {
     int32_t block = -1;  // -1 means not fully initialized yet
     std::bitset<16> empty = std::bitset<16>{}.flip();
     std::array<Hash, 16> hash;
-    std::bitset<16> leaves_in_db;  // TODO revisit
+
+    // may only be true if the corresponding subtree is fully
+    // consistent with the parent and has all its leaves in the db
+    std::bitset<16> synced;
   };
 
   DbBucket& db_;
@@ -57,7 +60,7 @@ class State {
   // TODO invariant: parent.block >= child.block if parent.block != -1
   std::vector<std::vector<Node>> tree_;
 
-  std::optional<Prefix> sync_request_cursor_;
+  Prefix phase1_cursor_;
 
   const Node& node(unsigned level, Prefix prefix) const {
     return tree_[level][prefix.val() >> (64 - level * 4)];

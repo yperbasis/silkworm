@@ -58,16 +58,6 @@ Hash Prefix::padded() const {
   return array;
 }
 
-std::optional<Prefix> Prefix::next() const {
-  const auto shift = 64 - size_ * 4;
-  uint64_t next = val_ + (1ull << shift);
-  if (next == 0) {
-    return {};
-  } else {
-    return Prefix(size_, next);
-  }
-}
-
 Prefix operator"" _prefix(const char* in, std::size_t n) {
   std::string str(8 * 2, '0');
   std::copy_n(in, n, str.begin());

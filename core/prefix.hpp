@@ -18,7 +18,6 @@
 #define SILKWORM_CORE_PREFIX_HPP_
 
 #include <algorithm>
-#include <optional>
 #include <utility>
 
 #include "common.hpp"
@@ -40,7 +39,11 @@ class Prefix {
     val_ = (val_ & ~(0xfull << shift)) + (static_cast<uint64_t>(x) << shift);
   }
 
-  std::optional<Prefix> next() const;
+  Prefix& operator++() {
+    const auto shift = 64 - size_ * 4;
+    val_ += 1ull << shift;
+    return *this;
+  }
 
   Hash padded() const;
 

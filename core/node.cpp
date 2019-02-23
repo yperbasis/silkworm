@@ -45,36 +45,46 @@ Node::Node(DbBucket& db, const sync::Hints& hints,
   }
 }
 
-sync::Stats Node::sync(const Node& peer) {
+void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
   // TODO error handling, incl resend of timed-out request
   // TODO separate the wheat from the chaff (good vs bad peers)
-  auto& state = state_;
-  sync::Stats stats;
   // TODO buffered request/reply dequeue?
+
+  auto& state = state_;
+  uint64_t bytes_used = 0;
+
   while (auto request = state.next_sync_request()) {
     ++stats.num_requests;
     stats.request_total_bytes += request->byte_size();
     auto reply = peer.get_state_leaves(*request);
+
     std::visit(
-        [&state, &stats](auto&& arg) {
-          using T = std::decay_t<decltype(arg)>;
+        [&state, &stats, &bytes_used](auto&& rpl) {
+          using T = std::decay_t<decltype(rpl)>;
           if constexpr (std::is_same_v<T, sync::Reply>) {
             ++stats.num_replies;
-            stats.reply_total_bytes += arg.byte_size();
-            if (arg.leaves) {
-              stats.reply_total_leaves += arg.leaves->size();
+            bytes_used += rpl.byte_size();
+            stats.reply_total_bytes += rpl.byte_size();
+            if (rpl.leaves) {
+              stats.reply_total_leaves += rpl.leaves->size();
             }
-            state.process_sync_data(arg);
+            state.process_sync_data(rpl);
           } else if constexpr (std::is_same_v<T, sync::Error>) {
-            std::cerr << "sync error " << arg << std::endl;
+            std::cerr << "sync error " << rpl << std::endl;
             throw std::runtime_error("TODO better error handling");
           } else {
             static_assert(AlwaysFalse<T>::value, "non-exhaustive visitor!");
           }
         },
         reply);
+
+    if (bytes_used >= max_bytes) {
+      return;
+    }
   }
-  return stats;
+  return;
 }
+
+bool Node::phase1_sync_done() const { return state_.phase1_sync_done(); }
 
 }  // namespace silkworm

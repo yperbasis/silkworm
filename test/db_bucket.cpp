@@ -36,6 +36,10 @@ TEST_CASE("Database leaves by prefix") {
   db.put(key4, "bar");
   db.put(key3, "kittie");
 
+  const Prefix null_prefix(0);
+  const auto r0 = db.leaves(null_prefix);
+  REQUIRE(r0.first != r0.second);
+
   const auto r1 = db.leaves("0ffdf"_prefix);
   REQUIRE(r1.first == r1.second);
 

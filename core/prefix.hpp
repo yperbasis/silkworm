@@ -27,6 +27,7 @@ namespace silkworm {
 class Prefix {
  public:
   explicit Prefix(size_t size, uint64_t val = 0);
+  Prefix(size_t size, const Hash&);
 
   size_t size() const { return size_; }
 
@@ -40,8 +41,10 @@ class Prefix {
   }
 
   Prefix& operator++() {
-    const auto shift = 64 - size_ * 4;
-    val_ += 1ull << shift;
+    if (size_) {
+      const auto shift = 64 - size_ * 4;
+      val_ += 1ull << shift;
+    }
     return *this;
   }
 

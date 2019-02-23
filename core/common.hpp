@@ -33,20 +33,14 @@ std::string hex_string_to_bytes(std::string_view);
 static constexpr size_t kAddressBytes = 20;
 using Address = std::array<uint8_t, kAddressBytes>;
 
+// unsigned 20 byte hex literal
+std::array<uint8_t, 20> operator"" _x20(const char* in, std::size_t n);
+
 static constexpr size_t kHashBytes = 32;
 using Hash = std::array<uint8_t, kHashBytes>;
 
 // unsigned 32 byte hex literal
-inline Hash operator"" _x32(const char* in, std::size_t n) {
-  if (n != 32 * 2) {
-    throw std::invalid_argument("expected 64 hex characters");
-  }
-
-  std::string out = hex_string_to_bytes({in, n});
-  Hash array;
-  std::copy_n(out.begin(), 32, array.begin());
-  return array;
-}
+std::array<uint8_t, 32> operator"" _x32(const char* in, std::size_t n);
 
 template <std::size_t N>
 inline std::string_view byte_view(const std::array<uint8_t, N>& a) {

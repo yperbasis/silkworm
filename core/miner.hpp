@@ -28,12 +28,16 @@ class Miner : public Node {
         std::optional<uint32_t> block_height)
       : Node(db, hints, block_height) {}
 
-  void start_block();
-
   // TODO prohibit creation of non-zero balance accounts ex nihilo
+  // must be done after new_block and before seal_block
   void create_account(const Address&, const Account&);
 
-  void seal_block();
+  [[nodiscard]] bool new_block();
+
+  [[nodiscard]] bool seal_block();
+
+ private:
+  uint32_t new_block_ = 0;
 };
 
 }  // namespace silkworm

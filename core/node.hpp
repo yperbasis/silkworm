@@ -32,7 +32,9 @@ class Node {
        std::optional<uint32_t> data_valid_for_block);
 
   // TODO multiple peers
-  sync::Stats sync(const Node& peer);
+  void sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes);
+
+  bool phase1_sync_done() const;
 
   // TODO storage sync
   std::variant<sync::Reply, sync::Error> get_state_leaves(
@@ -40,7 +42,7 @@ class Node {
     return state_.get_leaves(request);
   }
 
- private:
+ protected:
   State state_;
 };
 

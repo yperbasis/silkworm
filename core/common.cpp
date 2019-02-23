@@ -16,9 +16,25 @@
 
 #include "common.hpp"
 
+#include <algorithm>
 #include <iterator>
 
 #include <boost/algorithm/hex.hpp>
+
+namespace {
+template <std::size_t N>
+std::array<uint8_t, N> to_byte_array(const char* in, std::size_t n) {
+  if (n != N * 2) {
+    throw std::invalid_argument("expected " + std::to_string(N * 2) +
+                                " nibbles");
+  }
+
+  std::string str = silkworm::hex_string_to_bytes({in, n});
+  std::array<uint8_t, N> array;
+  std::copy_n(str.begin(), N, array.begin());
+  return array;
+}
+}  // namespace
 
 namespace silkworm {
 
@@ -34,6 +50,14 @@ std::string hex_string_to_bytes(std::string_view in) {
   res.reserve(in.size() / 2);
   boost::algorithm::unhex(in.begin(), in.end(), std::back_inserter(res));
   return res;
+}
+
+std::array<uint8_t, 20> operator"" _x20(const char* in, std::size_t n) {
+  return to_byte_array<20>(in, n);
+}
+
+std::array<uint8_t, 32> operator"" _x32(const char* in, std::size_t n) {
+  return to_byte_array<32>(in, n);
 }
 
 }  // namespace silkworm

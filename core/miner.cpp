@@ -14,34 +14,32 @@
    limitations under the License.
 */
 
-#include "db_bucket.hpp"
+#include "miner.hpp"
 
 namespace silkworm {
 
-DbBucket::Range DbBucket::leaves(Prefix p) const {
-  if (p.size() == 0) {
-    return {data_.begin(), data_.end()};
+bool Miner::new_block() {
+  if (state_.synced_block() < 0) {
+    return false;
   }
 
-  auto lb = data_.lower_bound(p.padded());
-
-  ++p;
-  if (p.val() == 0) {
-    return {lb, data_.end()};
-  }
-
-  Hash next_hash = p.padded();
-
-  if (lb->first >= next_hash) {
-    return {data_.end(), data_.end()};
-  } else {
-    return {lb, data_.lower_bound(next_hash)};
-  }
+  new_block_ = state_.synced_block() + 1;
+  return true;
 }
 
-void DbBucket::erase(Prefix p) {
-  const auto range = leaves(p);
-  data_.erase(range.first, range.second);
+void Miner::create_account(const Address& address, const Account& account) {
+  state_.put(keccak(byte_view(address)), to_rlp(account));
+}
+
+bool Miner::seal_block() {
+  if (new_block_ == 0) {
+    return false;
+  }
+
+  state_.init_from_db(new_block_);
+
+  new_block_ = 0;
+  return true;
 }
 
 }  // namespace silkworm

@@ -43,14 +43,18 @@ State::State(DbBucket& db, unsigned depth, unsigned phase1_depth)
   }
 }
 
-void State::init_from_db(uint32_t data_valid_for_block) {
+void State::init_from_db(const uint32_t data_valid_for_block) {
   auto prefix = Prefix(depth());
 
   // bottom nodes
   for (uint64_t i = 0; i < tree_.back().size(); ++i) {
     auto& nodes = tree_.back();
 
-    for (unsigned j = 0; j < 16; ++j) {
+    for (Nibble j = 0; j < 16; ++j, ++prefix) {
+      if (nodes[i].synced[j]) {
+        continue;
+      }
+
       const auto leaves = db_.leaves(prefix);
 
       const bool empty = leaves.first == leaves.second;
@@ -61,8 +65,6 @@ void State::init_from_db(uint32_t data_valid_for_block) {
       }
 
       nodes[i].synced[j] = true;
-
-      ++prefix;
     }
 
     nodes[i].block = data_valid_for_block;
@@ -73,7 +75,7 @@ void State::init_from_db(uint32_t data_valid_for_block) {
     auto& nodes = tree_[lvl];
 
     for (uint64_t i = 0; i < nodes.size(); ++i) {
-      for (unsigned j = 0; j < 16; ++j) {
+      for (Nibble j = 0; j < 16; ++j) {
         const auto& child = tree_[lvl + 1][i * 16 + j];
         const bool empty = child.empty.all();
         nodes[i].empty[j] = empty;
@@ -87,11 +89,22 @@ void State::init_from_db(uint32_t data_valid_for_block) {
   }
 }
 
+void State::put(Hash key, std::string val) {
+  root().block = -1;  // prevent sync while block is not sealed yet
+
+  Prefix prefix(depth(), key);
+  auto& nd = node(depth() - 1, prefix);
+  Nibble nbl = prefix[depth() - 1];
+  nd.synced[nbl] = false;
+
+  db_.put(std::move(key), std::move(val));
+}
+
 unsigned State::consistent_path_depth(Prefix prefix) const {
   int32_t block = root().block;
   for (unsigned level = 0; level < prefix.size(); ++level) {
-    const auto& node = this->node(level, prefix);
-    if (node.block == -1 || node.block != block) {
+    const auto& nd = node(level, prefix);
+    if (nd.block == -1 || nd.block != block) {
       return level;
     }
   }
@@ -152,13 +165,21 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
   return reply;
 }
 
+bool State::phase1_sync_done() const {
+  const auto prefix = phase1_cursor_;
+  const auto& nd = node(prefix.size() - 1, prefix);
+  const Nibble x = prefix[prefix.size() - 1];
+
+  // TODO check if we still have data gaps
+  return phase1_cursor_.val() == 0 && nd.synced[x];
+}
+
 std::optional<sync::Request> State::next_sync_request() {
   const auto prefix = phase1_cursor_;
   const auto& nd = node(prefix.size() - 1, prefix);
   const Nibble x = prefix[prefix.size() - 1];
 
-  if (phase1_cursor_.val() == 0 && nd.synced[x]) {
-    // TODO check if we still have data gaps
+  if (phase1_sync_done()) {
     return {};
   }
 
@@ -178,6 +199,15 @@ std::optional<sync::Request> State::next_sync_request() {
   ++phase1_cursor_;
 
   return request;
+}
+
+bool State::nibble_obsolete(const Node& node, Nibble nibble,
+                            const std::bitset<16>& new_empty,
+                            const std::array<Hash, 16>& new_hash) {
+  if (!node.empty[nibble] && !new_empty[nibble])
+    return node.hash[nibble] != new_hash[nibble];
+  else
+    return node.empty[nibble] != new_empty[nibble];
 }
 
 void State::process_sync_data(const sync::Reply& reply) {
@@ -225,11 +255,10 @@ void State::process_sync_data(const sync::Reply& reply) {
             db_.put(x.first, x.second);
           }
         }
+        main_node.empty[j] = new_empty[j];
+        main_node.hash[j] = new_hash[j];
         main_node.synced[j] = true;
-      } else if (main_node.empty[j] != new_empty[j] ||
-                 (!new_empty[j] && main_node.hash[j] != new_hash[j])) {
-        // sibling nibble out of sync
-
+      } else if (nibble_obsolete(main_node, j, new_empty, new_hash)) {
         if (main_node.synced[j] && !main_node.empty[j]) {
           db_.erase(nibble_prefix);
         }
@@ -300,13 +329,20 @@ void State::process_sync_data(const sync::Reply& reply) {
     Node& path_node = node(level, prefix);
     if (path_node.block < rb) {
       const auto& proof = reply.proof[level - start_from];
+
+      for (Nibble j = 0; j < 16; ++j) {
+        if (nibble_obsolete(path_node, j, proof.empty, proof.hash)) {
+          path_node.synced[j] = false;
+        }
+      }
+
       path_node.empty = proof.empty;
       path_node.hash = proof.hash;
       path_node.block = rb;
     }
   }
 
-  // TODO reset synced if hash changed
+  // TODO propogate synced up
 }
 
 }  // namespace silkworm

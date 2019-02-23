@@ -21,13 +21,18 @@
 using namespace silkworm;
 
 TEST_CASE("Even prefix") {
+  const auto matching_hash =
+      "0fd714a130000000000000000000000000000006770000000000000000000004"_x32;
+
   auto prefix = "0fd714"_prefix;
   REQUIRE(prefix.size() == 6);
   REQUIRE(
       prefix.padded() ==
       "0fd7140000000000000000000000000000000000000000000000000000000000"_x32);
-  REQUIRE(prefix.matches(
-      "0fd714a130000000000000000000000000000006770000000000000000000004"_x32));
+
+  REQUIRE(prefix.matches(matching_hash));
+  REQUIRE(Prefix(6, matching_hash) == prefix);
+
   REQUIRE(!prefix.matches(
       "0fd715a130000000000000000000000000000006770000000000000000000004"_x32));
 
@@ -49,13 +54,17 @@ TEST_CASE("Even prefix") {
 }
 
 TEST_CASE("Odd prefix") {
+  const auto matching_hash =
+      "0fd715a130000000000000000000000000000006770000000000000000000004"_x32;
+
   auto prefix = "0fd71"_prefix;
   REQUIRE(prefix.size() == 5);
   REQUIRE(
       prefix.padded() ==
       "0fd7100000000000000000000000000000000000000000000000000000000000"_x32);
-  REQUIRE(prefix.matches(
-      "0fd715a130000000000000000000000000000006770000000000000000000004"_x32));
+
+  REQUIRE(prefix.matches(matching_hash));
+  REQUIRE(Prefix(5, matching_hash) == prefix);
 
   REQUIRE(prefix != "0ad710"_prefix);
 

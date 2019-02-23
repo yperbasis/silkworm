@@ -27,9 +27,26 @@ Prefix::Prefix(size_t size, uint64_t val) : size_(size), val_(val) {
     throw std::length_error(
         "only prefixes up to 16 nibbles are currently supported");
   }
-  const auto shift = 64u - size * 4;
-  if (val << shift) {
+  const auto shift = 64 - size * 4;
+  if ((size_ == 0 && val_ != 0) || (val << shift) != 0) {
     throw std::invalid_argument("non-zero padding");
+  }
+}
+
+Prefix::Prefix(size_t size, const Hash& hash) : size_(size) {
+  if (size > 16) {
+    throw std::length_error(
+        "only prefixes up to 16 nibbles are currently supported");
+  }
+
+  val_ = 0;
+  for (int i = 0; i < 8; ++i) {
+    val_ *= 0x100;
+    val_ += hash[i];
+  }
+
+  for (int pos = size; pos < 16; ++pos) {
+    set(pos, 0);
   }
 }
 

@@ -80,6 +80,10 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
 
     for (uint64_t i = 0; i < nodes.size(); ++i) {
       for (Nibble j = 0; j < 16; ++j) {
+        if (nodes[i].synced[j]) {
+          continue;
+        }
+
         const auto& child = tree_[lvl + 1][i * 16 + j];
         const bool empty = child.empty.all();
         nodes[i].empty[j] = empty;
@@ -96,10 +100,12 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
 void State::put(Hash key, std::string val) {
   root().block = -1;  // prevent sync while block is not sealed yet
 
-  Prefix prefix(depth(), key);
-  auto& nd = node(depth() - 1, prefix);
-  const Nibble nbl = prefix[depth() - 1];
-  nd.synced[nbl] = false;
+  const Prefix prefix(depth(), key);
+  for (unsigned level = 0; level < depth(); ++level) {
+    auto& nd = node(level, prefix);
+    const Nibble nbl = prefix[level];
+    nd.synced[nbl] = false;
+  }
 
   db_.put(std::move(key), std::move(val));
 }

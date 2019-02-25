@@ -26,9 +26,9 @@
 using namespace silkworm;
 
 static const auto kInitialAccounts = 1'000'000;
-// static const auto kNewAccountsPerBlock = 1000;
-static const auto kBlockTime = 15;               // sec
-static const auto kBandwidth = 1024 * 1024 / 8;  // bytes per sec
+static const auto kNewAccountsPerBlock = 1000;
+static const auto kBlockTime = 15;                   // sec
+static const auto kBandwidth = 2 * 1024 * 1024 / 8;  // bytes per sec
 
 void print_hints(const sync::Hints& hints) {
   std::cout << "Hints for " << hints.num_leaves * 1e-6
@@ -64,7 +64,7 @@ int main() {
   DbBucket miner_state;
   RNG rng(kSeed);
   DustGenerator dust_gen(rng);
-  for (auto i = 0u; i < kInitialAccounts; ++i) {
+  for (int i = 0; i < kInitialAccounts; ++i) {
     Hash key = keccak(byte_view(dust_gen.random_address()));
     std::string val = to_rlp(dust_gen.random_account());
     miner_state.put(key, val);
@@ -76,42 +76,49 @@ int main() {
   DbBucket leecher_state;
   Node leecher(leecher_state, hints, {});
   sync::Stats stats;
-  auto block = kStartBlock;
+  auto new_blocks = 0;
 
   while (true) {
+    std::cout << "new block " << new_blocks << " phase "
+              << (leecher.phase1_sync_done() + 1) << std::endl;
+
+    const auto prev_replies = stats.num_replies;
     leecher.sync(miner, stats, kBandwidth * kBlockTime);
-    if (leecher.phase1_sync_done()) {
+    const auto new_replies = stats.num_replies - prev_replies;
+    std::cout << "sync replies " << new_replies << std::endl;
+
+    if (leecher.sync_done()) {
       break;
     }
-    /* TODO
-        assert(miner.new_block());
-        for (auto i = 0u; i < kNewAccountsPerBlock; ++i) {
-          miner.create_account(dust_gen.random_address(),
-                               dust_gen.random_account());
-        }
-        assert(miner.seal_block());
-    */
 
-    ++block;
+    miner.new_block();
+    for (int i = 0; i < kNewAccountsPerBlock; ++i) {
+      miner.create_account(dust_gen.random_address(),
+                           dust_gen.random_account());
+    }
+    miner.seal_block();
+
+    ++new_blocks;
   }
 
+  std::cout << "\nSync done? " << std::boolalpha << leecher.sync_done()
+            << "\n\n";
+
   const auto time2 = microsec_clock::local_time();
-  const auto emulated_time = seconds((block - kStartBlock) * kBlockTime);
-  std::cout << "Phase 1 CPU time      " << time2 - time1 << std::endl;
-  std::cout << "Phase 1 emulated time " << emulated_time << std::endl;
-  std::cout << "#blocks               " << block - kStartBlock << std::endl;
-  std::cout << "#requests             " << stats.num_requests << std::endl;
-  std::cout << "request total bytes   " << stats.request_total_bytes
-            << std::endl;
-  std::cout << "#replies              " << stats.num_replies << std::endl;
-  std::cout << "reply total bytes     " << stats.reply_total_bytes << std::endl;
-  std::cout << "reply total leaves    " << stats.reply_total_leaves
-            << std::endl;
+  const auto emulated_time = seconds((new_blocks + 1) * kBlockTime);
+  std::cout << "CPU time            " << time2 - time1 << std::endl;
+  std::cout << "Emulated time       " << emulated_time << std::endl;
+  std::cout << "#new blocks         " << new_blocks << std::endl;
+  std::cout << "#requests           " << stats.num_requests << std::endl;
+  std::cout << "request total bytes " << stats.request_total_bytes << std::endl;
+  std::cout << "#replies            " << stats.num_replies << std::endl;
+  std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
+  std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
 
   double leaf_bytes = stats.reply_total_leaves * sync::kLeafSize;
   double overhead = stats.reply_total_bytes / leaf_bytes - 1;
-  std::cout << "reply overhead        " << std::setprecision(2)
-            << overhead * 100 << "%\n\n";
+  std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
+            << "%\n\n";
 
   const Prefix null_prefix(0);
   const auto miner_leaves = miner_state.leaves(null_prefix);

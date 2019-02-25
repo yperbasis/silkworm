@@ -25,8 +25,12 @@
 
 namespace silkworm {
 
+// TODO randomize phase 1 & 2 cursors
 State::State(DbBucket& db, unsigned depth, unsigned phase1_depth)
-    : db_(db), tree_(depth), phase1_cursor_(phase1_depth) {
+    : db_(db),
+      tree_(depth),
+      phase1_cursor_(phase1_depth),
+      phase2_cursor_(depth) {
   if (depth < 2) {
     throw std::length_error("too shallow");
   }
@@ -94,10 +98,35 @@ void State::put(Hash key, std::string val) {
 
   Prefix prefix(depth(), key);
   auto& nd = node(depth() - 1, prefix);
-  Nibble nbl = prefix[depth() - 1];
+  const Nibble nbl = prefix[depth() - 1];
   nd.synced[nbl] = false;
 
   db_.put(std::move(key), std::move(val));
+}
+
+void State::update_blocks_down_path(Prefix prefix) {
+  for (unsigned level = 1; level < prefix.size(); ++level) {
+    const auto& parent = node(level - 1, prefix);
+    auto& child = node(level, prefix);
+    const auto nibble = prefix[level - 1];
+
+    if (parent.block == -1 || child.block == -1) {
+      break;
+    }
+
+    if (parent.block == child.block) {
+      continue;
+    }
+
+    const bool child_empty = child.empty.all();
+    const Hash child_hash = mptrie::branch_node_hash(child.empty, child.hash);
+
+    if (nibble_obsolete(parent, nibble, child_empty, child_hash)) {
+      break;
+    }
+
+    child.block = parent.block;
+  }
 }
 
 unsigned State::consistent_path_depth(Prefix prefix) const {
@@ -126,11 +155,9 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
   }
 
   const Node& nd = node(prefix.size() - 1, prefix);
-  const Nibble last_nibble = prefix[prefix.size() - 1];
+  const auto nibble = prefix[prefix.size() - 1];
 
-  // TODO propogate synced up with consistency checks
-  // or some kind of dynamic checks?
-  if (!nd.empty[last_nibble] && !nd.synced[last_nibble]) {
+  if (!nd.synced[nibble]) {
     return sync::kDontHaveData;
   }
 
@@ -149,12 +176,12 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
     reply.proof.push_back(sync::Proof{y.empty, y.hash});
   }
 
-  const bool leaves_required = !request.hash_of_leaves ||
-                               *request.hash_of_leaves != nd.hash[last_nibble];
+  const bool leaves_required =
+      !request.hash_of_leaves || *request.hash_of_leaves != nd.hash[nibble];
 
   if (leaves_required) {
     reply.leaves = std::vector<sync::Leaf>{};
-    if (!nd.empty[last_nibble]) {
+    if (!nd.empty[nibble]) {
       const auto db_leaves = db_.leaves(prefix);
       for (auto it = db_leaves.first; it != db_leaves.second; ++it) {
         reply.leaves->push_back(sync::Leaf{it->first, it->second});
@@ -165,49 +192,61 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
   return reply;
 }
 
-bool State::phase1_sync_done() const {
-  const auto prefix = phase1_cursor_;
-  const auto& nd = node(prefix.size() - 1, prefix);
-  const Nibble x = prefix[prefix.size() - 1];
-
-  // TODO check if we still have data gaps
-  return phase1_cursor_.val() == 0 && nd.synced[x];
-}
-
 std::optional<sync::Request> State::next_sync_request() {
-  const auto prefix = phase1_cursor_;
-  const auto& nd = node(prefix.size() - 1, prefix);
-  const Nibble x = prefix[prefix.size() - 1];
+  if (!phase1_sync_done_) {
+    const auto r = next_sync_request(phase1_cursor_);
+    if (!r) {
+      phase1_sync_done_ = true;
+    } else {
+      return r;
+    }
+  }
 
-  if (phase1_sync_done()) {
+  if (synced_block() == -1) {
+    return next_sync_request(phase2_cursor_);
+  } else {
     return {};
   }
-
-  sync::Request request{prefix};
-
-  if (root().block != -1) {
-    request.block = root().block;
-  }
-
-  request.start_proof_from = consistent_path_depth(prefix);
-
-  if (!nd.empty[x] && nd.synced[x]) {
-    request.hash_of_leaves = nd.hash[x];
-  }
-
-  // TODO some kind of randomisation instead
-  ++phase1_cursor_;
-
-  return request;
 }
 
-bool State::nibble_obsolete(const Node& node, Nibble nibble,
-                            const std::bitset<16>& new_empty,
-                            const std::array<Hash, 16>& new_hash) {
-  if (!node.empty[nibble] && !new_empty[nibble])
-    return node.hash[nibble] != new_hash[nibble];
+std::optional<sync::Request> State::next_sync_request(Prefix& prefix) {
+  do {
+    const auto& nd = node(prefix.size() - 1, prefix);
+    const Nibble x = prefix[prefix.size() - 1];
+
+    update_blocks_down_path(prefix);
+    const auto cpd = consistent_path_depth(prefix);
+
+    sync::Request request{prefix};
+
+    ++prefix;
+
+    if (nd.synced[x] && cpd == prefix.size()) {
+      continue;
+    } else {
+      if (root().block != -1) {
+        request.block = root().block;
+      }
+
+      request.start_proof_from = cpd;
+
+      if (!nd.empty[x] && nd.synced[x]) {
+        request.hash_of_leaves = nd.hash[x];
+      }
+
+      return request;
+    }
+  } while (prefix.val() != 0);
+
+  return {};
+}
+
+bool State::nibble_obsolete(const Node& node, const Nibble nibble,
+                            const bool new_empty, const Hash& new_hash) {
+  if (!node.empty[nibble] && !new_empty)
+    return node.hash[nibble] != new_hash;
   else
-    return node.empty[nibble] != new_empty[nibble];
+    return node.empty[nibble] != new_empty;
 }
 
 void State::process_sync_data(const sync::Reply& reply) {
@@ -222,7 +261,7 @@ void State::process_sync_data(const sync::Reply& reply) {
   auto& main_node = node(prefix.size() - 1, prefix);
 
   int32_t rb = reply.block;
-  if (main_node.block > rb) {
+  if (root().block > rb) {
     return;  // old reply
   }
 
@@ -240,13 +279,13 @@ void State::process_sync_data(const sync::Reply& reply) {
     const auto& new_hash =
         reply.proof.empty() ? main_node.hash : reply.proof.back().hash;
 
-    const auto last_nibble = prefix[prefix.size() - 1];
+    const auto nibble = prefix[prefix.size() - 1];
 
     for (unsigned j = 0; j < 16; ++j) {
       Prefix nibble_prefix = prefix;
       nibble_prefix.set(prefix.size() - 1, j);
 
-      if (j == last_nibble) {
+      if (j == nibble) {
         if (reply.leaves) {
           if (main_node.synced[j] && !main_node.empty[j]) {
             db_.erase(nibble_prefix);
@@ -258,7 +297,7 @@ void State::process_sync_data(const sync::Reply& reply) {
         main_node.empty[j] = new_empty[j];
         main_node.hash[j] = new_hash[j];
         main_node.synced[j] = true;
-      } else if (nibble_obsolete(main_node, j, new_empty, new_hash)) {
+      } else if (nibble_obsolete(main_node, j, new_empty[j], new_hash[j])) {
         if (main_node.synced[j] && !main_node.empty[j]) {
           db_.erase(nibble_prefix);
         }
@@ -274,7 +313,7 @@ void State::process_sync_data(const sync::Reply& reply) {
     auto btm_prfx = Prefix{depth(), prefix.val()};
 
     for (uint64_t i = 0; i < (1ull << (4 * tail)); ++i, ++btm_prfx) {
-      const auto last_nibble = btm_prfx[depth() - 1];
+      const auto nibble = btm_prfx[depth() - 1];
       auto& bottom_node = node(depth() - 1, btm_prfx);
 
       const auto range_begin = it;
@@ -291,14 +330,14 @@ void State::process_sync_data(const sync::Reply& reply) {
       }
 
       const bool empty = range_begin == range_end;
-      bottom_node.empty[last_nibble] = empty;
+      bottom_node.empty[nibble] = empty;
 
       if (!empty) {
-        bottom_node.hash[last_nibble] =
+        bottom_node.hash[nibble] =
             mptrie::hash_of_leaves(range_begin, range_end);
       }
 
-      bottom_node.synced[last_nibble] = true;
+      bottom_node.synced[nibble] = true;
     }
 
     // propagate up the subtree of main_node
@@ -307,18 +346,18 @@ void State::process_sync_data(const sync::Reply& reply) {
       const auto shift = 4 * (level - prefix.size());
 
       for (uint64_t i = 0; i < (1ull << shift); ++i, ++sub_prfx) {
-        const auto last_nibble = sub_prfx[level - 1];
+        const auto nibble = sub_prfx[level - 1];
         auto& parent = node(level - 1, sub_prfx);
         auto& child = node(level, sub_prfx);
 
         child.block = rb;
 
-        parent.empty[last_nibble] = child.empty.all();
-        if (!parent.empty[last_nibble]) {
-          parent.hash[last_nibble] =
+        parent.empty[nibble] = child.empty.all();
+        if (!parent.empty[nibble]) {
+          parent.hash[nibble] =
               mptrie::branch_node_hash(child.empty, child.hash);
         }
-        parent.synced[last_nibble] = child.synced.all();
+        parent.synced[nibble] = true;
       }
     }
   }
@@ -331,7 +370,7 @@ void State::process_sync_data(const sync::Reply& reply) {
       const auto& proof = reply.proof[level - start_from];
 
       for (Nibble j = 0; j < 16; ++j) {
-        if (nibble_obsolete(path_node, j, proof.empty, proof.hash)) {
+        if (nibble_obsolete(path_node, j, proof.empty[j], proof.hash[j])) {
           path_node.synced[j] = false;
         }
       }
@@ -342,7 +381,13 @@ void State::process_sync_data(const sync::Reply& reply) {
     }
   }
 
-  // TODO propogate synced up
+  // propagate synced up
+  for (auto level = prefix.size() - 1; level > 0; --level) {
+    const auto nibble = prefix[level - 1];
+    auto& parent = node(level - 1, prefix);
+    const auto& child = node(level, prefix);
+    parent.synced[nibble] = child.synced.all();
+  }
 }
 
 }  // namespace silkworm

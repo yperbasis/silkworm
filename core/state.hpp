@@ -39,13 +39,15 @@ class State {
 
   std::variant<sync::Reply, sync::Error> get_leaves(const sync::Request&) const;
 
-  bool phase1_sync_done() const;
+  bool phase1_sync_done() const { return phase1_sync_done_; }
 
   std::optional<sync::Request> next_sync_request();
 
   void process_sync_data(const sync::Reply&);
 
-  int32_t synced_block() { return root().synced.all() ? root().block : -1; }
+  int32_t synced_block() const {
+    return root().synced.all() ? root().block : -1;
+  }
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(State)
@@ -63,10 +65,15 @@ class State {
   DbBucket& db_;
 
   // TODO unify with mptrie
-  // Invariant: parent.block >= child.block if all nodes are initialized.
+  // Invariant: parent.block >= child.block if parent.block != -1.
   std::vector<std::vector<Node>> tree_;
 
   Prefix phase1_cursor_;
+  Prefix phase2_cursor_;
+
+  bool phase1_sync_done_ = false;
+
+  std::optional<sync::Request> next_sync_request(Prefix&);
 
   const Node& node(unsigned level, Prefix prefix) const {
     if (level == 0) {
@@ -84,11 +91,12 @@ class State {
   Node& root() { return tree_[0][0]; }
   const Node& root() const { return tree_[0][0]; }
 
+  void update_blocks_down_path(Prefix);
+
   unsigned consistent_path_depth(Prefix) const;
 
-  static bool nibble_obsolete(const Node&, Nibble,
-                              const std::bitset<16>& new_empty,
-                              const std::array<Hash, 16>& new_hash);
+  static bool nibble_obsolete(const Node&, Nibble, bool new_empty,
+                              const Hash& new_hash);
 };
 
 }  // namespace silkworm

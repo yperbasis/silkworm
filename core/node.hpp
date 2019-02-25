@@ -36,6 +36,8 @@ class Node {
 
   bool phase1_sync_done() const;
 
+  bool sync_done() const;
+
   // TODO storage sync
   std::variant<sync::Reply, sync::Error> get_state_leaves(
       sync::Request request) const {

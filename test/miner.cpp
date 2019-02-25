@@ -47,9 +47,9 @@ TEST_CASE("Block creation", "[miner]") {
   REQUIRE(reply.leaves->empty());
 
   // create account and new block
-  REQUIRE(miner.new_block());
+  miner.new_block();
   miner.create_account(address, account);
-  REQUIRE(miner.seal_block());
+  miner.seal_block();
 
   // state with the account
   reply_wrapper = miner.get_state_leaves(sync_request);

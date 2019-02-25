@@ -87,4 +87,6 @@ void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
 
 bool Node::phase1_sync_done() const { return state_.phase1_sync_done(); }
 
+bool Node::sync_done() const { return state_.synced_block() >= 0; }
+
 }  // namespace silkworm

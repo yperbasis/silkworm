@@ -25,8 +25,8 @@
 
 using namespace silkworm;
 
-static const auto kInitialAccounts = 1'000'000;
-static const auto kNewAccountsPerBlock = 1000;
+static const auto kInitialAccounts = 2'000'000;
+static const auto kNewAccountsPerBlock = 300;
 static const auto kBlockTime = 15;                   // sec
 static const auto kBandwidth = 2 * 1024 * 1024 / 8;  // bytes per sec
 
@@ -43,7 +43,7 @@ void print_hints(const sync::Hints& hints) {
   std::cout << "optimal phase 1 depth  " << hints.optimal_phase1_depth()
             << std::endl;
   const double phase1_overhead = hints.phase1_reply_overhead();
-  std::cout << "phase 1 reply overhead " << std::setprecision(2)
+  std::cout << "overhead (∞ bandwidth) " << std::setprecision(2)
             << phase1_overhead * 100 << "%\n\n";
 }
 
@@ -82,10 +82,7 @@ int main() {
     std::cout << "new block " << new_blocks << " phase "
               << (leecher.phase1_sync_done() + 1) << std::endl;
 
-    const auto prev_replies = stats.num_replies;
     leecher.sync(miner, stats, kBandwidth * kBlockTime);
-    const auto new_replies = stats.num_replies - prev_replies;
-    std::cout << "sync replies " << new_replies << std::endl;
 
     if (leecher.sync_done()) {
       break;
@@ -105,7 +102,11 @@ int main() {
             << "\n\n";
 
   const auto time2 = microsec_clock::local_time();
+
   const auto emulated_time = seconds((new_blocks + 1) * kBlockTime);
+  const auto generated_leaves =
+      kInitialAccounts + new_blocks * kNewAccountsPerBlock;
+
   std::cout << "CPU time            " << time2 - time1 << std::endl;
   std::cout << "Emulated time       " << emulated_time << std::endl;
   std::cout << "#new blocks         " << new_blocks << std::endl;
@@ -114,8 +115,9 @@ int main() {
   std::cout << "#replies            " << stats.num_replies << std::endl;
   std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
   std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
+  std::cout << "generated leaves    " << generated_leaves << std::endl;
 
-  double leaf_bytes = stats.reply_total_leaves * sync::kLeafSize;
+  double leaf_bytes = generated_leaves * sync::kLeafSize;
   double overhead = stats.reply_total_bytes / leaf_bytes - 1;
   std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
             << "%\n\n";

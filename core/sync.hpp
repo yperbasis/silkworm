@@ -117,7 +117,7 @@ struct Stats {
 // all sizes are in bytes
 struct Hints {
   uint64_t max_memory = 8 * 1024 * 1024 * 1024ll;
-  uint64_t num_leaves = 100'000'000;
+  uint64_t num_leaves = 50'000'000;
 
   unsigned approx_max_reply_size = 32 * 1024;
 

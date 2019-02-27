@@ -15,7 +15,7 @@
 ]]
 
 find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 include_directories(${Silkworm_SOURCE_DIR}/core)
 

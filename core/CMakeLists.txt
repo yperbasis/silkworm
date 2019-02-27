@@ -15,6 +15,6 @@
 ]]
 
 find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 file(GLOB Silkworm_CORE_SRC "*.h" "*.hpp" "*.c" "*.cpp")
 add_library(silkworm ${Silkworm_CORE_SRC})

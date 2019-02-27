@@ -53,6 +53,12 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
   // bottom nodes
   for (uint64_t i = 0; i < tree_.back().size(); ++i) {
     auto& nodes = tree_.back();
+    nodes[i].block = data_valid_for_block;
+
+    if (nodes[i].synced.all()) {
+      prefix += 16;
+      continue;
+    }
 
     for (Nibble j = 0; j < 16; ++j, ++prefix) {
       if (nodes[i].synced[j]) {
@@ -70,8 +76,6 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
 
       nodes[i].synced[j] = true;
     }
-
-    nodes[i].block = data_valid_for_block;
   }
 
   // the rest of the tree
@@ -79,6 +83,12 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
     auto& nodes = tree_[lvl];
 
     for (uint64_t i = 0; i < nodes.size(); ++i) {
+      nodes[i].block = data_valid_for_block;
+
+      if (nodes[i].synced.all()) {
+        continue;
+      }
+
       for (Nibble j = 0; j < 16; ++j) {
         if (nodes[i].synced[j]) {
           continue;
@@ -92,7 +102,6 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
         }
         nodes[i].synced[j] = true;
       }
-      nodes[i].block = data_valid_for_block;
     }
   }
 }

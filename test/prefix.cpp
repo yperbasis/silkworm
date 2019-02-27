@@ -81,5 +81,9 @@ TEST_CASE("Odd prefix") {
 
   REQUIRE(++prefix == "0ad7f"_prefix);
   REQUIRE(++prefix == "0ad80"_prefix);
+
+  prefix += 0xa7;
+  REQUIRE(prefix == "0ae27"_prefix);
+
   REQUIRE(++"fffff"_prefix == "00000"_prefix);
 }

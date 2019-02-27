@@ -119,7 +119,7 @@ int main() {
 
   double leaf_bytes = generated_leaves * sync::kLeafSize;
   double overhead = stats.reply_total_bytes / leaf_bytes - 1;
-  std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
+  std::cout << "reply overhead      " << std::setprecision(3) << overhead * 100
             << "%\n\n";
 
   const Prefix null_prefix(0);

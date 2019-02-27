@@ -40,10 +40,12 @@ class Prefix {
     val_ = (val_ & ~(0xfull << shift)) + (static_cast<uint64_t>(x) << shift);
   }
 
-  Prefix& operator++() {
+  Prefix& operator++() { return (*this) += 1; }
+
+  Prefix& operator+=(uint64_t inc) {
     if (size_) {
       const auto shift = 64 - size_ * 4;
-      val_ += 1ull << shift;
+      val_ += inc << shift;
     }
     return *this;
   }

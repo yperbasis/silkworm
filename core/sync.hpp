@@ -26,15 +26,23 @@
 #include "common.hpp"
 #include "prefix.hpp"
 
-// TODO sync research:
-// 0. single-machine in-memory PoC with ~1m dust accounts
-// 1. database with ~100m dust accounts
-// 2. network layer, p2p
-// 3. real protocol
-// 4. proof checking
-// 5. smart contract storage
-// 6. compare against geth's fast sync
-// 7. real historical Ethereum data
+/* Sync Research
+[DONE]
+  0. single-machine in-memory PoC with ~1m dust accounts
+[TODO]
+  1. optimal phase 2 depth
+  2. theoretical convergence (if possible)
+  3. LMDB(?) database
+  4. experimental convergence with ~100m dust accounts
+  5. smart contract storage
+  6. extension/leaf nodes
+  7. real protocol + doc
+  8. network layer, p2p
+  9. multiple leechers, BitTorrent-like swarm
+  10. proof checking
+  11. compare against geth's fast sync and parity's warp sync
+  12. real historical Ethereum data
+*/
 
 namespace silkworm::sync {
 

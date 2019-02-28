@@ -30,7 +30,6 @@
 namespace silkworm::rlp {
 
 using Item =
-    // TODO string_view? measure first
     boost::make_recursive_variant<std::string,
                                   std::vector<boost::recursive_variant_>>::type;
 using List = std::vector<Item>;

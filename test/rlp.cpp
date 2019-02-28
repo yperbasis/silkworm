@@ -82,8 +82,14 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
   }
 
   // TODO: bad inputs, positive integers with leading zeroes
+  /* From the Yellow Paper:
+  When interpreting RLP data, if an expected fragment is decoded as a scalar and
+  leading zeroes are found in the byte sequence, clients are required to
+  consider it non-canonical and treat it in the same manner as otherwise invalid
+  RLP data, dismissing it completely.
+  */
 
-  SECTION("uint64_t vs boost multiprecision") {
+  SECTION("big_endian: uint64_t vs boost multiprecision") {
     const uint64_t scalar1 = 0xf409785633ef3294;
     const UInt256 scalar2 = scalar1;
     REQUIRE(to_big_endian(scalar1) == to_big_endian(scalar2));

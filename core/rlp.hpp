@@ -42,11 +42,11 @@ bool are_equal(const Item&, const Item&);
 std::string encode(const Item&);
 Item decode(std::string_view);
 
-std::string to_binary(uint64_t);
-std::string to_binary(UInt256);
+std::string to_big_endian(uint64_t);
+std::string to_big_endian(UInt256);
 
 // TODO UInt256
-uint64_t to_integer(std::string_view b);
+uint64_t from_big_endian(std::string_view b);
 }  // namespace silkworm::rlp
 
 #endif  // SILKWORM_CORE_RLP_HPP_

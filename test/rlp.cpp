@@ -48,7 +48,7 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
       // The empty list = [ 0xc0 ]
       {List{}, "\xc0"},
       // // The integer 0 = [ 0x80 ]
-      {to_binary(0), "\x80"},
+      {to_big_endian(0), "\x80"},
       // The encoded integer 0 ('\x00') = [ 0x00 ]
       {"\x00"s, "\x00"s},
       // The encoded integer 15 ('\x0f') = [ 0x0f ]
@@ -65,7 +65,7 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
        "\xb8\x38"
        "Lorem ipsum dolor sit amet, consectetur adipisicing elit"},
       // a single byte outside of the [0x00, 0x7f] range
-      {to_binary(0x90), "\x81\x90"},
+      {to_big_endian(0x90), "\x81\x90"},
   };
 
   SECTION("encode examples") {
@@ -86,6 +86,6 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
   SECTION("uint64_t vs boost multiprecision") {
     const uint64_t scalar1 = 0xf409785633ef3294;
     const UInt256 scalar2 = scalar1;
-    REQUIRE(to_binary(scalar1) == to_binary(scalar2));
+    REQUIRE(to_big_endian(scalar1) == to_big_endian(scalar2));
   }
 }

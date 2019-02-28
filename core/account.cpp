@@ -22,8 +22,8 @@ namespace silkworm {
 
 std::string to_rlp(const Account& in) {
   const rlp::List list = {
-      rlp::to_binary(in.nonce),
-      rlp::to_binary(in.balance),
+      rlp::to_big_endian(in.nonce),
+      rlp::to_big_endian(in.balance),
       std::string(byte_view(in.storage)),
       std::string(byte_view(in.code)),
   };

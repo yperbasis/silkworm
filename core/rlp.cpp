@@ -41,7 +41,7 @@ std::string encode_length(uint64_t len, char offset) {
   if (len < 56) {
     return {static_cast<char>(len + offset)};
   } else {
-    const auto bl = to_binary(len);
+    const auto bl = to_big_endian(len);
     return static_cast<char>(bl.length() + offset + 55) + bl;
   }
 }
@@ -92,7 +92,7 @@ DecodedLength decode_length(std::string_view& input) {
     if (input.length() < len_of_len) {
       throw std::invalid_argument("truncated length");
     }
-    const auto str_len = to_integer(input.substr(0, len_of_len));
+    const auto str_len = from_big_endian(input.substr(0, len_of_len));
     input.remove_prefix(len_of_len);
     if (input.length() < str_len) {
       throw std::invalid_argument("truncated string");
@@ -109,7 +109,7 @@ DecodedLength decode_length(std::string_view& input) {
     if (input.length() < len_of_len) {
       throw std::invalid_argument("truncated length");
     }
-    const auto list_len = to_integer(input.substr(0, len_of_len));
+    const auto list_len = from_big_endian(input.substr(0, len_of_len));
     input.remove_prefix(len_of_len);
     if (input.length() < list_len) {
       throw std::invalid_argument("truncated list");
@@ -158,20 +158,20 @@ Item decode(std::string_view input) {
   return *output;
 }
 
-std::string to_binary(uint64_t x) {
+std::string to_big_endian(uint64_t x) {
   if (x == 0)
     return "";
   else
-    return to_binary(x / 256) + static_cast<char>(x % 256);
+    return to_big_endian(x / 256) + static_cast<char>(x % 256);
 }
 
-std::string to_binary(UInt256 x) {
+std::string to_big_endian(UInt256 x) {
   std::string out;
   export_bits(x, std::back_inserter(out), 8);
   return out;
 }
 
-uint64_t to_integer(std::string_view b) {
+uint64_t from_big_endian(std::string_view b) {
   uint64_t res = 0;
   for (uint8_t c : b) {
     res = res * 0x100 + c;

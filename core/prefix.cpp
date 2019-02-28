@@ -79,7 +79,7 @@ Prefix operator"" _prefix(const char* in, std::size_t n) {
   std::string str(8 * 2, '0');
   std::copy_n(in, n, str.begin());
   const std::string bytes = hex_string_to_bytes(str);
-  uint64_t val = rlp::to_integer(bytes);
+  const uint64_t val = rlp::from_big_endian(bytes);
   return Prefix{n, val};
 }
 

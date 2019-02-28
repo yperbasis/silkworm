@@ -20,6 +20,8 @@
 
 #include <catch2/catch.hpp>
 
+using namespace silkworm;
+
 // https://github.com/ethereum/wiki/wiki/RLP
 TEST_CASE("Recursive Length Prefix", "[rlp]") {
   using namespace silkworm::rlp;
@@ -80,4 +82,10 @@ TEST_CASE("Recursive Length Prefix", "[rlp]") {
   }
 
   // TODO: bad inputs, positive integers with leading zeroes
+
+  SECTION("uint64_t vs boost multiprecision") {
+    const uint64_t scalar1 = 0xf409785633ef3294;
+    const UInt256 scalar2 = scalar1;
+    REQUIRE(to_binary(scalar1) == to_binary(scalar2));
+  }
 }

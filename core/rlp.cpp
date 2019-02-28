@@ -16,6 +16,7 @@
 
 #include "rlp.hpp"
 
+#include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <utility>
@@ -162,6 +163,12 @@ std::string to_binary(uint64_t x) {
     return "";
   else
     return to_binary(x / 256) + static_cast<char>(x % 256);
+}
+
+std::string to_binary(UInt256 x) {
+  std::string out;
+  export_bits(x, std::back_inserter(out), 8);
+  return out;
 }
 
 uint64_t to_integer(std::string_view b) {

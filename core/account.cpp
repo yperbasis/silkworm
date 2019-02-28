@@ -16,18 +16,14 @@
 
 #include "account.hpp"
 
-#include <iterator>
-
 #include "rlp.hpp"
 
 namespace silkworm {
 
 std::string to_rlp(const Account& in) {
-  std::string balance_bytes;
-  export_bits(in.balance, std::back_inserter(balance_bytes), 8);
   const rlp::List list = {
       rlp::to_binary(in.nonce),
-      balance_bytes,
+      rlp::to_binary(in.balance),
       std::string(byte_view(in.storage)),
       std::string(byte_view(in.code)),
   };

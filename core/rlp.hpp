@@ -24,6 +24,8 @@
 
 #include <boost/variant.hpp>
 
+#include "common.hpp"
+
 // https://github.com/ethereum/wiki/wiki/RLP
 namespace silkworm::rlp {
 
@@ -41,6 +43,9 @@ std::string encode(const Item&);
 Item decode(std::string_view);
 
 std::string to_binary(uint64_t);
+std::string to_binary(UInt256);
+
+// TODO UInt256
 uint64_t to_integer(std::string_view b);
 }  // namespace silkworm::rlp
 

@@ -22,8 +22,9 @@
 namespace silkworm {
 
 struct Account {
+  // should be UInt256 instead according to Yellow Paper's Eq (12)
   uint64_t nonce = 0;
-  BigInt balance = 0;
+  UInt256 balance = 0;
   Hash storage = kEmptyStringHash;
   Hash code = kEmptyStringHash;
 };

@@ -25,7 +25,7 @@
 
 namespace silkworm {
 
-using BigInt = boost::multiprecision::cpp_int;
+using UInt256 = boost::multiprecision::uint256_t;
 
 std::string bytes_to_hex_string(std::string_view);
 std::string hex_string_to_bytes(std::string_view);

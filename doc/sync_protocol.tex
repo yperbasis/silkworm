@@ -1,0 +1,52 @@
+\documentclass{amsart}
+
+\usepackage{epigraph}
+\usepackage{natbib}
+\usepackage{hyperref}
+
+\begin{document}
+\title{Red Queen's Sync Protocol for Ethereum}
+\author{Andrew Ashikhmin \& Alexey Akhunov}
+\date{March 2019}
+
+\begin{abstract}
+TODO: abstract.
+\end{abstract}
+
+\maketitle
+
+\epigraph{
+    "A slow sort of country!" said the Queen.
+    "Now, here, you see, it takes all the running you can do, to keep in the same place.
+    If you want to get somewhere else, you must run at least twice as fast as that!"
+    }{Lewis Carroll, Through the Looking-Glass and What Alice Found There}
+
+\section{Introduction}
+TODO: mention the sync failure problem \cite{akhunov_1x_workshop_part1} and the needs of light clients like Mustekala.
+Inspirations like BitTorrent, Parity's warp sync.
+
+\section{Notation}
+We mostly follow the conventions and notations of the Yellow Paper \cite{yellow_paper},
+for instance $\mathbb{Y}$ denotes the set of nibble sequences.
+TODO: prefix.
+
+\section{Protocol Specification}
+TODO: check geth's fast sync spec.
+
+\section{Suggested Full Sync Algorithm}
+TODO: top-level trie with branch nodes only that track blocks; phase 1, phase 2.
+
+\section{Performance Analysis}
+For this analysis we assume that all tries are well balanced.
+TODO: optimal phase 1 depth.
+
+Let us further assume that all leaf changes are random and independent of each other.
+TODO: optimal phase 2 depth.
+
+\section{Conclusion}
+TODO: conclusion.
+
+\bibliographystyle{plainnat}
+\bibliography{biblio}
+
+\end{document}

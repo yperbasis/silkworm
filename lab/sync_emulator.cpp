@@ -114,6 +114,8 @@ int main() {
   std::cout << "request total bytes " << stats.request_total_bytes << std::endl;
   std::cout << "#replies            " << stats.num_replies << std::endl;
   std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
+
+  // TODO: why reply_total_leaves so much bigger than generated_leaves?
   std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
   std::cout << "generated leaves    " << generated_leaves << std::endl;
 

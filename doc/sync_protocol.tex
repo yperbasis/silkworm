@@ -28,7 +28,10 @@ Inspirations like BitTorrent, Parity's warp sync.
 \section{Notation}
 We mostly follow the conventions and notations of the Yellow Paper \cite{yellow_paper},
 for instance $\mathbb{Y}$ denotes the set of nibble sequences.
-TODO: prefix.
+We use the letter $\pi$: $\pi \in \mathbb{Y}$, $||\pi|| \leq 64$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$.
+A key matches a prefix iff all their first nibbles are the same,
+$$\texttt{MATCH}(\mathbf{k}, \pi) \equiv \forall_{i < ||\pi||}: \mathbf{k}'[i] = \pi[i]$$
+($\mathbf{k}'$ is a sequence of nibbles, while $\mathbf{k}$ is a sequence of bytes.)
 
 \section{Protocol Specification}
 TODO: check geth's fast sync spec.
@@ -38,6 +41,9 @@ TODO: top-level trie with branch nodes only that track blocks; phase 1, phase 2.
 
 \section{Performance Analysis}
 For this analysis we assume that all tries are well balanced.
+We also assume that all top nodes up to a certain trie depth $d$ are branch nodes, not leaf or extension ones.
+This is a reasonable assumption if $d$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
+
 TODO: optimal phase 1 depth.
 
 Let us further assume that all leaf changes are random and independent of each other.

@@ -209,7 +209,7 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
 
 std::optional<sync::Request> State::next_sync_request() {
   if (!phase1_sync_done_) {
-    const auto r = next_sync_request(phase1_cursor_);
+    const auto r = next_sync_request(phase1_cursor_, true);
     if (!r) {
       phase1_sync_done_ = true;
     } else {
@@ -218,13 +218,14 @@ std::optional<sync::Request> State::next_sync_request() {
   }
 
   if (synced_block() == -1) {
-    return next_sync_request(phase2_cursor_);
+    return next_sync_request(phase2_cursor_, false);
   } else {
     return {};
   }
 }
 
-std::optional<sync::Request> State::next_sync_request(Prefix& prefix) {
+std::optional<sync::Request> State::next_sync_request(Prefix& prefix,
+                                                      bool phase1) {
   do {
     const auto& nd = node(prefix.size() - 1, prefix);
     const Nibble x = prefix[prefix.size() - 1];
@@ -236,7 +237,7 @@ std::optional<sync::Request> State::next_sync_request(Prefix& prefix) {
 
     ++prefix;
 
-    if (nd.synced[x] && cpd == prefix.size()) {
+    if (nd.synced[x] && (cpd == prefix.size() || phase1)) {
       continue;
     } else {
       if (root().block != -1) {

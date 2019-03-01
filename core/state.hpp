@@ -73,7 +73,7 @@ class State {
 
   bool phase1_sync_done_ = false;
 
-  std::optional<sync::Request> next_sync_request(Prefix&);
+  std::optional<sync::Request> next_sync_request(Prefix&, bool phase1);
 
   const Node& node(unsigned level, Prefix prefix) const {
     if (level == 0) {

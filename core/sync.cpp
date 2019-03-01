@@ -27,10 +27,11 @@ unsigned Hints::depth_to_fit_in_memory() const {
   return 15;
 }
 
-unsigned Hints::fine_grained_depth() const {
+unsigned Hints::optimal_phase2_depth() const {
   for (unsigned i = 1; i < 16; ++i) {
     const uint64_t num_bottom_hashes = 1ull << (i * 4);
-    if (num_bottom_hashes >= num_leaves) {
+    if (num_bottom_hashes * (16 * proof_size + 15 * reply_overhead) >=
+        15 * num_leaves * leaf_size) {
       return i;
     }
   }
@@ -51,7 +52,7 @@ unsigned Hints::optimal_phase1_depth() const {
   return 16;
 }
 
-double Hints::phase1_reply_overhead() const {
+double Hints::inf_bandwidth_reply_overhead() const {
   const auto depth = optimal_phase1_depth();
   const uint64_t num_requests = 1ull << (depth * 4);
   const uint64_t num_proofs = num_tree_nodes(depth);

@@ -24,30 +24,83 @@ TODO: abstract.
 \section{Introduction}
 TODO: mention the sync failure problem \cite{akhunov_1x_workshop_part1} and the needs of light clients like Mustekala.
 Inspirations like BitTorrent, Parity's warp sync.
+Snapshot synchronisation rather than from genesis.
 
 \section{Notation}
 We mostly follow the conventions and notations of the Yellow Paper \cite{yellow_paper},
 for instance $\mathbb{Y}$ denotes the set of nibble sequences.
-We use the letter $\pi$: $\pi \in \mathbb{Y}$, $||\pi|| \leq 64$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$.
+We use the letter $\pi$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$,
+\begin{equation}
+    \pi \in \mathbb{Y} \; \land \; ||\pi|| \leq 64
+\end{equation}
 A key matches a prefix iff all their first nibbles are the same,
-$$\texttt{MATCH}(\mathbf{k}, \pi) \equiv \forall_{i < ||\pi||}: \mathbf{k}'[i] = \pi[i]$$
+\begin{equation}
+    \texttt{MATCH}(\mathbf{k}, \pi) \equiv \forall_{i < ||\pi||}: \mathbf{k}'[i] = \pi[i]
+\end{equation}
 ($\mathbf{k}'$ is a sequence of nibbles, while $\mathbf{k}$ is a sequence of bytes.)
 
 \section{Protocol Specification}
-TODO: check geth's fast sync spec.
+TODO: protocol spec; cross-check it against geth's fast sync spec.
+
+% TODO: internal notation consistency + cross-check against the Yellow Paper.
+
+$o$ -- reply overhead in bytes.
+
+$b$ -- size of a branch node in bytes.
+
+$l$ -- average leaf size in bytes.
+
+$||R_b||$ -- number of nodes in reply.
+
+$||R_l||$ -- number of leaves in reply.
+
+Thus the size of a reply, assuming the average leaf size, is
+\begin{equation}
+    S(R) = o + ||R_b|| b + ||R_l|| l
+\end{equation}
+TODO: RLP changes the formula slightly.
 
 \section{Suggested Full Sync Algorithm}
-TODO: top-level trie with branch nodes only that track blocks; phase 1, phase 2.
+TODO: top-level trie with branch nodes only; nodes track blocks; phase 1, phase 2.
 
 \section{Performance Analysis}
 For this analysis we assume that all tries are well balanced.
-We also assume that all top nodes up to a certain trie depth $d$ are branch nodes, not leaf or extension ones.
-This is a reasonable assumption if $d$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
+We also assume that all top nodes up to a certain trie level $i$ are branch nodes, not leaf nor extension nodes.
+This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
+
+$t$ -- total number of leaves in the trie.
 
 TODO: optimal phase 1 depth.
 
-Let us further assume that all leaf changes are random and independent of each other.
-TODO: optimal phase 2 depth.
+Now let us find the maximum size $d$ of the request prefix $\pi$ that makes sense to use when we are catching up (phase 2 of the sync).
+Let assume that only one leaf that matches $\pi$ has changed.
+(If we know that there are no changes, there is no need for a sync request.)
+That is a reasonable assumption if we are not too many blocks behind, there are not that many changes per block, and $d$ is sufficiently large.
+(For instance, if we are 100 blocks behind, and there are 500 leaf changes per block, then $d \geq 4$ will suffice.)
+Consider two options: request the prefix $\pi$ or send requests with prefixes $\pi \cdot 0, ..., \pi \cdot 15$ of size $d+1$
+(not necesseraly all 16 of them).
+In the first case we receive a reply of the size, on average,
+\begin{equation}
+    S = o + ||R_b|| b + \frac{t}{16^d} l
+\end{equation}
+For the second case we need to send at most two requests,
+as the first reply will give us the information to identify which nibble has changed.
+(With the probability $\frac{1}{16}$ the second request is not necessary.)
+The combined size of those 1 or 2 replies, on average, is
+\begin{equation}
+    S' = \left( 1 + \frac{15}{16} \right) o + (||R_b|| + 1) b + \frac{t}{16^{d+1}} l
+\end{equation}
+It does not make sense to prefer requests with longer prefixes if $S \leq S'$.
+Solving this inequality, we obtain
+\begin{equation}
+    16^d (16b + 15o) \geq 15tl
+\end{equation}
+In other words, it does not make sense to use prefixes longer than
+\begin{equation}
+\left\lceil \log_{16} \frac{15tl} {16b + 15o} \right\rceil
+\end{equation}
+
+TODO: convergence analysis.
 
 \section{Conclusion}
 TODO: conclusion.

@@ -25,7 +25,7 @@
 
 using namespace silkworm;
 
-static const auto kInitialAccounts = 2'000'000;
+static const auto kInitialAccounts = 10'000'000;
 static const auto kNewAccountsPerBlock = 300;
 static const auto kBlockTime = 15;                   // sec
 static const auto kBandwidth = 2 * 1024 * 1024 / 8;  // bytes per sec
@@ -38,13 +38,12 @@ void print_hints(const sync::Hints& hints) {
   std::cout << "depth to fit in memory " << mem_depth << " ("
             << std::setprecision(3)
             << hints.tree_size_in_bytes(mem_depth) * 1e-6 << " MB)\n";
-  std::cout << "fine grained depth     " << hints.fine_grained_depth()
-            << std::endl;
   std::cout << "optimal phase 1 depth  " << hints.optimal_phase1_depth()
             << std::endl;
-  const double phase1_overhead = hints.phase1_reply_overhead();
+  std::cout << "optimal phase 2 depth  " << hints.optimal_phase2_depth()
+            << std::endl;
   std::cout << "overhead (∞ bandwidth) " << std::setprecision(2)
-            << phase1_overhead * 100 << "%\n\n";
+            << hints.inf_bandwidth_reply_overhead() * 100 << "%\n\n";
 }
 
 int main() {
@@ -77,12 +76,16 @@ int main() {
   Node leecher(leecher_state, hints, {});
   sync::Stats stats;
   auto new_blocks = 0;
+  auto generated_leaves = kInitialAccounts;
 
   while (true) {
     std::cout << "new block " << new_blocks << " phase "
               << (leecher.phase1_sync_done() + 1) << std::endl;
 
     leecher.sync(miner, stats, kBandwidth * kBlockTime);
+
+    std::cout << "leaves received " << stats.reply_total_leaves
+              << " vs generated " << generated_leaves << std::endl;
 
     if (leecher.sync_done()) {
       break;
@@ -95,6 +98,7 @@ int main() {
     }
     miner.seal_block();
 
+    generated_leaves += kNewAccountsPerBlock;
     ++new_blocks;
   }
 
@@ -102,10 +106,7 @@ int main() {
             << "\n\n";
 
   const auto time2 = microsec_clock::local_time();
-
   const auto emulated_time = seconds((new_blocks + 1) * kBlockTime);
-  const auto generated_leaves =
-      kInitialAccounts + new_blocks * kNewAccountsPerBlock;
 
   std::cout << "CPU time            " << time2 - time1 << std::endl;
   std::cout << "Emulated time       " << emulated_time << std::endl;
@@ -114,14 +115,12 @@ int main() {
   std::cout << "request total bytes " << stats.request_total_bytes << std::endl;
   std::cout << "#replies            " << stats.num_replies << std::endl;
   std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
-
-  // TODO: why reply_total_leaves so much bigger than generated_leaves?
   std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
   std::cout << "generated leaves    " << generated_leaves << std::endl;
 
   double leaf_bytes = generated_leaves * sync::kLeafSize;
   double overhead = stats.reply_total_bytes / leaf_bytes - 1;
-  std::cout << "reply overhead      " << std::setprecision(3) << overhead * 100
+  std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
             << "%\n\n";
 
   const Prefix null_prefix(0);

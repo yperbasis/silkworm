@@ -26,7 +26,7 @@ template <class T>
 struct AlwaysFalse : std::false_type {};
 
 unsigned depth(const silkworm::sync::Hints& hints) {
-  return std::min(hints.fine_grained_depth(), hints.depth_to_fit_in_memory());
+  return std::min(hints.optimal_phase2_depth(), hints.depth_to_fit_in_memory());
 }
 
 unsigned phase1_depth(const silkworm::sync::Hints& hints) {

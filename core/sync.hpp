@@ -29,8 +29,9 @@
 /* Sync Research
 [DONE]
   0. single-machine in-memory PoC with ~1m dust accounts
-[TODO]
   1. optimal phase 2 depth
+[TODO]
+  1. describe the algo. perhaps we need to use geth's fast sync for some bits
   2. theoretical convergence (if possible)
   3. LMDB(?) database
   4. experimental convergence with ~100m dust accounts
@@ -137,9 +138,9 @@ struct Hints {
   unsigned depth_to_fit_in_memory() const;
 
   // not taking depth_to_fit_in_memory into account
-  unsigned fine_grained_depth() const;  // ~1 leaf per bottom hash
+  unsigned optimal_phase2_depth() const;
   unsigned optimal_phase1_depth() const;
-  double phase1_reply_overhead() const;  // over warp sync
+  double inf_bandwidth_reply_overhead() const;  // compared to warp sync
 
   static uint64_t num_tree_nodes(unsigned depth) {
     return ((1ull << (4 * depth)) - 1) / 15;

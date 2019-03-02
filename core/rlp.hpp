@@ -38,7 +38,14 @@ using List = std::vector<Item>;
 // TODO: submit a bugreport to boost
 bool are_equal(const Item&, const Item&);
 
-std::string encode(const Item&);
+void encode(const Item&, std::string& out);
+
+inline std::string encode(const Item& item) {
+  std::string out;
+  encode(item, out);
+  return out;
+}
+
 Item decode(std::string_view);
 
 std::string to_big_endian(uint64_t);

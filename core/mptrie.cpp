@@ -22,11 +22,22 @@ namespace silkworm::mptrie {
 
 // https://github.com/ethereum/wiki/wiki/Patricia-Tree
 Hash branch_node_hash(std::bitset<16> empty, const std::array<Hash, 16>& hash) {
-  rlp::List rlp(16);
+  thread_local rlp::List rlp(16, "");
+
   for (unsigned i = 0; i < 16; ++i) {
-    rlp[i] = !empty[i] ? std::string{byte_view(hash[i])} : "";
+    auto& str = boost::get<std::string>(rlp[i]);
+    if (empty[i]) {
+      str.clear();
+    } else {
+      str = byte_view(hash[i]);
+    }
   }
-  return keccak(rlp::encode(rlp));
+
+  thread_local std::string out;
+  out.clear();
+  rlp::encode(rlp, out);
+
+  return keccak(out);
 }
 
 }  // namespace silkworm::mptrie

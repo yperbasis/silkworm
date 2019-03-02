@@ -21,12 +21,12 @@
 namespace silkworm {
 
 std::string to_rlp(const Account& in) {
-  const rlp::List list = {
-      rlp::to_big_endian(in.nonce),
-      rlp::to_big_endian(in.balance),
-      std::string(byte_view(in.storage)),
-      std::string(byte_view(in.code)),
-  };
+  thread_local rlp::List list = {"", "", "", ""};
+  boost::get<std::string>(list[0]) = rlp::to_big_endian(in.nonce);
+  boost::get<std::string>(list[1]) = rlp::to_big_endian(in.balance);
+  boost::get<std::string>(list[2]) = byte_view(in.storage);
+  boost::get<std::string>(list[3]) = byte_view(in.code);
+
   return rlp::encode(list);
 }
 }  // namespace silkworm

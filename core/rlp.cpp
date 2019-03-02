@@ -46,21 +46,64 @@ std::string encode_length(uint64_t len, char offset) {
   }
 }
 
-struct Encoder : public boost::static_visitor<std::string> {
-  std::string operator()(const std::string& input) const {
-    if (input.length() == 1 && static_cast<unsigned>(input[0]) < 0x80)
-      return input;
-    else
-      return encode_length(input.length(), 0x80) + input;
+size_t big_endian_length(uint64_t x) {
+  size_t len = 0;
+  for (; x != 0; x /= 256) {
+    ++len;
+  }
+  return len;
+}
+
+size_t length_of_length(uint64_t len) {
+  return len < 56 ? 1 : 1 + big_endian_length(len);
+}
+
+struct LengthEncoder : public boost::static_visitor<size_t> {
+  size_t operator()(const std::string& in) const {
+    size_t len = in.length();
+
+    if (in.length() != 1 || static_cast<unsigned>(in[0]) >= 0x80) {
+      len += length_of_length(in.length());
+    }
+
+    return len;
   }
 
-  std::string operator()(const List& input) const {
-    std::string output;
-    for (const auto& item : input) {
-      output += encode(item);
+  size_t operator()(const List& in) const {
+    size_t len = 0;
+    for (const auto& item : in) {
+      len += boost::apply_visitor(LengthEncoder(), item);
     }
-    return encode_length(output.length(), 0xc0) + output;
+    return length_of_length(len) + len;
   }
+};
+
+class Encoder : public boost::static_visitor<> {
+ public:
+  explicit Encoder(std::string& out) : out_(out){};
+
+  void operator()(const std::string& in) const {
+    if (in.length() != 1 || static_cast<unsigned>(in[0]) >= 0x80) {
+      out_ += encode_length(in.length(), 0x80);
+    }
+
+    out_ += in;
+  }
+
+  void operator()(const List& in) const {
+    size_t len = 0;
+    for (const auto& item : in) {
+      len += boost::apply_visitor(LengthEncoder(), item);
+    }
+    out_ += encode_length(len, 0xc0);
+
+    for (const auto& item : in) {
+      encode(item, out_);
+    }
+  }
+
+ private:
+  std::string& out_;
 };
 
 struct DecodedLength {
@@ -145,7 +188,9 @@ std::optional<Item> decode_impl(std::string_view& input) {
 
 namespace silkworm::rlp {
 
-std::string encode(const Item& x) { return boost::apply_visitor(Encoder(), x); }
+void encode(const Item& in, std::string& out) {
+  boost::apply_visitor(Encoder(out), in);
+}
 
 Item decode(std::string_view input) {
   const auto output = decode_impl(input);

@@ -42,6 +42,7 @@ TEST_CASE("Even prefix") {
   REQUIRE(prefix[3] == 0x7);
   REQUIRE(prefix[4] == 0x1);
   REQUIRE(prefix[5] == 0x4);
+  REQUIRE(prefix.last() == 0x4);
 
   prefix.set(1, 0xa);
   REQUIRE(prefix == "0ad714"_prefix);
@@ -73,6 +74,7 @@ TEST_CASE("Odd prefix") {
   REQUIRE(prefix[2] == 0xd);
   REQUIRE(prefix[3] == 0x7);
   REQUIRE(prefix[4] == 0x1);
+  REQUIRE(prefix.last() == 0x1);
 
   prefix.set(1, 0xa);
   REQUIRE(prefix == "0ad71"_prefix);

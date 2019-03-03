@@ -35,6 +35,8 @@ class Prefix {
 
   Nibble operator[](size_t pos) const { return (val_ << (pos * 4)) >> 60; }
 
+  Nibble last() const { return (*this)[size_ - 1]; }
+
   void set(size_t pos, Nibble x) {
     const auto shift = 60 - pos * 4;
     val_ = (val_ & ~(0xfull << shift)) + (static_cast<uint64_t>(x) << shift);

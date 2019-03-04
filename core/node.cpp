@@ -61,7 +61,7 @@ void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
     std::visit(
         [&state, &stats, &bytes_used](auto&& rpl) {
           using T = std::decay_t<decltype(rpl)>;
-          if constexpr (std::is_same_v<T, sync::Reply>) {
+          if constexpr (std::is_same_v<T, sync::LeavesReply>) {
             ++stats.num_replies;
             bytes_used += rpl.byte_size();
             stats.reply_total_bytes += rpl.byte_size();

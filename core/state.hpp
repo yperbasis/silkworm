@@ -37,13 +37,14 @@ class State {
 
   void put(Hash key, std::string val);
 
-  std::variant<sync::Reply, sync::Error> get_leaves(const sync::Request&) const;
+  std::variant<sync::LeavesReply, sync::Error> get_leaves(
+      const sync::GetLeavesRequest&) const;
 
   bool phase1_sync_done() const { return phase1_sync_done_; }
 
-  std::optional<sync::Request> next_sync_request();
+  std::optional<sync::GetLeavesRequest> next_sync_request();
 
-  void process_sync_data(const sync::Reply&);
+  void process_sync_data(const sync::LeavesReply&);
 
   int32_t synced_block() const {
     return root().synced.all() ? root().block : -1;
@@ -73,9 +74,9 @@ class State {
 
   bool phase1_sync_done_ = false;
 
-  std::optional<sync::Request> phase1_sync_request();
-  std::optional<sync::Request> phase2_sync_request();
-  std::optional<sync::Request> next_sync_request(Prefix&, bool phase1);
+  std::optional<sync::GetLeavesRequest> phase1_sync_request();
+  std::optional<sync::GetLeavesRequest> phase2_sync_request();
+  std::optional<sync::GetLeavesRequest> next_sync_request(Prefix&, bool phase1);
 
   static size_t node_index(unsigned level, Prefix prefix) {
     return level == 0 ? 0 : prefix.val() >> (64 - level * 4);

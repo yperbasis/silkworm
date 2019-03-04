@@ -54,8 +54,8 @@ TEST_CASE("State sync") {
     seeder.init_from_db(block);
 
     const auto reply_wrapper = seeder.get_leaves(*request);
-    REQUIRE(std::holds_alternative<sync::Reply>(reply_wrapper));
-    const auto reply = std::get<sync::Reply>(reply_wrapper);
+    REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
+    const auto reply = std::get<sync::LeavesReply>(reply_wrapper);
     REQUIRE(reply.prefix == request->prefix);
     REQUIRE(reply.block == block);
     REQUIRE(reply.leaves);
@@ -72,11 +72,13 @@ TEST_CASE("State sync") {
     leecher.process_sync_data(reply);
     // leecher turning into seeder
     const auto new_reply_wrapper = leecher.get_leaves(*request);
-    REQUIRE(std::holds_alternative<sync::Reply>(new_reply_wrapper));
-    const auto new_reply = std::get<sync::Reply>(new_reply_wrapper);
+    REQUIRE(std::holds_alternative<sync::LeavesReply>(new_reply_wrapper));
+    const auto new_reply = std::get<sync::LeavesReply>(new_reply_wrapper);
     REQUIRE(new_reply.prefix == request->prefix);
     REQUIRE(new_reply.block == block);
     REQUIRE(new_reply.leaves);
     REQUIRE(*new_reply.leaves == leaves);
   }
+
+  // TODO test phase 2 sync
 }

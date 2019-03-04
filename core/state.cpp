@@ -155,8 +155,8 @@ unsigned State::consistent_path_depth(Prefix prefix) const {
   return prefix.size();
 }
 
-std::variant<sync::Reply, sync::Error> State::get_leaves(
-    const sync::Request& request) const {
+std::variant<sync::LeavesReply, sync::Error> State::get_leaves(
+    const sync::GetLeavesRequest& request) const {
   const auto prefix = request.prefix;
   if (prefix.size() == 0) {
     throw std::runtime_error("TODO prefix.size = 0 not implemented yet");
@@ -181,7 +181,7 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
     return sync::kDontHaveData;
   }
 
-  sync::Reply reply(prefix, nd.block);
+  sync::LeavesReply reply(prefix, nd.block);
 
   const bool full_proof = rb < nd.block;
   const unsigned proof_start = full_proof ? 0 : request.start_proof_from;
@@ -207,7 +207,7 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
   return reply;
 }
 
-std::optional<sync::Request> State::next_sync_request() {
+std::optional<sync::GetLeavesRequest> State::next_sync_request() {
   if (!phase1_sync_done_) {
     const auto r = phase1_sync_request();
     if (!r)
@@ -223,18 +223,19 @@ std::optional<sync::Request> State::next_sync_request() {
   }
 }
 
-std::optional<sync::Request> State::phase1_sync_request() {
+std::optional<sync::GetLeavesRequest> State::phase1_sync_request() {
   return next_sync_request(phase1_cursor_, true);
 }
 
-std::optional<sync::Request> State::phase2_sync_request() {
+std::optional<sync::GetLeavesRequest> State::phase2_sync_request() {
   return next_sync_request(phase2_cursor_, false);
 }
 
-std::optional<sync::Request> State::next_sync_request(Prefix& cursor,
-                                                      bool phase1) {
+std::optional<sync::GetLeavesRequest> State::next_sync_request(Prefix& cursor,
+                                                               bool phase1) {
   do {
     const auto prefix = cursor;
+    ++cursor;
 
     const auto& nd = node(prefix.size() - 1, prefix);
     const Nibble x = prefix.last();
@@ -242,12 +243,10 @@ std::optional<sync::Request> State::next_sync_request(Prefix& cursor,
     update_blocks_down_path(prefix);
     const auto cpd = consistent_path_depth(prefix);
 
-    cursor = prefix + 1;
-
     if (nd.synced[x] && (cpd == prefix.size() || phase1)) {
       continue;
     } else {
-      sync::Request request{prefix};
+      sync::GetLeavesRequest request{prefix};
 
       if (root().block != -1) {
         request.block = root().block;
@@ -274,7 +273,7 @@ bool State::nibble_obsolete(const Node& node, const Nibble nibble,
     return node.empty[nibble] != new_empty;
 }
 
-void State::process_sync_data(const sync::Reply& reply) {
+void State::process_sync_data(const sync::LeavesReply& reply) {
   const auto prefix = reply.prefix;
   if (prefix.size() == 0) {
     throw std::runtime_error("TODO prefix.size = 0 not implemented yet");

@@ -47,8 +47,8 @@
 
 namespace silkworm::sync {
 
-// GetLeaves
-struct Request {
+// TODO move to protocol
+struct GetLeavesRequest {
   // request all leaves with this prefix
   Prefix prefix;
 
@@ -62,7 +62,7 @@ struct Request {
   // known hash(leaves), allows to avoid re-sending the same leaves
   std::optional<Hash> hash_of_leaves;
 
-  explicit Request(Prefix prefix) : prefix{prefix} {}
+  explicit GetLeavesRequest(Prefix prefix) : prefix{prefix} {}
 
   size_t byte_size() const {
     return sizeof(*this) + (hash_of_leaves ? kHashBytes : 0);
@@ -85,7 +85,7 @@ struct Proof {
   std::array<Hash, 16> hash;
 };
 
-struct Reply {
+struct LeavesReply {
   // must = request.prefix
   Prefix prefix;
 
@@ -102,7 +102,7 @@ struct Reply {
   std::optional<std::vector<Leaf>>
       leaves;  // must be strictly ordered by hash_key
 
-  Reply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
+  LeavesReply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
 
   size_t byte_size() const {
     auto sz = sizeof(*this) + proof.size() * sizeof(Proof);
@@ -133,7 +133,7 @@ struct Hints {
   unsigned proof_size = sizeof(Proof);
   unsigned node_size = proof_size + 8;
   unsigned leaf_size = kLeafSize;
-  unsigned reply_overhead = sizeof(Reply);
+  unsigned reply_overhead = sizeof(LeavesReply);
 
   unsigned depth_to_fit_in_memory() const;
 

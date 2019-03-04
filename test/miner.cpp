@@ -35,12 +35,12 @@ TEST_CASE("Block creation", "[miner]") {
   const auto key = keccak(byte_view(address));
 
   const auto prefix = Prefix(2, static_cast<uint64_t>(key[0]) << (7 * 8));
-  const auto sync_request = sync::Request{prefix};
+  const auto sync_request = sync::GetLeavesRequest{prefix};
 
   // empty state
   auto reply_wrapper = miner.get_state_leaves(sync_request);
-  REQUIRE(std::holds_alternative<sync::Reply>(reply_wrapper));
-  auto reply = std::get<sync::Reply>(reply_wrapper);
+  REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
+  auto reply = std::get<sync::LeavesReply>(reply_wrapper);
   REQUIRE(reply.prefix == prefix);
   REQUIRE(reply.block == block);
   REQUIRE(reply.leaves);
@@ -53,8 +53,8 @@ TEST_CASE("Block creation", "[miner]") {
 
   // state with the account
   reply_wrapper = miner.get_state_leaves(sync_request);
-  REQUIRE(std::holds_alternative<sync::Reply>(reply_wrapper));
-  reply = std::get<sync::Reply>(reply_wrapper);
+  REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
+  reply = std::get<sync::LeavesReply>(reply_wrapper);
   REQUIRE(reply.prefix == prefix);
   REQUIRE(reply.block == block + 1);
   REQUIRE(reply.leaves);

@@ -73,19 +73,20 @@ class State {
 
   bool phase1_sync_done_ = false;
 
+  std::optional<sync::Request> phase1_sync_request();
+  std::optional<sync::Request> phase2_sync_request();
   std::optional<sync::Request> next_sync_request(Prefix&, bool phase1);
 
+  static size_t node_index(unsigned level, Prefix prefix) {
+    return level == 0 ? 0 : prefix.val() >> (64 - level * 4);
+  }
+
   const Node& node(unsigned level, Prefix prefix) const {
-    if (level == 0) {
-      return root();
-    } else {
-      return tree_[level][prefix.val() >> (64 - level * 4)];
-    }
+    return tree_[level][node_index(level, prefix)];
   }
 
   Node& node(unsigned level, Prefix prefix) {
-    return const_cast<Node&>(
-        static_cast<const State*>(this)->node(level, prefix));
+    return tree_[level][node_index(level, prefix)];
   }
 
   Node& root() { return tree_[0][0]; }

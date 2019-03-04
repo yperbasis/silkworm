@@ -170,7 +170,7 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
   }
 
   const Node& nd = node(prefix.size() - 1, prefix);
-  const auto nibble = prefix[prefix.size() - 1];
+  const auto nibble = prefix.last();
 
   if (!nd.synced[nibble]) {
     return sync::kDontHaveData;
@@ -209,37 +209,46 @@ std::variant<sync::Reply, sync::Error> State::get_leaves(
 
 std::optional<sync::Request> State::next_sync_request() {
   if (!phase1_sync_done_) {
-    const auto r = next_sync_request(phase1_cursor_, true);
-    if (!r) {
+    const auto r = phase1_sync_request();
+    if (!r)
       phase1_sync_done_ = true;
-    } else {
+    else
       return r;
-    }
   }
 
   if (synced_block() == -1) {
-    return next_sync_request(phase2_cursor_, false);
+    return phase2_sync_request();
   } else {
     return {};
   }
 }
 
-std::optional<sync::Request> State::next_sync_request(Prefix& prefix,
+std::optional<sync::Request> State::phase1_sync_request() {
+  return next_sync_request(phase1_cursor_, true);
+}
+
+std::optional<sync::Request> State::phase2_sync_request() {
+  return next_sync_request(phase2_cursor_, false);
+}
+
+std::optional<sync::Request> State::next_sync_request(Prefix& cursor,
                                                       bool phase1) {
   do {
+    const auto prefix = cursor;
+
     const auto& nd = node(prefix.size() - 1, prefix);
-    const Nibble x = prefix[prefix.size() - 1];
+    const Nibble x = prefix.last();
 
     update_blocks_down_path(prefix);
     const auto cpd = consistent_path_depth(prefix);
 
-    sync::Request request{prefix};
-
-    ++prefix;
+    cursor = prefix + 1;
 
     if (nd.synced[x] && (cpd == prefix.size() || phase1)) {
       continue;
     } else {
+      sync::Request request{prefix};
+
       if (root().block != -1) {
         request.block = root().block;
       }
@@ -252,7 +261,7 @@ std::optional<sync::Request> State::next_sync_request(Prefix& prefix,
 
       return request;
     }
-  } while (prefix.val() != 0);
+  } while (cursor.val() != 0);
 
   return {};
 }
@@ -295,7 +304,7 @@ void State::process_sync_data(const sync::Reply& reply) {
     const auto& new_hash =
         reply.proof.empty() ? main_node.hash : reply.proof.back().hash;
 
-    const auto nibble = prefix[prefix.size() - 1];
+    const auto nibble = prefix.last();
 
     for (unsigned j = 0; j < 16; ++j) {
       Prefix nibble_prefix = prefix;
@@ -329,7 +338,7 @@ void State::process_sync_data(const sync::Reply& reply) {
     auto btm_prfx = Prefix{depth(), prefix.val()};
 
     for (uint64_t i = 0; i < (1ull << (4 * tail)); ++i, ++btm_prfx) {
-      const auto nibble = btm_prfx[depth() - 1];
+      const auto nibble = btm_prfx.last();
       auto& bottom_node = node(depth() - 1, btm_prfx);
 
       const auto range_begin = it;
@@ -362,7 +371,7 @@ void State::process_sync_data(const sync::Reply& reply) {
       const auto shift = 4 * (level - prefix.size());
 
       for (uint64_t i = 0; i < (1ull << shift); ++i, ++sub_prfx) {
-        const auto nibble = sub_prfx[level - 1];
+        const auto nibble = sub_prfx.last();
         auto& parent = node(level - 1, sub_prfx);
         auto& child = node(level, sub_prfx);
 

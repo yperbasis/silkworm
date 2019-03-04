@@ -38,11 +38,12 @@
   5. smart contract storage
   6. extension/leaf nodes
   7. real protocol + doc
-  8. network layer, p2p
-  9. multiple leechers, BitTorrent-like swarm
-  10. proof checking
-  11. compare against geth's fast sync and parity's warp sync
-  12. real historical Ethereum data
+  8. chain reorg
+  9. network layer, p2p
+  10. multiple leechers, BitTorrent-like swarm
+  11. proof checking
+  12. compare against geth's fast sync and parity's warp sync
+  13. real historical Ethereum data
 */
 
 namespace silkworm::sync {
@@ -52,12 +53,14 @@ struct GetLeavesRequest {
   // request all leaves with this prefix
   Prefix prefix;
 
-  // only applies if respond.block = request.block
-  // otherwise full proof is required
-  uint8_t start_proof_from = 0;  // <= prefix.size
+  // If from_level is greater than zero, the given number of trie nodes closest
+  // to the root must be omitted from the proof.
+  // Only applies if respond.block_number = request.block_number,
+  // otherwise full proof is required.
+  uint8_t from_level = 0;  // <= prefix.size
 
   // may not respond with older data
-  std::optional<uint32_t> block;
+  std::optional<uint32_t> block_number;
 
   // known hash(leaves), allows to avoid re-sending the same leaves
   std::optional<Hash> hash_of_leaves;
@@ -87,14 +90,14 @@ struct Proof {
 
 struct LeavesReply {
   // must = request.prefix
-  Prefix prefix;
+  Prefix prefix;  // TODO replace with reqID
 
-  // must be >= request.block
-  uint32_t block = 0;
+  // must be >= request.block_number
+  uint32_t block_number = 0;
 
-  // If block = request.block
-  // proof.size = prefix.size - start_proof_from
-  // else if block > request.block || request.block not set
+  // If block_number = request.block_number
+  // proof.size = prefix.size - from_level // TODO extension/leaf nodes
+  // else if block_number > request.block_number || request.block_number not set
   // proof.size = prefix.size
   std::vector<Proof> proof;
 
@@ -102,7 +105,8 @@ struct LeavesReply {
   std::optional<std::vector<Leaf>>
       leaves;  // must be strictly ordered by hash_key
 
-  LeavesReply(Prefix prefix, uint32_t block) : prefix{prefix}, block{block} {}
+  LeavesReply(Prefix prefix, uint32_t block_number)
+      : prefix{prefix}, block_number{block_number} {}
 
   size_t byte_size() const {
     auto sz = sizeof(*this) + proof.size() * sizeof(Proof);

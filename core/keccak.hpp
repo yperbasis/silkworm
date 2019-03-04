@@ -28,6 +28,7 @@ namespace silkworm {
 static const Hash kEmptyStringHash =
     "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"_x32;
 
+// TODO compare performance against CryptoPP
 inline Hash keccak(std::string_view in) {
   Hash out;
   // https://stackoverflow.com/questions/10151834/why-cant-i-static-cast-between-char-and-unsigned-char

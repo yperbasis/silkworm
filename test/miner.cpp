@@ -42,7 +42,7 @@ TEST_CASE("Block creation", "[miner]") {
   REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
   auto reply = std::get<sync::LeavesReply>(reply_wrapper);
   REQUIRE(reply.prefix == prefix);
-  REQUIRE(reply.block == block);
+  REQUIRE(reply.block_number == block);
   REQUIRE(reply.leaves);
   REQUIRE(reply.leaves->empty());
 
@@ -56,7 +56,7 @@ TEST_CASE("Block creation", "[miner]") {
   REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
   reply = std::get<sync::LeavesReply>(reply_wrapper);
   REQUIRE(reply.prefix == prefix);
-  REQUIRE(reply.block == block + 1);
+  REQUIRE(reply.block_number == block + 1);
   REQUIRE(reply.leaves);
   REQUIRE(reply.leaves->size() == 1);
 

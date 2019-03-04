@@ -32,7 +32,7 @@ TEST_CASE("State sync") {
   SECTION("frozen block") {
     auto request = leecher.next_sync_request();
     REQUIRE(request);
-    REQUIRE(!request->block);
+    REQUIRE(!request->block_number);
     REQUIRE(!request->hash_of_leaves);
 
     const auto no_data = leecher.get_leaves(*request);
@@ -57,7 +57,7 @@ TEST_CASE("State sync") {
     REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
     const auto reply = std::get<sync::LeavesReply>(reply_wrapper);
     REQUIRE(reply.prefix == request->prefix);
-    REQUIRE(reply.block == block);
+    REQUIRE(reply.block_number == block);
     REQUIRE(reply.leaves);
 
     const auto& leaves = *reply.leaves;
@@ -75,7 +75,7 @@ TEST_CASE("State sync") {
     REQUIRE(std::holds_alternative<sync::LeavesReply>(new_reply_wrapper));
     const auto new_reply = std::get<sync::LeavesReply>(new_reply_wrapper);
     REQUIRE(new_reply.prefix == request->prefix);
-    REQUIRE(new_reply.block == block);
+    REQUIRE(new_reply.block_number == block);
     REQUIRE(new_reply.leaves);
     REQUIRE(*new_reply.leaves == leaves);
   }

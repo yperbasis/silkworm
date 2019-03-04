@@ -176,7 +176,8 @@ std::variant<sync::LeavesReply, sync::Error> State::get_leaves(
     return sync::kDontHaveData;
   }
 
-  auto rb = request.block ? static_cast<int32_t>(*request.block) : -1;
+  auto rb =
+      request.block_number ? static_cast<int32_t>(*request.block_number) : -1;
   if (rb > nd.block) {
     return sync::kDontHaveData;
   }
@@ -184,7 +185,7 @@ std::variant<sync::LeavesReply, sync::Error> State::get_leaves(
   sync::LeavesReply reply(prefix, nd.block);
 
   const bool full_proof = rb < nd.block;
-  const unsigned proof_start = full_proof ? 0 : request.start_proof_from;
+  const unsigned proof_start = full_proof ? 0 : request.from_level;
 
   for (unsigned i = proof_start; i < prefix.size(); ++i) {
     const auto& y = node(i, prefix);
@@ -249,10 +250,10 @@ std::optional<sync::GetLeavesRequest> State::next_sync_request(Prefix& cursor,
       sync::GetLeavesRequest request{prefix};
 
       if (root().block != -1) {
-        request.block = root().block;
+        request.block_number = root().block;
       }
 
-      request.start_proof_from = cpd;
+      request.from_level = cpd;
 
       if (!nd.empty[x] && nd.synced[x]) {
         request.hash_of_leaves = nd.hash[x];
@@ -284,7 +285,7 @@ void State::process_sync_data(const sync::LeavesReply& reply) {
 
   auto& main_node = node(prefix.size() - 1, prefix);
 
-  int32_t rb = reply.block;
+  int32_t rb = reply.block_number;
   if (root().block > rb) {
     return;  // old reply
   }

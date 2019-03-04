@@ -52,6 +52,11 @@ class Prefix {
     return *this;
   }
 
+  friend Prefix operator+(Prefix prfx, uint64_t inc) {
+    prfx += inc;
+    return prfx;
+  }
+
   Hash padded() const;
 
   bool matches(const Hash&) const;

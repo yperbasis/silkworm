@@ -20,7 +20,48 @@
 
 using namespace silkworm;
 
-TEST_CASE("State sync") {
+TEST_CASE("GetNode Request", "[sync]") {
+  const auto depth = 5u;
+  const auto phase1_depth = 3u;
+  const auto block = 74;
+
+  DbBucket db;
+  db.put("27407374bb099f172303644baef2dcc703c0e500b653ca82273b7b045d85a470"_x32,
+         "crypto kitties");
+  db.put("274cc374bb09f9172122dcc70c03036123e0e178b654cd82273b7b045d85a499"_x32,
+         "teh DAO");
+
+  State state(db, depth, phase1_depth);
+  state.init_from_db(block);
+
+  const uint64_t req_id = 6643894947723747ull;
+
+  const sync::GetNodeRequest node_request{
+      req_id,
+      {},
+      {"000"_prefix, "0fd7"_prefix, "274"_prefix, "ffff"_prefix, "274c"_prefix},
+      block};
+
+  const auto node_reply = state.get_nodes(node_request);
+  REQUIRE(node_reply->req_id == req_id);
+  REQUIRE(node_reply->block_number == block);
+  REQUIRE(node_reply->nodes.size() == 5);
+
+  for (size_t i = 0; i < 5; ++i) {
+    REQUIRE(node_reply->nodes[0]);
+  }
+
+  REQUIRE(node_reply->nodes[0]->empty.all());
+  REQUIRE(node_reply->nodes[1]->empty.all());
+  REQUIRE(node_reply->nodes[2]->empty ==
+          std::bitset<16>{0b1110'1111'1111'1110});
+  //               nibbles  fedc'ba98'7654'3210
+  REQUIRE(node_reply->nodes[3]->empty.all());
+  REQUIRE(node_reply->nodes[4]->empty ==
+          std::bitset<16>{0b1110'1111'1111'1111});
+}
+
+TEST_CASE("Phase 1 sync", "[sync]") {
   const auto depth = 3u;
   const auto phase1_depth = 2u;
 

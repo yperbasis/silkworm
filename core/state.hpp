@@ -40,6 +40,8 @@ class State {
   std::variant<sync::LeavesReply, sync::Error> get_leaves(
       const sync::GetLeavesRequest&) const;
 
+  std::optional<sync::NodeReply> get_nodes(const sync::GetNodeRequest&) const;
+
   bool phase1_sync_done() const { return phase1_sync_done_; }
 
   std::optional<sync::GetLeavesRequest> next_sync_request();

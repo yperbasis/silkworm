@@ -415,4 +415,32 @@ void State::process_sync_data(const sync::LeavesReply& reply) {
   }
 }
 
+std::optional<sync::NodeReply> State::get_nodes(
+    const sync::GetNodeRequest& request) const {
+  if (request.block_number > root().block) {
+    return {};
+  }
+
+  sync::NodeReply reply{
+      request.req_id, static_cast<uint32_t>(root().block), {}};
+  reply.nodes.resize(request.prefixes.size());
+
+  for (size_t i = 0; i < reply.nodes.size(); ++i) {
+    const auto prefix = request.prefixes[i];
+
+    if (prefix.size() >= depth()) {
+      // TODO implement
+      continue;
+    }
+
+    const auto cpd = consistent_path_depth(prefix);
+    if (cpd == prefix.size()) {
+      const auto& nd = node(prefix.size(), prefix);
+      reply.nodes[i] = sync::Proof{nd.empty, nd.hash};
+    }
+  }
+
+  return reply;
+}
+
 }  // namespace silkworm

@@ -50,8 +50,14 @@ namespace silkworm::sync {
 
 // TODO move to protocol
 struct GetLeavesRequest {
+  // {} account means state rather than storage trie
+  std::optional<Address> account = {};
+
   // request all leaves with this prefix
   Prefix prefix;
+
+  // may not respond with older data
+  std::optional<uint32_t> block_number;
 
   // If from_level is greater than zero, the given number of trie nodes closest
   // to the root must be omitted from the proof.
@@ -59,16 +65,14 @@ struct GetLeavesRequest {
   // otherwise full proof is required.
   uint8_t from_level = 0;  // <= prefix.size
 
-  // may not respond with older data
-  std::optional<uint32_t> block_number;
-
   // known hash(leaves), allows to avoid re-sending the same leaves
   std::optional<Hash> hash_of_leaves;
 
   explicit GetLeavesRequest(Prefix prefix) : prefix{prefix} {}
 
   size_t byte_size() const {
-    return sizeof(*this) + (hash_of_leaves ? kHashBytes : 0);
+    return sizeof(*this) + (account ? kAddressBytes : 0) +
+           (hash_of_leaves ? kHashBytes : 0);
   }
 };
 
@@ -117,7 +121,33 @@ struct LeavesReply {
   }
 };
 
-// TODO (potentially) delta request & reply
+// uses prefixes unlike PV63
+struct GetNodeRequest {
+  uint64_t req_id = -1;
+
+  // {} account means state rather than storage trie
+  std::optional<Address> account = {};
+
+  std::vector<Prefix> prefixes;
+
+  // may not respond with older data
+  std::optional<uint32_t> block_number;
+};
+
+struct NodeReply {
+  uint64_t req_id = -1;
+
+  // must be >= request.block_number
+  uint32_t block_number = 0;
+
+  std::vector<std::optional<Proof>> nodes;
+
+  size_t byte_size() const {
+    return sizeof(*this) + nodes.size() * sizeof(Proof);
+  }
+};
+
+// TODO: GetStorageSize
 
 struct Stats {
   uint64_t num_requests = 0;

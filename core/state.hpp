@@ -43,9 +43,12 @@ class State {
 
   bool phase1_sync_done() const { return phase1_sync_done_; }
 
-  std::optional<sync::GetLeavesRequest> next_sync_request();
+  std::variant<std::monostate, sync::GetLeavesRequest, sync::GetNodeRequest>
+  next_sync_request();
 
-  void process_sync_data(Prefix, const sync::LeavesReply&);
+  void process_leaves_reply(Prefix, const sync::LeavesReply&);
+
+  void process_node_reply(const sync::GetNodeRequest&, const sync::NodeReply&);
 
   int32_t synced_block() const {
     return root().synced.all() ? root().block : -1;

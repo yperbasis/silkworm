@@ -213,20 +213,24 @@ sync::LeavesReply State::get_leaves(
   return reply;
 }
 
-std::optional<sync::GetLeavesRequest> State::next_sync_request() {
+std::variant<std::monostate, sync::GetLeavesRequest, sync::GetNodeRequest>
+State::next_sync_request() {
   if (!phase1_sync_done_) {
     const auto r = phase1_sync_request();
     if (!r)
       phase1_sync_done_ = true;
     else
-      return r;
+      return *r;
   }
 
   if (synced_block() == -1) {
-    return phase2_sync_request();
-  } else {
-    return {};
+    const auto r = phase2_sync_request();
+    if (r) {
+      return *r;
+    }
   }
+
+  return {};
 }
 
 std::optional<sync::GetLeavesRequest> State::phase1_sync_request() {
@@ -279,8 +283,8 @@ bool State::nibble_obsolete(const Node& node, const Nibble nibble,
     return node.empty[nibble] != new_empty;
 }
 
-void State::process_sync_data(const Prefix prefix,
-                              const sync::LeavesReply& reply) {
+void State::process_leaves_reply(const Prefix prefix,
+                                 const sync::LeavesReply& reply) {
   if (prefix.size() == 0) {
     throw std::runtime_error("TODO prefix.size = 0 not implemented yet");
   }
@@ -446,6 +450,11 @@ std::optional<sync::NodeReply> State::get_nodes(
   }
 
   return reply;
+}
+
+void State::process_node_reply(const sync::GetNodeRequest&,
+                               const sync::NodeReply&) {
+  // TODO implement
 }
 
 }  // namespace silkworm

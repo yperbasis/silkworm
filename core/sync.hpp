@@ -31,13 +31,13 @@
   0. single-machine in-memory PoC with ~1m dust accounts
   1. optimal phase 2 depth
 [TODO]
-  1. describe the algo. perhaps we need to use geth's fast sync for some bits
+  1. describe the algo
   2. theoretical convergence (if possible)
   3. LMDB(?) database
   4. experimental convergence with ~100m dust accounts
   5. storage tries. pack multiple accounts into 1 request/reply for small tries?
-  6. extension/leaf nodes
-  7. real protocol + doc
+  6. extension/leaf nodes (prereq: Issue #7, better test coverage)
+  7. real protocol (incl reqID) + doc
   8. handle chain reorgs
   9. network layer, p2p
   10. multiple leechers, BitTorrent-like swarm
@@ -94,6 +94,7 @@ struct LeavesReply {
     kTooManyLeaves,  // TODO how many is too many?
   };
 
+  // still send proof if status = kTooManyLeaves
   Status status = kOK;
 
   // must be >= request.block_number
@@ -127,6 +128,11 @@ struct GetNodeRequest {
 
   // may not respond with older data
   std::optional<uint32_t> block_number;
+
+  size_t byte_size() const {
+    return sizeof(*this) + (account ? kAddressBytes : 0) +
+           prefixes.size() * sizeof(Prefix);
+  }
 };
 
 struct NodeReply {

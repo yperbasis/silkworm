@@ -50,23 +50,49 @@ void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
   auto& state = state_;
   uint64_t bytes_used = 0;
 
-  while (auto request = state.next_sync_request()) {
-    ++stats.num_requests;
-    stats.request_total_bytes += request->byte_size();
-    const auto reply = peer.get_state_leaves(*request);
+  while (true) {
+    const auto request = state.next_sync_request();
 
-    if (reply.status != sync::LeavesReply::kOK) {
-      std::cerr << "sync error " << reply.status << std::endl;
-      throw std::runtime_error("TODO better error handling");
+    if (std::holds_alternative<std::monostate>(request)) {
+      return;
+    }
+
+    ++stats.num_requests;
+
+    if (auto leaves_request = std::get_if<sync::GetLeavesRequest>(&request)) {
+      stats.request_total_bytes += leaves_request->byte_size();
+
+      const auto reply = peer.get_state_leaves(*leaves_request);
+
+      if (reply.status != sync::LeavesReply::kOK) {
+        std::cerr << "sync error " << reply.status << std::endl;
+        throw std::runtime_error("TODO better error handling");
+      }
+
+      bytes_used += reply.byte_size();
+      stats.reply_total_bytes += reply.byte_size();
+      if (reply.leaves) {
+        stats.reply_total_leaves += reply.leaves->size();
+      }
+
+      state.process_leaves_reply(leaves_request->prefix, reply);
+    } else if (auto node_request =
+                   std::get_if<sync::GetNodeRequest>(&request)) {
+      stats.request_total_bytes += node_request->byte_size();
+
+      const auto reply = peer.get_state_nodes(*node_request);
+
+      if (!reply) {
+        throw std::runtime_error("Unexpected null NodeReply");
+      }
+
+      bytes_used += reply->byte_size();
+      stats.reply_total_bytes += reply->byte_size();
+
+      state.process_node_reply(*node_request, *reply);
     }
 
     ++stats.num_replies;
-    bytes_used += reply.byte_size();
-    stats.reply_total_bytes += reply.byte_size();
-    if (reply.leaves) {
-      stats.reply_total_leaves += reply.leaves->size();
-    }
-    state.process_sync_data(request->prefix, reply);
 
     if (bytes_used >= max_bytes) {
       return;

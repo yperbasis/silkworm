@@ -67,7 +67,8 @@ TEST_CASE("Phase 1 sync", "[sync]") {
   State leecher(leecher_db, depth, phase1_depth);
 
   SECTION("frozen block") {
-    auto request = leecher.next_sync_request();
+    auto request_variant = leecher.next_sync_request();
+    auto request = std::get_if<sync::GetLeavesRequest>(&request_variant);
     REQUIRE(request);
     REQUIRE(!request->block_number);
     REQUIRE(!request->hash_of_leaves);
@@ -104,7 +105,7 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     REQUIRE(leaves[1].first[29] == '\x19');
     REQUIRE(leaves[1].second == "crypto kitties");
 
-    leecher.process_sync_data(prefix, reply);
+    leecher.process_leaves_reply(prefix, reply);
     // leecher turning into seeder
     const auto new_reply = leecher.get_leaves(*request);
     REQUIRE(new_reply.status == sync::LeavesReply::kOK);

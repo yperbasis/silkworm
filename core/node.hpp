@@ -43,6 +43,11 @@ class Node {
     return state_.get_leaves(request);
   }
 
+  std::optional<sync::NodeReply> get_state_nodes(
+      const sync::GetNodeRequest& request) const {
+    return state_.get_nodes(request);
+  }
+
  protected:
   State state_;
 };

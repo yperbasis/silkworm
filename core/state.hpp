@@ -100,6 +100,7 @@ class State {
   const Node& root() const { return tree_[0][0]; }
 
   void update_blocks_down_path(Prefix);
+  bool update_block_at(Prefix, size_t level);
 
   unsigned consistent_path_depth(Prefix) const;
 

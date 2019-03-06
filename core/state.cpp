@@ -120,28 +120,35 @@ void State::put(Hash key, std::string val) {
 }
 
 void State::update_blocks_down_path(Prefix prefix) {
-  for (unsigned level = 1; level <= prefix.size() && level < depth(); ++level) {
-    const auto& parent = node(level - 1, prefix);
-    auto& child = node(level, prefix);
-    const auto nibble = prefix[level - 1];
-
-    if (parent.block == -1 || child.block == -1) {
+  for (unsigned level = 1; level < prefix.size(); ++level) {
+    if (!update_block_at(prefix, level)) {
       break;
     }
-
-    if (parent.block == child.block) {
-      continue;
-    }
-
-    const bool child_empty = child.empty.all();
-    const Hash child_hash = mptrie::branch_node_hash(child.empty, child.hash);
-
-    if (nibble_obsolete(parent, nibble, child_empty, child_hash)) {
-      break;
-    }
-
-    child.block = parent.block;
   }
+}
+
+bool State::update_block_at(const Prefix prefix, const size_t level) {
+  const auto& parent = node(level - 1, prefix);
+  auto& child = node(level, prefix);
+
+  if (parent.block == -1 || child.block == -1) {
+    return false;
+  }
+
+  if (parent.block == child.block) {
+    return true;
+  }
+
+  const bool child_empty = child.empty.all();
+  const Hash child_hash = mptrie::branch_node_hash(child.empty, child.hash);
+
+  const auto nibble = prefix[level - 1];
+  if (nibble_obsolete(parent, nibble, child_empty, child_hash)) {
+    return false;
+  }
+
+  child.block = parent.block;
+  return true;
 }
 
 unsigned State::consistent_path_depth(Prefix prefix) const {
@@ -224,11 +231,7 @@ State::next_sync_request() {
   }
 
   if (synced_block() == -1) {
-    if (root_is_old_) {
-      return node_request(0);
-    }
-
-    for (size_t level = 1; level < depth() - 1; ++level) {
+    for (size_t level = 0; level < depth() - 1; ++level) {
       const auto nr = node_request(level);
       if (!nr.prefixes.empty()) {
         return nr;
@@ -249,16 +252,20 @@ sync::GetNodeRequest State::node_request(const size_t level) {
   request.block_number = root().block;
 
   Prefix prefix(level);
-  do {
-    update_blocks_down_path(prefix);
+  if (level > 0) {
+    do {
+      update_block_at(prefix, level);
 
-    const auto& nd = node(level, prefix);
-    if (nd.block < root().block || root_is_old_) {
-      request.prefixes.push_back(prefix);
-    }
+      const auto& nd = node(level, prefix);
+      if (nd.block < root().block) {
+        request.prefixes.push_back(prefix);
+      }
 
-    ++prefix;
-  } while (prefix.val() != 0);
+      ++prefix;
+    } while (prefix.val() != 0);
+  } else if (root_is_old_) {
+    request.prefixes.push_back(prefix);
+  }
 
   return request;
 }

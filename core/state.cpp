@@ -120,7 +120,7 @@ void State::put(Hash key, std::string val) {
 }
 
 void State::update_blocks_down_path(Prefix prefix) {
-  for (unsigned level = 1; level < prefix.size(); ++level) {
+  for (unsigned level = 1; level <= prefix.size() && level < depth(); ++level) {
     const auto& parent = node(level - 1, prefix);
     auto& child = node(level, prefix);
     const auto nibble = prefix[level - 1];
@@ -228,7 +228,7 @@ State::next_sync_request() {
       return node_request(0);
     }
 
-    for (size_t level = 1; level < depth(); ++level) {
+    for (size_t level = 1; level < depth() - 1; ++level) {
       const auto nr = node_request(level);
       if (!nr.prefixes.empty()) {
         return nr;
@@ -244,9 +244,22 @@ State::next_sync_request() {
   return {};
 }
 
-sync::GetNodeRequest State::node_request(const size_t) {
+sync::GetNodeRequest State::node_request(const size_t level) {
   sync::GetNodeRequest request;
-  // TODO: implement
+  request.block_number = root().block;
+
+  Prefix prefix(level);
+  do {
+    update_blocks_down_path(prefix);
+
+    const auto& nd = node(level, prefix);
+    if (nd.block < root().block || root_is_old_) {
+      request.prefixes.push_back(prefix);
+    }
+
+    ++prefix;
+  } while (prefix.val() != 0);
+
   return request;
 }
 
@@ -498,6 +511,7 @@ void State::process_node_reply(const sync::GetNodeRequest& request,
     propagate_synced_up(prefix, prefix.size());
   }
 
+  // TODO: better root_is_old_ logic
   root_is_old_ = block_num > root().block;
 }
 

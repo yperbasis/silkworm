@@ -37,8 +37,7 @@ class State {
 
   void put(Hash key, std::string val);
 
-  std::variant<sync::LeavesReply, sync::Error> get_leaves(
-      const sync::GetLeavesRequest&) const;
+  sync::LeavesReply get_leaves(const sync::GetLeavesRequest&) const;
 
   std::optional<sync::NodeReply> get_nodes(const sync::GetNodeRequest&) const;
 
@@ -46,7 +45,7 @@ class State {
 
   std::optional<sync::GetLeavesRequest> next_sync_request();
 
-  void process_sync_data(const sync::LeavesReply&);
+  void process_sync_data(Prefix, const sync::LeavesReply&);
 
   int32_t synced_block() const {
     return root().synced.all() ? root().block : -1;

@@ -39,8 +39,7 @@ class Node {
   bool sync_done() const;
 
   // TODO storage sync
-  std::variant<sync::LeavesReply, sync::Error> get_state_leaves(
-      sync::GetLeavesRequest request) const {
+  sync::LeavesReply get_state_leaves(sync::GetLeavesRequest request) const {
     return state_.get_leaves(request);
   }
 

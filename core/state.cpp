@@ -155,7 +155,7 @@ unsigned State::consistent_path_depth(Prefix prefix) const {
   return prefix.size();
 }
 
-std::variant<sync::LeavesReply, sync::Error> State::get_leaves(
+sync::LeavesReply State::get_leaves(
     const sync::GetLeavesRequest& request) const {
   const auto prefix = request.prefix;
   if (prefix.size() == 0) {
@@ -165,24 +165,29 @@ std::variant<sync::LeavesReply, sync::Error> State::get_leaves(
     throw std::runtime_error("TODO prefix.size > depth not implemented yet");
   }
 
+  sync::LeavesReply reply;
+
   if (consistent_path_depth(prefix) != prefix.size()) {
-    return sync::kDontHaveData;
+    reply.status = sync::LeavesReply::kDontHaveData;
+    return reply;
   }
 
   const Node& nd = node(prefix.size() - 1, prefix);
   const auto nibble = prefix.last();
 
   if (!nd.synced[nibble]) {
-    return sync::kDontHaveData;
+    reply.status = sync::LeavesReply::kDontHaveData;
+    return reply;
   }
 
   auto rb =
       request.block_number ? static_cast<int32_t>(*request.block_number) : -1;
   if (rb > nd.block) {
-    return sync::kDontHaveData;
+    reply.status = sync::LeavesReply::kDontHaveData;
+    return reply;
   }
 
-  sync::LeavesReply reply(prefix, nd.block);
+  reply.block_number = nd.block;
 
   const bool full_proof = rb < nd.block;
   const unsigned proof_start = full_proof ? 0 : request.from_level;
@@ -274,8 +279,8 @@ bool State::nibble_obsolete(const Node& node, const Nibble nibble,
     return node.empty[nibble] != new_empty;
 }
 
-void State::process_sync_data(const sync::LeavesReply& reply) {
-  const auto prefix = reply.prefix;
+void State::process_sync_data(const Prefix prefix,
+                              const sync::LeavesReply& reply) {
   if (prefix.size() == 0) {
     throw std::runtime_error("TODO prefix.size = 0 not implemented yet");
   }
@@ -421,8 +426,8 @@ std::optional<sync::NodeReply> State::get_nodes(
     return {};
   }
 
-  sync::NodeReply reply{
-      request.req_id, static_cast<uint32_t>(root().block), {}};
+  sync::NodeReply reply;
+  reply.block_number = root().block;
   reply.nodes.resize(request.prefixes.size());
 
   for (size_t i = 0; i < reply.nodes.size(); ++i) {

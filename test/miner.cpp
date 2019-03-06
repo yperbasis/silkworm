@@ -38,10 +38,8 @@ TEST_CASE("Block creation", "[miner]") {
   const auto sync_request = sync::GetLeavesRequest{prefix};
 
   // empty state
-  auto reply_wrapper = miner.get_state_leaves(sync_request);
-  REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
-  auto reply = std::get<sync::LeavesReply>(reply_wrapper);
-  REQUIRE(reply.prefix == prefix);
+  auto reply = miner.get_state_leaves(sync_request);
+  REQUIRE(reply.status == sync::LeavesReply::kOK);
   REQUIRE(reply.block_number == block);
   REQUIRE(reply.leaves);
   REQUIRE(reply.leaves->empty());
@@ -52,10 +50,8 @@ TEST_CASE("Block creation", "[miner]") {
   miner.seal_block();
 
   // state with the account
-  reply_wrapper = miner.get_state_leaves(sync_request);
-  REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
-  reply = std::get<sync::LeavesReply>(reply_wrapper);
-  REQUIRE(reply.prefix == prefix);
+  reply = miner.get_state_leaves(sync_request);
+  REQUIRE(reply.status == sync::LeavesReply::kOK);
   REQUIRE(reply.block_number == block + 1);
   REQUIRE(reply.leaves);
   REQUIRE(reply.leaves->size() == 1);

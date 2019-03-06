@@ -21,9 +21,6 @@
 #include <type_traits>
 
 namespace {
-// https://en.cppreference.com/w/cpp/utility/variant/visit
-template <class T>
-struct AlwaysFalse : std::false_type {};
 
 unsigned depth(const silkworm::sync::Hints& hints) {
   return std::min(hints.optimal_phase2_depth(), hints.depth_to_fit_in_memory());
@@ -56,27 +53,20 @@ void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
   while (auto request = state.next_sync_request()) {
     ++stats.num_requests;
     stats.request_total_bytes += request->byte_size();
-    auto reply = peer.get_state_leaves(*request);
+    const auto reply = peer.get_state_leaves(*request);
 
-    std::visit(
-        [&state, &stats, &bytes_used](auto&& rpl) {
-          using T = std::decay_t<decltype(rpl)>;
-          if constexpr (std::is_same_v<T, sync::LeavesReply>) {
-            ++stats.num_replies;
-            bytes_used += rpl.byte_size();
-            stats.reply_total_bytes += rpl.byte_size();
-            if (rpl.leaves) {
-              stats.reply_total_leaves += rpl.leaves->size();
-            }
-            state.process_sync_data(rpl);
-          } else if constexpr (std::is_same_v<T, sync::Error>) {
-            std::cerr << "sync error " << rpl << std::endl;
-            throw std::runtime_error("TODO better error handling");
-          } else {
-            static_assert(AlwaysFalse<T>::value, "non-exhaustive visitor!");
-          }
-        },
-        reply);
+    if (reply.status != sync::LeavesReply::kOK) {
+      std::cerr << "sync error " << reply.status << std::endl;
+      throw std::runtime_error("TODO better error handling");
+    }
+
+    ++stats.num_replies;
+    bytes_used += reply.byte_size();
+    stats.reply_total_bytes += reply.byte_size();
+    if (reply.leaves) {
+      stats.reply_total_leaves += reply.leaves->size();
+    }
+    state.process_sync_data(request->prefix, reply);
 
     if (bytes_used >= max_bytes) {
       return;

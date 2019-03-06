@@ -34,16 +34,12 @@ TEST_CASE("GetNode Request", "[sync]") {
   State state(db, depth, phase1_depth);
   state.init_from_db(block);
 
-  const uint64_t req_id = 6643894947723747ull;
-
   const sync::GetNodeRequest node_request{
-      req_id,
       {},
       {"000"_prefix, "0fd7"_prefix, "274"_prefix, "ffff"_prefix, "274c"_prefix},
       block};
 
   const auto node_reply = state.get_nodes(node_request);
-  REQUIRE(node_reply->req_id == req_id);
   REQUIRE(node_reply->block_number == block);
   REQUIRE(node_reply->nodes.size() == 5);
 
@@ -77,10 +73,10 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     REQUIRE(!request->hash_of_leaves);
 
     const auto no_data = leecher.get_leaves(*request);
-    REQUIRE(std::holds_alternative<sync::Error>(no_data));
-    REQUIRE(std::get<sync::Error>(no_data) == sync::kDontHaveData);
+    REQUIRE(no_data.status == sync::LeavesReply::kDontHaveData);
 
-    Hash hash = request->prefix.padded();
+    const auto prefix = request->prefix;
+    Hash hash = prefix.padded();
     hash[23] = '\xf7';
     hash[29] = '\x19';
     hash[30] = '\x70';
@@ -94,10 +90,8 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     State seeder(seeder_db, depth, phase1_depth);
     seeder.init_from_db(block);
 
-    const auto reply_wrapper = seeder.get_leaves(*request);
-    REQUIRE(std::holds_alternative<sync::LeavesReply>(reply_wrapper));
-    const auto reply = std::get<sync::LeavesReply>(reply_wrapper);
-    REQUIRE(reply.prefix == request->prefix);
+    const auto reply = seeder.get_leaves(*request);
+    REQUIRE(reply.status == sync::LeavesReply::kOK);
     REQUIRE(reply.block_number == block);
     REQUIRE(reply.leaves);
 
@@ -110,12 +104,10 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     REQUIRE(leaves[1].first[29] == '\x19');
     REQUIRE(leaves[1].second == "crypto kitties");
 
-    leecher.process_sync_data(reply);
+    leecher.process_sync_data(prefix, reply);
     // leecher turning into seeder
-    const auto new_reply_wrapper = leecher.get_leaves(*request);
-    REQUIRE(std::holds_alternative<sync::LeavesReply>(new_reply_wrapper));
-    const auto new_reply = std::get<sync::LeavesReply>(new_reply_wrapper);
-    REQUIRE(new_reply.prefix == request->prefix);
+    const auto new_reply = leecher.get_leaves(*request);
+    REQUIRE(new_reply.status == sync::LeavesReply::kOK);
     REQUIRE(new_reply.block_number == block);
     REQUIRE(new_reply.leaves);
     REQUIRE(*new_reply.leaves == leaves);

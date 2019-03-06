@@ -35,10 +35,10 @@
   2. theoretical convergence (if possible)
   3. LMDB(?) database
   4. experimental convergence with ~100m dust accounts
-  5. smart contract storage
+  5. storage tries. pack multiple accounts into 1 request/reply for small tries?
   6. extension/leaf nodes
   7. real protocol + doc
-  8. chain reorg
+  8. handle chain reorgs
   9. network layer, p2p
   10. multiple leechers, BitTorrent-like swarm
   11. proof checking
@@ -76,11 +76,6 @@ struct GetLeavesRequest {
   }
 };
 
-enum Error {
-  kDontHaveData = 1,
-  kTooManyLeaves = 2,  // TODO how many is too many?
-};
-
 using Leaf = std::pair<Hash, std::string>;
 
 // a reasonable approximation for dust accounts
@@ -93,8 +88,13 @@ struct Proof {
 };
 
 struct LeavesReply {
-  // must = request.prefix
-  Prefix prefix;  // TODO replace with reqID
+  enum Status {
+    kOK = 0,
+    kDontHaveData,
+    kTooManyLeaves,  // TODO how many is too many?
+  };
+
+  Status status = kOK;
 
   // must be >= request.block_number
   uint32_t block_number = 0;
@@ -109,9 +109,6 @@ struct LeavesReply {
   std::optional<std::vector<Leaf>>
       leaves;  // must be strictly ordered by hash_key
 
-  LeavesReply(Prefix prefix, uint32_t block_number)
-      : prefix{prefix}, block_number{block_number} {}
-
   size_t byte_size() const {
     auto sz = sizeof(*this) + proof.size() * sizeof(Proof);
     if (leaves) {
@@ -123,8 +120,6 @@ struct LeavesReply {
 
 // uses prefixes unlike PV63
 struct GetNodeRequest {
-  uint64_t req_id = -1;
-
   // {} account means state rather than storage trie
   std::optional<Address> account = {};
 
@@ -135,8 +130,6 @@ struct GetNodeRequest {
 };
 
 struct NodeReply {
-  uint64_t req_id = -1;
-
   // must be >= request.block_number
   uint32_t block_number = 0;
 

@@ -34,17 +34,23 @@ TEST_CASE("GetNode Request", "[sync]") {
   State state(db, depth, phase1_depth);
   state.init_from_db(block);
 
-  const sync::GetNodeRequest node_request{
-      {},
-      {"000"_prefix, "0fd7"_prefix, "274"_prefix, "ffff"_prefix, "274c"_prefix},
-      block};
+  const sync::GetNodeRequest node_request{{},
+                                          {
+                                              "000"_prefix,
+                                              "0fd7"_prefix,
+                                              "274"_prefix,
+                                              "ffff"_prefix,
+                                              "274c"_prefix,
+                                              ""_prefix,
+                                          },
+                                          block};
 
   const auto node_reply = state.get_nodes(node_request);
   REQUIRE(node_reply->block_number == block);
-  REQUIRE(node_reply->nodes.size() == 5);
+  REQUIRE(node_reply->nodes.size() == 6);
 
-  for (size_t i = 0; i < 5; ++i) {
-    REQUIRE(node_reply->nodes[0]);
+  for (const auto& node : node_reply->nodes) {
+    REQUIRE(node);
   }
 
   REQUIRE(node_reply->nodes[0]->empty.all());
@@ -55,6 +61,8 @@ TEST_CASE("GetNode Request", "[sync]") {
   REQUIRE(node_reply->nodes[3]->empty.all());
   REQUIRE(node_reply->nodes[4]->empty ==
           std::bitset<16>{0b1110'1111'1111'1111});
+  REQUIRE(node_reply->nodes[5]->empty ==
+          std::bitset<16>{0b1111'1111'1111'1011});
 }
 
 TEST_CASE("Phase 1 sync", "[sync]") {

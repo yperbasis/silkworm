@@ -78,9 +78,11 @@ class State {
 
   bool phase1_sync_done_ = false;
 
-  std::optional<sync::GetLeavesRequest> phase1_sync_request();
-  std::optional<sync::GetLeavesRequest> phase2_sync_request();
-  std::optional<sync::GetLeavesRequest> next_sync_request(Prefix&, bool phase1);
+  bool root_is_old_ = false;
+
+  sync::GetNodeRequest node_request(size_t level);
+  std::optional<sync::GetLeavesRequest> next_leaves_request(Prefix&,
+                                                            bool phase1);
 
   static size_t node_index(unsigned level, Prefix prefix) {
     return level == 0 ? 0 : prefix.val() >> (64 - level * 4);
@@ -100,6 +102,10 @@ class State {
   void update_blocks_down_path(Prefix);
 
   unsigned consistent_path_depth(Prefix) const;
+
+  void propagate_synced_up(Prefix, size_t from_level);
+
+  void update_node(Node&, const sync::Proof& new_data, int32_t new_block);
 
   static bool nibble_obsolete(const Node&, Nibble, bool new_empty,
                               const Hash& new_hash);

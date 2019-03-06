@@ -216,7 +216,7 @@ sync::LeavesReply State::get_leaves(
 std::variant<std::monostate, sync::GetLeavesRequest, sync::GetNodeRequest>
 State::next_sync_request() {
   if (!phase1_sync_done_) {
-    const auto r = phase1_sync_request();
+    const auto r = next_leaves_request(phase1_cursor_, true);
     if (!r)
       phase1_sync_done_ = true;
     else
@@ -224,25 +224,34 @@ State::next_sync_request() {
   }
 
   if (synced_block() == -1) {
-    const auto r = phase2_sync_request();
-    if (r) {
-      return *r;
+    if (root_is_old_) {
+      return node_request(0);
+    }
+
+    for (size_t level = 1; level < depth(); ++level) {
+      const auto nr = node_request(level);
+      if (!nr.prefixes.empty()) {
+        return nr;
+      }
+    }
+
+    const auto lr = next_leaves_request(phase2_cursor_, false);
+    if (lr) {
+      return *lr;
     }
   }
 
   return {};
 }
 
-std::optional<sync::GetLeavesRequest> State::phase1_sync_request() {
-  return next_sync_request(phase1_cursor_, true);
+sync::GetNodeRequest State::node_request(const size_t) {
+  sync::GetNodeRequest request;
+  // TODO: implement
+  return request;
 }
 
-std::optional<sync::GetLeavesRequest> State::phase2_sync_request() {
-  return next_sync_request(phase2_cursor_, false);
-}
-
-std::optional<sync::GetLeavesRequest> State::next_sync_request(Prefix& cursor,
-                                                               bool phase1) {
+std::optional<sync::GetLeavesRequest> State::next_leaves_request(Prefix& cursor,
+                                                                 bool phase1) {
   do {
     const auto prefix = cursor;
     ++cursor;
@@ -399,29 +408,35 @@ void State::process_leaves_reply(const Prefix prefix,
   // update the nodes up the tree path
   const unsigned start_from = prefix.size() - reply.proof.size();
   for (unsigned level = start_from; level < prefix.size(); ++level) {
-    Node& path_node = node(level, prefix);
-    if (path_node.block < rb) {
-      const auto& proof = reply.proof[level - start_from];
-
-      for (Nibble j = 0; j < 16; ++j) {
-        if (nibble_obsolete(path_node, j, proof.empty[j], proof.hash[j])) {
-          path_node.synced[j] = false;
-        }
-      }
-
-      path_node.empty = proof.empty;
-      path_node.hash = proof.hash;
-      path_node.block = rb;
-    }
+    update_node(node(level, prefix), reply.proof[level - start_from], rb);
   }
 
-  // propagate synced up
-  for (auto level = prefix.size() - 1; level > 0; --level) {
+  propagate_synced_up(prefix, prefix.size() - 1);
+}
+
+void State::propagate_synced_up(const Prefix prefix, const size_t from_level) {
+  for (auto level = from_level; level > 0; --level) {
     const auto nibble = prefix[level - 1];
     auto& parent = node(level - 1, prefix);
     const auto& child = node(level, prefix);
     parent.synced[nibble] = child.synced.all();
   }
+}
+
+void State::update_node(Node& nd, const sync::Proof& proof, int32_t new_block) {
+  if (new_block <= nd.block) {
+    return;
+  }
+
+  for (Nibble j = 0; j < 16; ++j) {
+    if (nibble_obsolete(nd, j, proof.empty[j], proof.hash[j])) {
+      nd.synced[j] = false;
+    }
+  }
+
+  nd.empty = proof.empty;
+  nd.hash = proof.hash;
+  nd.block = new_block;
 }
 
 std::optional<sync::NodeReply> State::get_nodes(
@@ -442,8 +457,7 @@ std::optional<sync::NodeReply> State::get_nodes(
       continue;
     }
 
-    const auto cpd = consistent_path_depth(prefix);
-    if (cpd == prefix.size()) {
+    if (consistent_path_depth(prefix) == prefix.size()) {
       const auto& nd = node(prefix.size(), prefix);
       reply.nodes[i] = sync::Proof{nd.empty, nd.hash};
     }
@@ -452,9 +466,39 @@ std::optional<sync::NodeReply> State::get_nodes(
   return reply;
 }
 
-void State::process_node_reply(const sync::GetNodeRequest&,
-                               const sync::NodeReply&) {
-  // TODO implement
+void State::process_node_reply(const sync::GetNodeRequest& request,
+                               const sync::NodeReply& reply) {
+  if (reply.nodes.size() != request.prefixes.size()) {
+    throw std::runtime_error("reply.nodes.size != request.prefixes.size");
+  }
+
+  int32_t block_num = reply.block_number;
+  if (block_num < root().block) {
+    return;  // old reply
+  }
+
+  for (size_t i = 0; i < reply.nodes.size(); ++i) {
+    const auto nd = reply.nodes[i];
+    if (!nd) {
+      continue;
+    }
+
+    const auto prefix = request.prefixes[i];
+
+    if (prefix.size() >= depth() ||
+        consistent_path_depth(prefix) != prefix.size()) {
+      continue;
+    }
+
+    if (prefix.size() != 0 && block_num > root().block) {
+      continue;
+    }
+
+    update_node(node(prefix.size(), prefix), *nd, block_num);
+    propagate_synced_up(prefix, prefix.size());
+  }
+
+  root_is_old_ = block_num > root().block;
 }
 
 }  // namespace silkworm

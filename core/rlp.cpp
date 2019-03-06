@@ -84,7 +84,7 @@ class Encoder : public boost::static_visitor<> {
 
   void operator()(const std::string& in) const {
     if (in.length() != 1 || static_cast<unsigned>(in[0]) >= 0x80) {
-      out_ += encode_length(in.length(), 0x80);
+      out_ += encode_length(in.length(), '\x80');
     }
 
     out_ += in;
@@ -95,7 +95,7 @@ class Encoder : public boost::static_visitor<> {
     for (const auto& item : in) {
       len += boost::apply_visitor(LengthEncoder(), item);
     }
-    out_ += encode_length(len, 0xc0);
+    out_ += encode_length(len, '\xc0');
 
     for (const auto& item : in) {
       encode(item, out_);

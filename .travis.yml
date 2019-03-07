@@ -1,0 +1,33 @@
+language: cpp
+dist: xenial
+compiler: gcc
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+    - sudo apt-get install -y libboost-all-dev
+    - git clone https://github.com/catchorg/Catch2.git
+    - cd Catch2
+    - cmake -Bbuild -H. -DBUILD_TESTING=OFF
+    - sudo cmake --build build/ --target install
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+
+script:
+  - make -j
+  - test/tests

@@ -270,7 +270,7 @@ sync::GetNodeRequest State::node_request(const uint8_t level) {
       }
     }
   } else if (root_is_old_) {
-    request.prefixes.emplace_back(0);
+    request.prefixes.emplace_back('\0');
   }
 
   return request;

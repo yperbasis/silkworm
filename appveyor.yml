@@ -12,36 +12,23 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-language: cpp
-dist: xenial
-compiler: gcc
-sudo: required
+os: Visual Studio 2017
+platform: x64
 
-matrix:
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-8
-      env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+cache: c:\tools\vcpkg\installed\
 
-before_install:
-    - eval "${MATRIX_EVAL}"
-    - sudo apt-get install -y cmake
-    - sudo add-apt-repository ppa:mhier/libboost-latest -y
-    - sudo apt-get update -q
-    - sudo apt-get install -y libboost1.68-dev
-    - ./install-catch2.sh
+install:
+  - cd c:\tools\vcpkg
+  - vcpkg install boost:x64-windows
+  - vcpkg install catch2:x64-windows
+  - vcpkg integrate install
 
-before_script:
-  - mkdir build
-  - cd build
-  - cmake ..
+before_build:
+  - cmake -H. -BBuild -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-script:
-  - make -j
-  - test/tests
+build:
+  project: Build\silkworm.sln
+
+test_script:
+  - cd Build
+  - ctest -V -j

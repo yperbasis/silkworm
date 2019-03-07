@@ -251,20 +251,26 @@ sync::GetNodeRequest State::node_request(const size_t level) {
   sync::GetNodeRequest request;
   request.block_number = root().block;
 
-  Prefix prefix(level);
   if (level > 0) {
-    do {
-      update_block_at(prefix, level);
+    for (uint64_t i = 0; i < 1ull << ((level - 1) * 4); ++i) {
+      const auto& parent = tree_[level - 1][i];
+      for (Nibble j = 0; j < 16; ++j) {
+        const auto node_index = i * 16 + j;
+        const auto& child = tree_[level][node_index];
+        if (parent.block == child.block) {
+          continue;
+        }
 
-      const auto& nd = node(level, prefix);
-      if (nd.block < root().block) {
-        request.prefixes.push_back(prefix);
+        const Prefix prefix(level, node_index << (64 - level * 4));
+        update_block_at(prefix, level);
+
+        if (child.block < root().block) {
+          request.prefixes.push_back(prefix);
+        }
       }
-
-      ++prefix;
-    } while (prefix.val() != 0);
+    }
   } else if (root_is_old_) {
-    request.prefixes.push_back(prefix);
+    request.prefixes.emplace_back(0);
   }
 
   return request;

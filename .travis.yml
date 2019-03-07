@@ -17,7 +17,8 @@ matrix:
 
 before_install:
     - eval "${MATRIX_EVAL}"
-    - sudo apt-get install -y cmake libboost-all-dev
+    - sudo apt-get install -y cmake
+    - ./install-boost.sh # xenial's boost is too old
     - ./install-catch2.sh
 
 before_script:

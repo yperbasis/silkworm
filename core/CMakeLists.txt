@@ -14,7 +14,7 @@
    limitations under the License.
 ]]
 
-find_package(Boost REQUIRED)
+find_package(Boost 1.62 REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 file(GLOB Silkworm_CORE_SRC "*.h" "*.hpp" "*.c" "*.cpp")
 add_library(silkworm ${Silkworm_CORE_SRC})

@@ -18,10 +18,7 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
     - sudo apt-get install -y cmake libboost-all-dev
-    - git clone https://github.com/catchorg/Catch2.git
-    - cd Catch2
-    - cmake -Bcatch_build -H. -DBUILD_TESTING=OFF
-    - sudo cmake --build catch_build/ --target install
+    - ./install-catch2.sh
 
 before_script:
   - mkdir build

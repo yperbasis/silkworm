@@ -86,14 +86,14 @@ TEST_CASE("Phase 1 sync", "[sync]") {
 
     const auto prefix = request->prefix;
     Hash hash = prefix.padded();
-    hash[23] = '\xf7';
-    hash[29] = '\x19';
-    hash[30] = '\x70';
+    hash[23] = 0xf7;
+    hash[29] = 0x19;
+    hash[30] = 0x70;
 
     DbBucket seeder_db;
     seeder_db.put(hash, "crypto kitties");
 
-    hash[29] = '\x0b';
+    hash[29] = 0x0b;
     seeder_db.put(hash, "teh DAO");
 
     State seeder(seeder_db, depth, phase1_depth);

@@ -26,7 +26,7 @@
 namespace silkworm {
 
 // TODO randomize phase 1 & 2 cursors
-State::State(DbBucket& db, unsigned depth, unsigned phase1_depth)
+State::State(DbBucket& db, uint8_t depth, uint8_t phase1_depth)
     : db_(db),
       tree_(depth),
       phase1_cursor_(phase1_depth),
@@ -42,7 +42,7 @@ State::State(DbBucket& db, unsigned depth, unsigned phase1_depth)
     throw std::invalid_argument("phase1_depth > depth");
   }
 
-  for (unsigned i = 0; i < depth; ++i) {
+  for (uint8_t i = 0; i < depth; ++i) {
     tree_[i].resize(1ull << (i * 4));
   }
 }
@@ -110,7 +110,7 @@ void State::put(Hash key, std::string val) {
   root().block = -1;  // prevent sync while block is not sealed yet
 
   const Prefix prefix(depth(), key);
-  for (unsigned level = 0; level < depth(); ++level) {
+  for (uint8_t level = 0; level < depth(); ++level) {
     auto& nd = node(level, prefix);
     const Nibble nbl = prefix[level];
     nd.synced[nbl] = false;
@@ -120,14 +120,14 @@ void State::put(Hash key, std::string val) {
 }
 
 void State::update_blocks_down_path(Prefix prefix) {
-  for (unsigned level = 1; level < prefix.size(); ++level) {
+  for (uint8_t level = 1; level < prefix.size(); ++level) {
     if (!update_block_at(prefix, level)) {
       break;
     }
   }
 }
 
-bool State::update_block_at(const Prefix prefix, const size_t level) {
+bool State::update_block_at(const Prefix prefix, const uint8_t level) {
   const auto& parent = node(level - 1, prefix);
   auto& child = node(level, prefix);
 
@@ -151,9 +151,9 @@ bool State::update_block_at(const Prefix prefix, const size_t level) {
   return true;
 }
 
-unsigned State::consistent_path_depth(Prefix prefix) const {
+uint8_t State::consistent_path_depth(Prefix prefix) const {
   int32_t block = root().block;
-  for (unsigned level = 0; level < prefix.size(); ++level) {
+  for (uint8_t level = 0; level < prefix.size(); ++level) {
     const auto& nd = node(level, prefix);
     if (nd.block == -1 || nd.block != block) {
       return level;
@@ -197,9 +197,9 @@ sync::LeavesReply State::get_leaves(
   reply.block_number = nd.block;
 
   const bool full_proof = rb < nd.block;
-  const unsigned proof_start = full_proof ? 0 : request.from_level;
+  const uint8_t proof_start = full_proof ? 0 : request.from_level;
 
-  for (unsigned i = proof_start; i < prefix.size(); ++i) {
+  for (auto i = proof_start; i < prefix.size(); ++i) {
     const auto& y = node(i, prefix);
     reply.proof.push_back(sync::Proof{y.empty, y.hash});
   }
@@ -231,7 +231,7 @@ State::next_sync_request() {
   }
 
   if (synced_block() == -1) {
-    for (size_t level = 0; level < depth() - 1; ++level) {
+    for (uint8_t level = 0; level < depth() - 1; ++level) {
       const auto nr = node_request(level);
       if (!nr.prefixes.empty()) {
         return nr;
@@ -247,7 +247,7 @@ State::next_sync_request() {
   return {};
 }
 
-sync::GetNodeRequest State::node_request(const size_t level) {
+sync::GetNodeRequest State::node_request(const uint8_t level) {
   sync::GetNodeRequest request;
   request.block_number = root().block;
 
@@ -344,7 +344,7 @@ void State::process_leaves_reply(const Prefix prefix,
 
     const auto nibble = prefix.last();
 
-    for (unsigned j = 0; j < 16; ++j) {
+    for (Nibble j = 0; j < 16; ++j) {
       Prefix nibble_prefix = prefix;
       nibble_prefix.set(prefix.size() - 1, j);
 
@@ -404,7 +404,7 @@ void State::process_leaves_reply(const Prefix prefix,
     }
 
     // propagate up the subtree of main_node
-    for (unsigned level = depth() - 1; level >= prefix.size(); --level) {
+    for (uint8_t level = depth() - 1; level >= prefix.size(); --level) {
       auto sub_prfx = Prefix{level, prefix.val()};
       const auto shift = 4 * (level - prefix.size());
 
@@ -426,15 +426,15 @@ void State::process_leaves_reply(const Prefix prefix,
   }
 
   // update the nodes up the tree path
-  const unsigned start_from = prefix.size() - reply.proof.size();
-  for (unsigned level = start_from; level < prefix.size(); ++level) {
+  const auto start_from = static_cast<uint8_t>(prefix.size() - reply.proof.size());
+  for (auto level = start_from; level < prefix.size(); ++level) {
     update_node(node(level, prefix), reply.proof[level - start_from], rb);
   }
 
   propagate_synced_up(prefix, prefix.size() - 1);
 }
 
-void State::propagate_synced_up(const Prefix prefix, const size_t from_level) {
+void State::propagate_synced_up(const Prefix prefix, const uint8_t from_level) {
   for (auto level = from_level; level > 0; --level) {
     const auto nibble = prefix[level - 1];
     auto& parent = node(level - 1, prefix);
@@ -461,7 +461,7 @@ void State::update_node(Node& nd, const sync::Proof& proof, int32_t new_block) {
 
 std::optional<sync::NodeReply> State::get_nodes(
     const sync::GetNodeRequest& request) const {
-  if (request.block_number > root().block) {
+  if (request.block_number && static_cast<int32_t>(*request.block_number) > root().block) {
     return {};
   }
 

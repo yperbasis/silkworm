@@ -18,8 +18,8 @@
 
 namespace silkworm::sync {
 
-unsigned Hints::depth_to_fit_in_memory() const {
-  for (unsigned i = 2; i <= 15; ++i) {
+uint8_t Hints::depth_to_fit_in_memory() const {
+  for (uint8_t i = 2; i <= 15; ++i) {
     if (tree_size_in_bytes(i) > max_memory) {
       return i - 1;
     }
@@ -27,8 +27,8 @@ unsigned Hints::depth_to_fit_in_memory() const {
   return 15;
 }
 
-unsigned Hints::optimal_phase2_depth() const {
-  for (unsigned i = 1; i < 16; ++i) {
+uint8_t Hints::optimal_phase2_depth() const {
+  for (uint8_t i = 1; i < 16; ++i) {
     const uint64_t num_bottom_hashes = 1ull << (i * 4);
     if (num_bottom_hashes * (16 * proof_size + 15 * reply_overhead) >=
         15 * num_leaves * leaf_size) {
@@ -38,14 +38,14 @@ unsigned Hints::optimal_phase2_depth() const {
   return 16;
 }
 
-unsigned Hints::optimal_phase1_depth() const {
-  for (unsigned i = 1; i < 16; ++i) {
-    const double num_requests = 1ull << (i * 4);
-    const double leaves_per_reply = num_leaves / num_requests;
-    const double reply_size =
-        i * proof_size + leaves_per_reply * leaf_size + reply_overhead;
+uint8_t Hints::optimal_phase1_depth() const {
+  for (uint8_t i = 1; i < 16; ++i) {
+    const uint64_t num_requests = 1ull << (i * 4);
+    const uint64_t reply_size_times_num_requests =
+        (reply_overhead + i * proof_size) * num_requests  +
+        num_leaves * leaf_size;
 
-    if (reply_size <= approx_max_reply_size) {
+    if (reply_size_times_num_requests <= approx_max_reply_size * num_requests) {
       return i;
     }
   }

@@ -2,3 +2,5 @@ build
 xcode
 .DS_Store
 .vscode
+.vs
+CMakeSettings.json

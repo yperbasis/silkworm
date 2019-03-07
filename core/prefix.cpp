@@ -22,7 +22,7 @@
 
 namespace silkworm {
 
-Prefix::Prefix(size_t size, uint64_t val) : size_(size), val_(val) {
+Prefix::Prefix(uint8_t size, uint64_t val) : size_(size), val_(val) {
   if (size > 16) {
     throw std::length_error(
         "only prefixes up to 16 nibbles are currently supported");
@@ -33,7 +33,7 @@ Prefix::Prefix(size_t size, uint64_t val) : size_(size), val_(val) {
   }
 }
 
-Prefix::Prefix(size_t size, const Hash& hash) : size_(size) {
+Prefix::Prefix(uint8_t size, const Hash& hash) : size_(size) {
   if (size > 16) {
     throw std::length_error(
         "only prefixes up to 16 nibbles are currently supported");
@@ -45,13 +45,13 @@ Prefix::Prefix(size_t size, const Hash& hash) : size_(size) {
     val_ += hash[i];
   }
 
-  for (int pos = size; pos < 16; ++pos) {
+  for (auto pos = size; pos < 16; ++pos) {
     set(pos, 0);
   }
 }
 
 bool Prefix::matches(const Hash& hash) const {
-  for (unsigned i = 0; i < size_ / 2; ++i) {
+  for (uint8_t i = 0; i < size_ / 2; ++i) {
     const uint8_t byte = (val_ << (8 * i)) >> (8 * 7);
     if (byte != hash[i]) {
       return false;
@@ -65,22 +65,22 @@ bool Prefix::matches(const Hash& hash) const {
 }
 
 Hash Prefix::padded() const {
-  Hash array;
-  for (unsigned i = 0; i < 8; ++i) {
+  Hash array = {
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  };
+  for (uint8_t i = 0; i < 8; ++i) {
     array[i] = (val_ << (8 * i)) >> (8 * 7);
-  }
-  for (unsigned i = 8; i < kHashBytes; ++i) {
-    array[i] = 0;
   }
   return array;
 }
 
-Prefix operator"" _prefix(const char* in, std::size_t n) {
+Prefix operator"" _prefix(const char* in, size_t n) {
   std::string str(8 * 2, '0');
   std::copy_n(in, n, str.begin());
   const std::string bytes = hex_string_to_bytes(str);
   const uint64_t val = rlp::from_big_endian(bytes);
-  return Prefix{n, val};
+  return Prefix{static_cast<uint8_t>(n), val};
 }
 
 }  // namespace silkworm

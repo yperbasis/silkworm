@@ -168,18 +168,18 @@ struct Hints {
   unsigned leaf_size = kLeafSize;
   unsigned reply_overhead = sizeof(LeavesReply);
 
-  unsigned depth_to_fit_in_memory() const;
+  uint8_t depth_to_fit_in_memory() const;
 
   // not taking depth_to_fit_in_memory into account
-  unsigned optimal_phase2_depth() const;
-  unsigned optimal_phase1_depth() const;
+  uint8_t optimal_phase2_depth() const;
+  uint8_t optimal_phase1_depth() const;
   double inf_bandwidth_reply_overhead() const;  // compared to warp sync
 
-  static uint64_t num_tree_nodes(unsigned depth) {
+  static uint64_t num_tree_nodes(uint8_t depth) {
     return ((1ull << (4 * depth)) - 1) / 15;
   }
 
-  uint64_t tree_size_in_bytes(unsigned depth) const {
+  uint64_t tree_size_in_bytes(uint8_t depth) const {
     const auto tree_overhead = depth * 8;
     return num_tree_nodes(depth) * node_size + tree_overhead;
   }

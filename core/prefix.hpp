@@ -26,18 +26,18 @@ namespace silkworm {
 
 class Prefix {
  public:
-  explicit Prefix(size_t size, uint64_t val = 0);
-  Prefix(size_t size, const Hash&);
+  explicit Prefix(uint8_t size, uint64_t val = 0);
+  Prefix(uint8_t size, const Hash&);
 
-  size_t size() const { return size_; }
+  uint8_t size() const { return size_; }
 
   uint64_t val() const { return val_; }
 
-  Nibble operator[](size_t pos) const { return (val_ << (pos * 4)) >> 60; }
+  Nibble operator[](uint8_t pos) const { return (val_ << (pos * 4)) >> 60; }
 
   Nibble last() const { return (*this)[size_ - 1]; }
 
-  void set(size_t pos, Nibble x) {
+  void set(uint8_t pos, Nibble x) {
     const auto shift = 60 - pos * 4;
     val_ = (val_ & ~(0xfull << shift)) + (static_cast<uint64_t>(x) << shift);
   }
@@ -61,14 +61,14 @@ class Prefix {
 
   bool matches(const Hash&) const;
 
-  friend Prefix operator"" _prefix(const char* in, std::size_t n);
+  friend Prefix operator"" _prefix(const char* in, size_t n);
 
   friend inline bool operator==(const Prefix& a, const Prefix& b) {
     return a.val_ == b.val_ && a.size_ == b.size_;
   }
 
  private:
-  size_t size_ = 0;
+  uint8_t size_ = 0;
   uint64_t val_ = 0;
 };
 

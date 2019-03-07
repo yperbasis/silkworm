@@ -14,11 +14,11 @@
    limitations under the License.
 ]]
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS date_time)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 include_directories(${Silkworm_SOURCE_DIR}/core)
 
 file(GLOB Silkworm_LAB_SRC "*.hpp" "*.cpp")
 add_executable(sync_emulator ${Silkworm_LAB_SRC})
-target_link_libraries(sync_emulator silkworm)
+target_link_libraries(sync_emulator silkworm ${Boost_LIBRARIES})

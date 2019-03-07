@@ -22,11 +22,11 @@
 
 namespace {
 
-unsigned depth(const silkworm::sync::Hints& hints) {
+uint8_t depth(const silkworm::sync::Hints& hints) {
   return std::min(hints.optimal_phase2_depth(), hints.depth_to_fit_in_memory());
 }
 
-unsigned phase1_depth(const silkworm::sync::Hints& hints) {
+uint8_t phase1_depth(const silkworm::sync::Hints& hints) {
   return std::min(hints.optimal_phase1_depth(), depth(hints));
 }
 

@@ -29,9 +29,9 @@ namespace silkworm {
 
 class State {
  public:
-  State(DbBucket& db, unsigned depth, unsigned phase1_depth);
+  State(DbBucket& db, uint8_t depth, uint8_t phase1_depth);
 
-  unsigned depth() const { return tree_.size(); }
+  uint8_t depth() const { return static_cast<uint8_t>(tree_.size()); }
 
   void init_from_db(uint32_t data_valid_for_block);
 
@@ -80,19 +80,19 @@ class State {
 
   bool root_is_old_ = false;
 
-  sync::GetNodeRequest node_request(size_t level);
+  sync::GetNodeRequest node_request(uint8_t level);
   std::optional<sync::GetLeavesRequest> next_leaves_request(Prefix&,
                                                             bool phase1);
 
-  static size_t node_index(unsigned level, Prefix prefix) {
+  static uint64_t node_index(uint8_t level, Prefix prefix) {
     return level == 0 ? 0 : prefix.val() >> (64 - level * 4);
   }
 
-  const Node& node(unsigned level, Prefix prefix) const {
+  const Node& node(uint8_t level, Prefix prefix) const {
     return tree_[level][node_index(level, prefix)];
   }
 
-  Node& node(unsigned level, Prefix prefix) {
+  Node& node(uint8_t level, Prefix prefix) {
     return tree_[level][node_index(level, prefix)];
   }
 
@@ -100,11 +100,11 @@ class State {
   const Node& root() const { return tree_[0][0]; }
 
   void update_blocks_down_path(Prefix);
-  bool update_block_at(Prefix, size_t level);
+  bool update_block_at(Prefix, uint8_t level);
 
-  unsigned consistent_path_depth(Prefix) const;
+  uint8_t consistent_path_depth(Prefix) const;
 
-  void propagate_synced_up(Prefix, size_t from_level);
+  void propagate_synced_up(Prefix, uint8_t from_level);
 
   void update_node(Node&, const sync::Proof& new_data, int32_t new_block);
 

@@ -24,7 +24,7 @@ namespace silkworm::mptrie {
 Hash branch_node_hash(std::bitset<16> empty, const std::array<Hash, 16>& hash) {
   thread_local rlp::List rlp(16, "");
 
-  for (unsigned i = 0; i < 16; ++i) {
+  for (Nibble i = 0; i < 16; ++i) {
     auto& str = boost::get<std::string>(rlp[i]);
     if (empty[i]) {
       str.clear();

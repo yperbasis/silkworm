@@ -50,8 +50,8 @@ int main() {
   using namespace silkworm::lab;
   using namespace boost::posix_time;
 
-  static const auto kStartBlock = 7212230;
-  static const unsigned kSeed = 3548264823;
+  static const auto kStartBlock = 7212230u;
+  static const auto kSeed = 3548264823u;
 
   sync::Hints hints;
   print_hints(hints);
@@ -118,8 +118,8 @@ int main() {
   std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
   std::cout << "generated leaves    " << generated_leaves << std::endl;
 
-  double leaf_bytes = generated_leaves * sync::kLeafSize;
-  double overhead = stats.reply_total_bytes / leaf_bytes - 1;
+  const auto leaf_bytes = static_cast<double>(generated_leaves * sync::kLeafSize);
+  const auto overhead = stats.reply_total_bytes / leaf_bytes - 1;
   std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
             << "%\n\n";
 

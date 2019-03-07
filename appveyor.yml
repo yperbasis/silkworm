@@ -24,6 +24,7 @@ install:
   - vcpkg integrate install
 
 before_build:
+  - cd c:\projects\silkworm
   - cmake -H. -BBuild -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 build:

@@ -20,7 +20,7 @@ before_install:
     - sudo apt-get install -y cmake
     - sudo add-apt-repository ppa:mhier/libboost-latest -y
     - sudo apt-get update -q
-    - sudo apt-get install -y libboost
+    - sudo apt-get install -y libboost1.68
     - ./install-catch2.sh
 
 before_script:

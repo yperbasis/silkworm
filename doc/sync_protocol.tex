@@ -69,28 +69,30 @@ Request storage trie sizes as of block \#$\texttt{blockAtLeast}$ or newer.
 Reply to $\texttt{GetStorageSizes}$.
 Returns storage trie sizes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
 The elements returned must strictly match the accounts requested.
-The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts the peer does not have enough informartion about.
+The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
 
 \textbf{GetNodeData2} [+0x22, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
-[account$^0$: $\mathbb{B}_{20} | \varnothing$, prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ... ],
-[account$^1$: $\mathbb{B}_{20} | \varnothing$, prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ... ],
+[account$^0$: $\mathbb{B}_{20} | \varnothing$, prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...],
+[account$^1$: $\mathbb{B}_{20} | \varnothing$, prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...],
 ...]
 Request state or storage trie nodes as of block \#$\texttt{blockAtLeast}$ or newer.
-The empty list $\varnothing$ instead of the account address signifies state rather than storage trie.
-Note that this operative is similar to $\texttt{GetNodeData}$  Ethereum Wire Protocol PV63,
-but it uses prefixes rather than hashes as node keys.
+The empty list $\varnothing$ instead of the account address signifies the state (rather than storage) trie.
+Note that this operative is similar to $\texttt{GetNodeData}$ from Ethereum Wire Protocol PV63,
+but it uses prefixes rather than hashes as node keys\footnote{For
+a justification see Péter Szilágyi's
+\href{https://ethereum-magicians.org/t/forming-a-ring-eth-v64-wire-protocol-ring/2857/10}{comment}
+at ETH v64 Wire Protocol Ring.}.
 TODO: prefix--node correspondence is trivial for branch nodes, not so much for leaf or extension nodes.
 TODO: prefix encoding consistent with the Yellow Paper.
 
 \textbf{NodeData2} [+0x23, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
-[node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ... ],
-[node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ... ],
+[node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ...],
+[node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ...],
 ...]
 Reply to $\texttt{GetNodeData2}$.
 Returns trie nodes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
 The nodes returned must strictly match the prefixes requested.
 The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
-Mind that state trie replies do not contain storage tries unlike \href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf Sync}.
 
 \textbf{GetLeaves} [+0x24, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
 
@@ -118,7 +120,7 @@ Mind that state trie replies do not contain storage tries unlike \href{https://n
 
 ] Request state or storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
 The empty list $\varnothing$ instead of the account address signifies state rather than storage trie.
-$\texttt{fromLevel}$ specifies the number of upper nodes to be excludes from the proof.
+$\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof.
 $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not changed.
 
 \textbf{Leaves} [+0x25, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
@@ -148,15 +150,20 @@ $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not change
 ] Reply to $\texttt{GetLeaves}$.
 Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
 The subtries returned must strictly match the prefixes requested.
-If a peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
-The nodes returned are the upper node of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.
+If the peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
+The nodes returned are the upper nodes of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.
 The first $\texttt{fromLevel}$ upper nodes must be skipped.
 (If $\texttt{fromLevel} = 0$, then the nodes must start with the root node.)
 $\texttt{tooManyLeaves}$ is a boolean flag ($0=false$, $1=true$) indicating that the subtrie requested contains too many leaves.
 TODO: how many is too many?
-The leaves are represented as a list of their keys\footnote{It's feasible to return suffixes rather than full keys given that prefixes are known, but we deem the performance gain to be insignificant.} and values.
-In case of $\texttt{tooManyLeaves}$ the leaves should not returned\footnote{In that case the peer must not return an empty list as that would imply that there are no leaves matching the prefix given.}.\\
+The leaves are represented as the list of their keys\footnote{It
+is feasible to return suffixes rather than full keys given that prefixes are known, but we deem the performance gain to be insignificant.}
+and values.
+The peer may only return either all leaves of the subtrie or nothing.
+In case of $\texttt{tooManyLeaves}$ the leaves should not returned\footnote{In
+that case the peer must not return an empty list as that would imply that there are no leaves matching the given prefix.}.
 
+Note that state trie replies do not inline storage tries unlike \href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf Sync}.\\
 TODO: is block number OK given chain reorgs?
 
 \section{Suggested Full Sync Algorithm}

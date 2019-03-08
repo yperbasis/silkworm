@@ -25,6 +25,10 @@ DbBucket::Range DbBucket::leaves(Prefix p) const {
 
   auto lb = data_.lower_bound(p.padded());
 
+  if (lb == data_.end()) {
+    return {lb, data_.end()};
+  }
+
   ++p;
   if (p.val() == 0) {
     return {lb, data_.end()};

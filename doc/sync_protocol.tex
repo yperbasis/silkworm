@@ -120,7 +120,7 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 
 ] Request state or storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
 The empty list $\varnothing$ instead of the account address signifies state rather than storage trie.
-$\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof.
+$\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead (reply block is not newer).
 $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not changed.
 
 \textbf{Leaves} [+0x25, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
@@ -152,7 +152,7 @@ Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \tex
 The subtries returned must strictly match the prefixes requested.
 If the peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
 The nodes returned are the upper nodes of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.
-The first $\texttt{fromLevel}$ upper nodes must be skipped.
+The first $\texttt{fromLevel}$ upper nodes must be skipped if and only if $\texttt{blockNumber} = \texttt{blockAtLeast}$.
 (If $\texttt{fromLevel} = 0$, then the nodes must start with the root node.)
 $\texttt{tooManyLeaves}$ is a boolean flag ($0=false$, $1=true$) indicating that the subtrie requested contains too many leaves.
 TODO: how many is too many?

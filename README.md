@@ -2,6 +2,7 @@ Silkworm
 ===
 
 [![Build Status](https://travis-ci.com/yperbasis/silkworm.svg?branch=master)](https://travis-ci.com/yperbasis/silkworm)
+[![Build status](https://ci.appveyor.com/api/projects/status/ckmtgkqxllho8p3b?svg=true)](https://ci.appveyor.com/project/yperbasis/silkworm)
 
 Silkworm is an experimental playground for Ethereum 1x research.
 If things go well, it might morph into a grown C++17 Ethereum client with the Apache licence.

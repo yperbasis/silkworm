@@ -12,10 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-os: Visual Studio 2017
+image: Visual Studio 2017
 platform: x64
-
-cache: c:\tools\vcpkg\installed\
 
 install:
   - cd c:\tools\vcpkg
@@ -23,9 +21,12 @@ install:
   - vcpkg install catch2:x64-windows
   - vcpkg integrate install
 
+cache:
+  - C:\tools\vcpkg\installed -> .appveyor.yml
+
 before_build:
-  - cd c:\projects\silkworm
-  - cmake -H. -BBuild -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - cd "%APPVEYOR_BUILD_FOLDER%"
+  - cmake -H. -BBuild -A%PLATFORM% -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 build:
   project: Build\silkworm.sln

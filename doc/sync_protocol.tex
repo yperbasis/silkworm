@@ -1,10 +1,15 @@
 \documentclass{amsart}
 
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
 \usepackage{epigraph}
 \usepackage{natbib}
+\usepackage{xcolor}
 \usepackage{hyperref}
 
 \begin{document}
+\pagecolor{white}
+
 \title{Red Queen's Sync Protocol for Ethereum}
 \author{Andrew Ashikhmin \& Alexey Akhunov}
 \date{March 2019}
@@ -22,16 +27,23 @@ TODO: abstract.
     }{Lewis Carroll, Through the Looking-Glass and What Alice Found There}
 
 \section{Introduction}
+
+In Red Queen's Synchronisation Protocol for Ethereum 1x seeders reply with data as of their most recent block.
+That results in an inconsistent trie on the leecher initially ("phase 1"), which we patch later ("phase 2").
+The idea is similar to \href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf Sync}.
+
 TODO: mention the sync failure problem \cite{akhunov_1x_workshop_part1} and the needs of light clients like Mustekala.
 Inspirations like BitTorrent, Parity's warp sync,
-\href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf sync}
 \href{https://notes.ethereum.org/eXnqtO_vQquzrFDPHjuaFQ}{Firehose Sync},
-\href{https://github.com/ethereum/wiki/wiki/Light-client-protocol}{Light client protocol}.
-Snapshot synchronisation rather than from genesis.
+\href{https://github.com/ethereum/wiki/wiki/Light-client-protocol}{Light Client Protocol}.
+
+N.B. Snapshot synchronisation rather than from genesis.
+
 
 % TODO https://ethereum-magicians.org/t/forming-a-ring-eth-v64-wire-protocol-ring/2857/4
 
 \section{Notation}
+
 We mostly follow the conventions and notations of the Yellow Paper \cite{yellow_paper},
 for instance $\mathbb{Y}$ denotes the set of nibble sequences.
 We use the letter $\pi$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$,
@@ -45,14 +57,121 @@ A key matches a prefix iff all their first nibbles are the same,
 ($\mathbf{k}'$ is a sequence of nibbles, while $\mathbf{k}$ is a sequence of bytes.)
 
 \section{Protocol Specification}
-TODO: protocol spec; cross-check it against geth's fast sync spec.
-% https://github.com/ethereum/wiki/wiki/Ethereum-Wire-Protocol#fast-synchronization-pv63
 
-State trie replies do not contain storage tries unlike Leaf Sync? 
+We propose the following 3 request/reply operative pairs.
 
-% TODO: internal notation consistency + cross-check against the Yellow Paper.
+\textbf{GetStorageSizes} [+0x20, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
+[account$^0$: $\mathbb{B}_{20}$, account$^1$: $\mathbb{B}_{20}$, ...]]
+Request storage trie sizes as of block \#$\texttt{blockAtLeast}$ or newer.
 
-$o$ -- reply overhead in bytes.
+\textbf{StorageSizes} [+0x21, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$,
+[numLeaves$^0$: $\mathbb{N} | \varnothing$, numLeaves$^1$: $\mathbb{N} | \varnothing$, ...]]
+Reply to $\texttt{GetStorageSizes}$.
+Returns storage trie sizes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
+The elements returned must strictly match the accounts requested.
+The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts the peer does not have enough informartion about.
+
+\textbf{GetNodeData2} [+0x22, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
+[account$^0$: $\mathbb{B}_{20} | \varnothing$, prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ... ],
+[account$^1$: $\mathbb{B}_{20} | \varnothing$, prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ... ],
+...]
+Request state or storage trie nodes as of block \#$\texttt{blockAtLeast}$ or newer.
+The empty list $\varnothing$ instead of the account address signifies state rather than storage trie.
+Note that this operative is similar to $\texttt{GetNodeData}$  Ethereum Wire Protocol PV63,
+but it uses prefixes rather than hashes as node keys.
+TODO: prefix--node correspondence is trivial for branch nodes, not so much for leaf or extension nodes.
+TODO: prefix encoding consistent with the Yellow Paper.
+
+\textbf{NodeData2} [+0x23, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
+[node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ... ],
+[node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ... ],
+...]
+Reply to $\texttt{GetNodeData2}$.
+Returns trie nodes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
+The nodes returned must strictly match the prefixes requested.
+The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
+Mind that state trie replies do not contain storage tries unlike \href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf Sync}.
+
+\textbf{GetLeaves} [+0x24, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
+
+\quad [account$^0$: $\mathbb{B}_{20} | \varnothing$,
+
+\qquad [prefix$^0_0$: $\mathbb{Y}$, fromLevel$^0_0$: $\mathbb{N}$, subtrieHash$^0_0$: $\mathbb{B}_{32}| \varnothing$],
+
+\qquad [prefix$^0_1$: $\mathbb{Y}$, fromLevel$^0_1$: $\mathbb{N}$, subtrieHash$^0_1$: $\mathbb{B}_{32}| \varnothing$],
+
+\qquad ...
+
+\quad ],
+
+\quad [account$^1$: $\mathbb{B}_{20} | \varnothing$,
+
+\qquad [prefix$^1_0$: $\mathbb{Y}$, fromLevel$^1_0$: $\mathbb{N}$, subtrieHash$^1_0$: $\mathbb{B}_{32}| \varnothing$],
+
+\qquad [prefix$^1_1$: $\mathbb{Y}$, fromLevel$^1_1$: $\mathbb{N}$, subtrieHash$^1_1$: $\mathbb{B}_{32}| \varnothing$],
+
+\qquad ...
+
+\quad ],
+
+\quad ...
+
+] Request state or storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
+The empty list $\varnothing$ instead of the account address signifies state rather than storage trie.
+$\texttt{fromLevel}$ specifies the number of upper nodes to be excludes from the proof.
+$\texttt{subtrieHash}$ is a means to avoid resending leaves that have not changed.
+
+\textbf{Leaves} [+0x25, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
+
+\quad [
+
+\qquad [[node$^0_{00}$: $\mathbb{B}$, node$^0_{01}$: $\mathbb{B}$, ...], tooManyLeaves$^0_0$, [key$^0_{00}$: $\mathbb{B}_{32}$, val$^0_{00}$: $\mathbb{B}$, key$^0_{01}$: $\mathbb{B}_{32}$, val$^0_{01}$: $\mathbb{B}$, ...]$_{opt}$],
+
+\qquad [[node$^0_{10}$: $\mathbb{B}$, node$^0_{11}$: $\mathbb{B}$, ...], tooManyLeaves$^0_1$, [key$^0_{10}$: $\mathbb{B}_{32}$, val$^0_{10}$: $\mathbb{B}$, key$^0_{11}$: $\mathbb{B}_{32}$, val$^0_{11}$: $\mathbb{B}$, ...]$_{opt}$],
+
+\qquad ...
+
+\quad ],
+
+\quad [
+
+\qquad [[node$^1_{00}$: $\mathbb{B}$, node$^1_{01}$: $\mathbb{B}$, ...], tooManyLeaves$^1_0$, [key$^1_{00}$: $\mathbb{B}_{32}$, val$^1_{00}$: $\mathbb{B}$, key$^1_{01}$: $\mathbb{B}_{32}$, val$^1_{01}$: $\mathbb{B}$, ...]$_{opt}$],
+
+\qquad [[node$^1_{10}$: $\mathbb{B}$, node$^1_{11}$: $\mathbb{B}$, ...], tooManyLeaves$^1_1$, [key$^1_{10}$: $\mathbb{B}_{32}$, val$^1_{10}$: $\mathbb{B}$, key$^1_{11}$: $\mathbb{B}_{32}$, val$^1_{11}$: $\mathbb{B}$, ...]$_{opt}$],
+
+\qquad ...
+
+\quad ],
+
+\quad ...
+
+] Reply to $\texttt{GetLeaves}$.
+Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
+The subtries returned must strictly match the prefixes requested.
+If a peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
+The nodes returned are the upper node of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.
+The first $\texttt{fromLevel}$ upper nodes must be skipped.
+(If $\texttt{fromLevel} = 0$, then the nodes must start with the root node.)
+$\texttt{tooManyLeaves}$ is a boolean flag ($0=false$, $1=true$) indicating that the subtrie requested contains too many leaves.
+TODO: how many is too many?
+The leaves are represented as a list of their keys\footnote{It's feasible to return suffixes rather than full keys given that prefixes are known, but we deem the performance gain to be insignificant.} and values.
+In case of $\texttt{tooManyLeaves}$ the leaves should not returned\footnote{In that case the peer must not return an empty list as that would imply that there are no leaves matching the prefix given.}.\\
+
+TODO: is block number OK given chain reorgs?
+
+\section{Suggested Full Sync Algorithm}
+
+TODO: top-level trie with branch nodes only; nodes track blocks; phase 1, phase 2.
+
+\section{Performance Analysis}
+
+For this analysis we assume that all tries are well balanced.
+We also assume that all top nodes up to a certain trie level $i$ are branch nodes, not leaf nor extension nodes.
+This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
+
+Some notation (TODO: internal notation consistency + cross-check against the Yellow Paper):
+
+$o$ -- $\texttt{Leaves}$ reply overhead in bytes.
 
 $b$ -- size of a branch node in bytes.
 
@@ -67,14 +186,6 @@ Thus the size of a reply, assuming the average leaf size, is
     S(R) = o + ||R_b|| b + ||R_l|| l
 \end{equation}
 TODO: RLP changes the formula slightly.
-
-\section{Suggested Full Sync Algorithm}
-TODO: top-level trie with branch nodes only; nodes track blocks; phase 1, phase 2.
-
-\section{Performance Analysis}
-For this analysis we assume that all tries are well balanced.
-We also assume that all top nodes up to a certain trie level $i$ are branch nodes, not leaf nor extension nodes.
-This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
 
 $t$ -- total number of leaves in the trie.
 
@@ -111,9 +222,12 @@ In other words, it does not make sense to use prefixes longer than
 TODO: convergence analysis.
 
 \section{Conclusion}
+
 TODO: conclusion.
 
 \bibliographystyle{plainnat}
 \bibliography{biblio}
+
+% TODO reference Leaf Sync, Firehose Sync, Light client protocol, etc.
 
 \end{document}

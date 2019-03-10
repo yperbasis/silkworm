@@ -29,15 +29,14 @@
 /* Sync Research
 [DONE]
   0. single-machine in-memory PoC with ~1m dust accounts
-  1. optimal phase 2 depth
+  1. describe the algo. optimal phase 2 depth
 [TODO]
-  1. describe the algo
-  2. theoretical convergence (if possible)
+  2. theoretical convergence
   3. LMDB(?) database
   4. experimental convergence with ~100m dust accounts
-  5. storage tries. pack multiple accounts into 1 request/reply for small tries?
+  5. storage tries. pack multiple accounts into 1 request/reply for small tries
   6. extension/leaf nodes (prereq: Issue #7, better test coverage)
-  7. real protocol (incl reqID) + doc
+  7. use the real protocol in the modelling code
   8. handle chain reorgs
   9. network layer, p2p
   10. multiple leechers, BitTorrent-like swarm

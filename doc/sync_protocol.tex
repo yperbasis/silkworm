@@ -30,7 +30,7 @@ TODO: abstract.
 
 In Red Queen's Synchronisation Protocol for Ethereum 1x seeders reply with data as of their most recent block.
 That results in an inconsistent trie on the leecher initially ("phase 1"), which we patch later ("phase 2").
-The idea is similar to \href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf Sync}.
+The idea is similar to that of Leaf Sync (\cite{leaf_sync}).
 
 TODO: mention the sync failure problem \cite{akhunov_1x_workshop_part1} and the needs of light clients like Mustekala.
 Inspirations like BitTorrent, Parity's warp sync,
@@ -44,7 +44,7 @@ N.B. Snapshot synchronisation rather than from genesis.
 
 \section{Notation}
 
-We mostly follow the conventions and notations of the Yellow Paper \cite{yellow_paper},
+We mostly follow the conventions and notations of the Yellow Paper (\cite{yellow_paper}),
 for instance $\mathbb{Y}$ denotes the set of nibble sequences.
 We use the letter $\pi$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$,
 \begin{equation}
@@ -163,12 +163,48 @@ The peer may only return either all leaves of the subtrie or nothing.
 In case of $\texttt{tooManyLeaves}$ the leaves should not returned\footnote{In
 that case the peer must not return an empty list as that would imply that there are no leaves matching the given prefix.}.
 
-Note that state trie replies do not inline storage tries unlike \href{https://notes.ethereum.org/kphcc_CKT4a5sUs_zWVelA}{Leaf Sync}.\\
+Proof nodes in $\texttt{Subtrie}$ replies give us a means to detect faulty or malicious peers.
+Note that state trie replies do not inline storage tries unlike Leaf Sync.\\
+
 TODO: is block number OK given chain reorgs?
 
 \section{Suggested Full Sync Algorithm}
 
-TODO: top-level trie with branch nodes only; nodes track blocks; phase 1, phase 2.
+Here we suggest a possible algorithm for full state and storage snapshot synchronisation using the protocol specified above.
+We describe a modus operandi where the seeder replies with its most recent data,
+and the leecher has to handle trie data coming from different blocks.
+We suggest to perform synchronisation in two stages:
+during phase~1 the leecher obtains leaf data (with the necessary proof nodes) as of any reasonable block height,
+while during phase~2 it patches up the trie in order to catch up to the most recent block\footnote{The
+Red Queen's race is a nice metaphor for phase 2.}.
+The idea was proposed in \cite{leaf_sync}.
+
+Let us focus on the state trie for the moment; we shall come back to storage sync later.
+For phase 1 we suggest to send $\texttt{GetSubtries}$ requests with a single prefix per request, ditto for phase 2.
+All requested prefixes are of size $d_1$ during phase 1 and of $d_2$ during phase 2, $d_2 \geq d_1$.
+We elaborate on the values of $d_1$ and $d_2$ later.
+The leecher gradually builds the first upper $d_2$ levels of the Merkle Patricia trie\footnote{$d_2$
+is small enough so that we can reasonably assume that (almost) all nodes in question are branch nodes;
+see \cite{akhunov_1x_workshop_part2}.}.
+(The full trie can be constructed if so desired, but only the upper $d_2$ levels are necessary for our algorithm.)
+Populated nodes are marked with the block number as of they are valid.
+The algorithm preserves the following invariant: parent's block is always no older than child's block.
+
+During phase 1 the leecher requests each possible prefix of size $d_1$ exactly once
+(barring network failures and faulty peers).
+When sending a request,
+the leecher sets its $\texttt{blockAtLeast}$ to the block of the root of the current (partially populated) trie,
+$\texttt{fromLevel}$ to the number of populated nodes down the path/prefix that are of the same block as the root,
+and $\texttt{subtrieHash}$ is not used (set to $\varnothing$).
+Having received a reply, the leecher verifies its proof.
+If the proof is valid, the leecher writes received leafs to the database and updates the nodes along the prefix/path.
+By the end of phase 1 the leecher will have all state accounts populated, albeit inconsistently.
+
+TODO: an example.
+
+TODO: phase 2.
+
+TODO: storage tries.
 
 \section{Performance Analysis}
 
@@ -235,6 +271,6 @@ TODO: conclusion.
 \bibliographystyle{plainnat}
 \bibliography{biblio}
 
-% TODO reference Leaf Sync, Firehose Sync, Light client protocol, etc.
+% TODO reference Firehose Sync, Light client protocol, etc.
 
 \end{document}

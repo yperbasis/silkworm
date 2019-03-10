@@ -203,25 +203,26 @@ By the end of phase 1 the leecher will have all state accounts populated, albeit
 
 \begin{figure}
 \begin{tikzpicture} [scale=1, auto=left]
+\tikzstyle{selected edge} = [draw,line width=2pt,-,red!50]
 
   \node[circle,draw] (n)       at (4.2,4) {5};
-  \node[circle,draw] (n7)     at (2.5,3) {5};
-  \node[circle,draw] (n9)     at (6,3)    {4};
+  \node[circle,draw] (n7)     at (2.5,3) {3};
+  \node[circle,draw] (n9)     at (6,3)    {5};
   \node[circle,draw] (n7a)   at (2.5,2) {3};
-  \node[circle,draw] (n95)   at (6,2)    {4};
+  \node[circle,draw] (n95)   at (6,2)    {5};
   \node[circle,draw] (n7a0) at (1,1)    {3};
   \node(n7a3) at (2,1)    {?};
-  \node[circle,draw] (n7ab) at (3,1)    {1};
+  \node[circle,draw] (n7ab) at (3,1)    {2};
   \node[circle,draw] (n7af)  at (4,1)    {3};
-  \node[circle,draw] (n958) at (5.2,1) {4};
-  \node[circle,draw] (n959) at (6.8,1) {2};
+  \node[circle,draw] (n958) at (5.2,1) {5};
+  \node[circle,draw] (n959) at (6.8,1) {4};
 
-  \draw (n) -- (n7);
+  \draw[selected edge] (n) -- (n7);
   \draw (n) -- (n9);
-  \draw (n7) -- (n7a);
+  \draw[selected edge] (n7) -- (n7a);
   \draw (n9) -- (n95);
   \draw (n7a) -- (n7a0);
-  \draw (n7a) -- (n7a3);
+  \draw[selected edge] (n7a) -- (n7a3);
   \draw (n7a) -- (n7ab);
   \draw (n7a) -- (n7af);
   \draw (n95) -- (n958);
@@ -250,17 +251,17 @@ By the end of phase 1 the leecher will have all state accounts populated, albeit
 \end{picture}
 \begin{tikzpicture} [scale=1,auto=left]
   
-  \node[circle,draw] (n)       at (4.2,4) {6};
-  \node[circle,draw] (n7)     at (2.5,3) {6};
-  \node[circle,draw] (n9)     at (6,3)    {4};
-  \node[circle,draw] (n7a)   at (2.5,2) {6};
-  \node[circle,draw] (n95)   at (6,2)    {4};
+  \node[circle,draw,fill=blue!20] (n)       at (4.2,4) {6};
+  \node[circle,draw,fill=blue!20] (n7)     at (2.5,3) {6};
+  \node[circle,draw] (n9)     at (6,3)    {5};
+  \node[circle,draw,fill=blue!20] (n7a)   at (2.5,2) {6};
+  \node[circle,draw] (n95)   at (6,2)    {5};
   \node[circle,draw] (n7a0) at (1,1)    {3};
-  \node[circle,draw] (n7a3) at (2,1)    {6};
-  \node[circle,draw] (n7ab) at (3,1)    {1};
+  \node[circle,draw,fill=blue!20] (n7a3) at (2,1)    {6};
+  \node[circle,draw] (n7ab) at (3,1)    {2};
   \node[circle,draw] (n7af)  at (4,1)    {3};
-  \node[circle,draw] (n958) at (5.2,1) {4};
-  \node[circle,draw] (n959) at (6.8,1) {2};
+  \node[circle,draw] (n958) at (5.2,1) {5};
+  \node[circle,draw] (n959) at (6.8,1) {4};
 
   \draw (n) -- (n7);
   \draw (n) -- (n9);
@@ -295,9 +296,9 @@ Figure~\ref{fig:phase1_example} shows an example of a phase 1 step with $d_1 = 3
 Say the leecher is interested in prefix $<$7a3$>$.
 The trie on the left represent leecher's state before sending a request.
 Root's block is 5, so it sets $\texttt{blockAtLeast}  = 5$.
-Out of the 3 nodes along the path ($<>$, $<$7$>$, $<$7a$>$) only 2 ($<>$, $<$7$>$) have the same block number,
-so the leecher sets $\texttt{fromLevel}  = 2$.
-Imagine that the seeder replies with data as of a newer block \#6.
+The leecher sets $\texttt{fromLevel}$ to 1 since there is no need to re-send the root as part of the proof.
+It cannot set $\texttt{fromLevel}$ higher as the other nodes along the path are older than the root and thus have to be refreshed.
+Suppose that the seeder replies with data as of a newer block \#6.
 Since the block has changed, the seeder ignores $\texttt{fromLevel}$ and sends a full proof.
 The leecher saves received leaves to its database and updates the nodes  ($<>$, $<$7$>$, $<$7a$>$, $<$7a3$>$).
 The result is displayed on the right of Figure~\ref{fig:phase1_example}.

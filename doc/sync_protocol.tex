@@ -94,7 +94,7 @@ Returns trie nodes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast
 The nodes returned must strictly match the prefixes requested.
 The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
 
-\textbf{GetLeaves} [+0x24, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
+\textbf{GetSubtries} [+0x24, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
 
 \quad [account$^0$: $\mathbb{B}_{20} | \varnothing$,
 
@@ -123,7 +123,7 @@ The empty list $\varnothing$ instead of the account address signifies state rath
 $\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead (reply block is not newer).
 $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not changed.
 
-\textbf{Leaves} [+0x25, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
+\textbf{Subtries} [+0x25, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
 
 \quad [
 
@@ -147,7 +147,7 @@ $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not change
 
 \quad ...
 
-] Reply to $\texttt{GetLeaves}$.
+] Reply to $\texttt{GetSubtries}$.
 Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
 The subtries returned must strictly match the prefixes requested.
 If the peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.

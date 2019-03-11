@@ -316,7 +316,10 @@ $\texttt{subtrieHash}$ is set in order to avoid leaf resending in case the leave
 Given a reply the leecher finds out which of the nibbles are still valid and which have to be refreshed with $\texttt{GetSubtrie}$.
 Repeating the process for each stale node at the last level $d_2-1$ concludes the algorithm for state trie synchronisation.
 
-TODO: storage tries.
+The algorithm for storage sync is similar for large storage tries.
+Its parameters $d_1$ and $d_2$ are optimised based on the storage size as described in the next section.
+Small storage tries can be obtained in bulk requesting the zero prefix (meaning the entire trie) for a number of them in one go.
+$\texttt{GetStorageSizes}$ provides a means to finding out storage sizes.
 
 \section{Performance Analysis}
 

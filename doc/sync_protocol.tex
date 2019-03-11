@@ -198,7 +198,7 @@ the leecher sets its $\texttt{blockAtLeast}$ to the block of the root of the cur
 $\texttt{fromLevel}$ to the number of populated nodes down the path/prefix that are of the same block as the root,
 and $\texttt{subtrieHash}$ is not used (set to $\varnothing$).
 Having received a reply, the leecher verifies its proof.
-If the proof is valid, the leecher writes received leafs to the database and updates the nodes along the prefix/path.
+If the proof is valid, the leecher writes received leaves to the database and updates the nodes along the prefix/path.
 By the end of phase 1 the leecher will have all state accounts populated, albeit inconsistently.
 
 \begin{figure}
@@ -351,7 +351,12 @@ TODO: RLP changes the formula slightly.
 
 $t$ -- total number of leaves in the trie.
 
-TODO: optimal phase 1 depth.
+The overhead of the sync algorithm during phase 1, compared with Parity's warp sync, is in the proof nodes sent alongside the leaf data.
+Their number is, roughly speaking, equal to the size of a Merkle Patricia trie of depth $d_1$, times the number of block changes during phase 1.
+So, to reduce the overhead, we want $d_1$ to be as low as possible.
+On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
+Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KB).
+TODO: the formula.
 
 Now let us find the maximum size $d$ of the request prefix $\pi$ that makes sense to use when we are catching up (phase 2 of the sync).
 Let assume that only one leaf that matches $\pi$ has changed.

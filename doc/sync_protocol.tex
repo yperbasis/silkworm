@@ -38,7 +38,7 @@ Inspirations like BitTorrent, Parity's warp sync,
 \href{https://notes.ethereum.org/eXnqtO_vQquzrFDPHjuaFQ}{Firehose Sync},
 \href{https://github.com/ethereum/wiki/wiki/Light-client-protocol}{Light Client Protocol}.
 
-N.B. Snapshot synchronisation rather than from genesis.
+N.B. Snapshot synchronisation rather than from the Genesis block.
 
 
 % TODO https://ethereum-magicians.org/t/forming-a-ring-eth-v64-wire-protocol-ring/2857/4
@@ -46,12 +46,12 @@ N.B. Snapshot synchronisation rather than from genesis.
 \section{Notation}
 
 We mostly follow the conventions and notations of the Yellow Paper (\cite{yellow_paper}),
-for instance $\mathbb{Y}$ denotes the set of nibble sequences.
+for instance, $\mathbb{Y}$ denotes the set of nibble sequences.
 We use the letter $\pi$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$,
 \begin{equation}
     \pi \in \mathbb{Y} \; \land \; ||\pi|| \leq 64
 \end{equation}
-A key matches a prefix iff all their first nibbles are the same,
+A key matches a prefix if and only if all their first nibbles are the same,
 \begin{equation}
     \texttt{MATCH}(\mathbf{k}, \pi) \equiv \forall_{i < ||\pi||}: \mathbf{k}'[i] = \pi[i]
 \end{equation}
@@ -162,13 +162,13 @@ The leaves are represented as the list of their keys\footnote{It
 is feasible to return suffixes rather than full keys given that prefixes are known, but we deem the performance gain to be insignificant.}
 and values.
 The peer may only return either all leaves of the subtrie or nothing.
-In case of $\texttt{tooManyLeaves}$ the leaves should not returned\footnote{In
-that case the peer must not return an empty list as that would imply that there are no leaves matching the given prefix.}.
-If subtrie hash matches $\texttt{subtrieHash}$ set in the request, the leaves also should not not sent.
+In the case of $\texttt{tooManyLeaves}$ the leaves should not be returned\footnote{In
+that case the peer must not return an empty list as that would imply that no leaves match the given prefix.}.
+If subtrie hash matches $\texttt{subtrieHash}$ set in the request, the leaves also should not be sent.
 TODO: describe subtrie hash more rigorously.
 Proof nodes must be sent in any case;
 they give us a means to detect faulty or malicious peers.
-Note that state trie replies do not inline storage tries unlike Leaf Sync.\\
+Note that state trie replies do not inline storage tries, unlike Leaf Sync.\\
 
 TODO: is block number OK given chain reorgs?
 
@@ -185,7 +185,7 @@ Red Queen's race is a nice metaphor for phase 2.}.
 The idea was proposed in \cite{leaf_sync}.
 
 Let us focus on the state trie for the moment; we shall come back to storage sync later.
-For phase 1 we suggest to send $\texttt{GetSubtries}$ requests with a single prefix per request, ditto for phase 2.
+For phase 1 we suggest sending $\texttt{GetSubtries}$ requests with a single prefix per request, ditto for phase 2.
 All requested prefixes are of size $d_1$ during phase 1 and of $d_2$ during phase 2, $d_2 \geq d_1$.
 We elaborate on the values of $d_1$ and $d_2$ later.
 The leecher gradually builds the first upper $d_2$ levels of the Merkle Patricia trie\footnote{$d_2$
@@ -203,7 +203,7 @@ $\texttt{fromLevel}$ to the number of populated nodes down the path/prefix that 
 and $\texttt{subtrieHash}$ is not used (set to $\varnothing$).
 Having received a reply, the leecher verifies its proof.
 If the proof is valid, the leecher writes received leaves to the database and updates the nodes along the prefix/path.
-By the end of phase 1 the leecher will have all accounts populated, albeit inconsistently.
+By the end of phase 1, the leecher will have all accounts populated, albeit inconsistently.
 
 \begin{figure}
 \begin{tikzpicture} [scale=1, auto=left]
@@ -292,46 +292,46 @@ By the end of phase 1 the leecher will have all accounts populated, albeit incon
   \node at (3.1, 3.6) {7};
   \node at (5.4, 3.6) {9};
 \end{tikzpicture}
-\caption{Illustration of phase 1 sync. Nodes are labeled with block numbers and edges are labeled with nibbles.}
+\caption{Illustration of phase 1 sync. Nodes are labelled with block numbers, and edges are labelled with nibbles.}
 \label{fig:phase1_example}
 \end{figure}
 
 Figure~\ref{fig:phase1_example} shows an example of a phase 1 step with $d_1 = 3$ and $d_2 = 4$.
 Say the leecher is interested in prefix $<$7a3$>$.
-The trie on the left represent leecher's state before sending a request.
+The trie on the left represents leecher's state before sending a request.
 Root's block is 5, so it sets $\texttt{blockAtLeast}  = 5$.
 The leecher sets $\texttt{fromLevel}$ to 1 since there is no need to re-send the root as part of the proof.
 It cannot set $\texttt{fromLevel}$ higher as the other nodes along the path are older than the root and thus have to be refreshed.
 Suppose that the seeder replies with data as of a newer block \#6.
-Since the block has changed, the seeder ignores $\texttt{fromLevel}$ and sends a full proof.
+Since the block has changed, the seeder ignores $\texttt{fromLevel}$ and sends full proof.
 The leecher saves received leaves to its database and updates the nodes  ($<>$, $<$7$>$, $<$7a$>$, $<$7a3$>$).
 The result is displayed on the right of Figure~\ref{fig:phase1_example}.
 
-At the beginning of phase 2 the leecher updates the trie in order to figure out which subtries have to be refreshed.
-For that it uses the $\texttt{GetNodeData2}$ operative.
-The leecher refreshes the trie level by level, starting from the root (level 0) and descending down to the penultimate level, level $d_2 - 2$.
+At the beginning of phase 2, the leecher updates the trie in order to figure out which subtries have to be refreshed.
+For that, it uses the $\texttt{GetNodeData2}$ operative.
+The leecher refreshes the trie level by level, starting from the root (level 0) and descending to the penultimate level, level $d_2 - 2$.
 Nodes at the same level may be requested in batch.
 Having refreshed nodes for a level, it knows which child nodes one level below have to be refreshed since the leecher can compare their hashes it currently holds with received fresh data.
-Thus for each level only the nodes that have been actually changed need to be requested.
+Therefore, only the nodes that have actually changed need to be requested.
 The leecher might have to restart the node refresh process from the root if new blocks are mined in between;
-however, provided a certain network bandwidth, the process will converge.
+however, provided a certain network bandwidth, the process converges.
 We analyse convergence conditions in the next section.
 
 After all trie levels from the root down to the penultimate level are up to date, the leecher determines which nodes at the ultimate level $d_2 - 1$ have to be refreshed.
 For such nodes it sends a $\texttt{GetSubtrie}$ request with a prefix of size $d_2$ corresponding to that note.
 The last nibble is set arbitrarily.
 $\texttt{subtrieHash}$ is set in order to avoid leaf resending in case the leaves the leecher obtained during phase 1 are still valid.
-Given a reply the leecher finds out which of the nibbles are still valid and which have to be refreshed with $\texttt{GetSubtrie}$.
+Given a reply, the leecher finds out which of the nibbles are still valid and which have to be refreshed with $\texttt{GetSubtrie}$.
 Repeating the process for each stale node at the last level $d_2-1$ concludes the algorithm for state trie synchronisation.
 
 The algorithm for storage sync is similar for large storage tries.
 Its parameters $d_1$ and $d_2$ are optimised based on the storage size as described in the next section.
 Small storage tries can be obtained in bulk requesting the empty prefix (meaning the entire trie) for a number of them in one go.
-$\texttt{GetStorageSizes}$ provides a means to finding out storage sizes.
+$\texttt{GetStorageSizes}$ provides a means of finding out storage sizes.
 
 \section{Performance Analysis}
 
-For this analysis we assume that all tries are well balanced.
+In this analysis, we assume that all tries are well balanced.
 We also assume that all top nodes up to a certain trie level $i$ are branch nodes, not leaf nor extension nodes.
 This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
 
@@ -339,13 +339,13 @@ Some notation (TODO: internal notation consistency + cross-check against the Yel
 
 $o$ -- $\texttt{Leaves}$ reply overhead in bytes.
 
-$b$ -- size of a branch node in bytes.
+$b$ -- the size of a branch node in bytes.
 
 $l$ -- average leaf size in bytes.
 
-$||R_b||$ -- number of nodes in reply.
+$||R_b||$ -- the number of nodes in reply.
 
-$||R_l||$ -- number of leaves in reply.
+$||R_l||$ -- the number of leaves in reply.
 
 Thus the size of a reply, assuming the average leaf size, is
 \begin{equation}
@@ -368,13 +368,13 @@ Let assume that only one leaf that matches $\pi$ has changed.
 That is a reasonable assumption if we are not too many blocks behind, there are not that many changes per block, and $d$ is sufficiently large.
 (For instance, if we are 100 blocks behind, and there are 500 leaf changes per block, then $d \geq 4$ will suffice.)
 Consider two options: request the prefix $\pi$ or send requests with prefixes $\pi \cdot 0, ..., \pi \cdot 15$ of size $d+1$
-(not necesseraly all 16 of them).
-In the first case we receive a reply of the size, on average,
+(not necessarily all 16 of them).
+In the first case, we receive a reply of the size, on average,
 \begin{equation}
     S = o + ||R_b|| b + \frac{t}{16^d} l
 \end{equation}
-For the second case we need to send at most two requests,
-as the first reply will give us the information to identify which nibble has changed.
+For the second case, we need to send at most two requests,
+as the first reply gives us the information to identify which nibble has changed.
 (With the probability $\frac{1}{16}$ the second request is not necessary.)
 The combined size of those 1 or 2 replies, on average, is
 \begin{equation}

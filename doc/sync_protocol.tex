@@ -66,7 +66,7 @@ We propose the following 3 request/reply operative pairs.
 Request storage trie sizes as of block \#$\texttt{blockAtLeast}$ or newer.
 Hashes of accounts addresses are used as keys.
 
-\textbf{StorageSizes} [+0x21, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$,
+\textbf{StorageSizes} [+0x21, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
 [numLeaves$^0$: $\mathbb{N} | \varnothing$, numLeaves$^1$: $\mathbb{N} | \varnothing$, ...]]
 Reply to $\texttt{GetStorageSizes}$.
 Returns storage trie sizes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
@@ -87,7 +87,7 @@ at ETH v64 Wire Protocol Ring.}.
 TODO: prefix--node correspondence is trivial for branch nodes, not so much for leaf or extension nodes.
 TODO: prefix encoding consistent with the Yellow Paper.
 
-\textbf{NodeData2} [+0x23, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
+\textbf{NodeData2} [+0x23, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
 [node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ...],
 [node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ...],
 ...]
@@ -125,7 +125,7 @@ The empty list $\varnothing$ instead of the account hash signifies state rather 
 $\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead (reply block is not newer).
 $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not changed.
 
-\textbf{Subtries} [+0x25, reqID: $\mathbb{N}$,  blockNumber: $\mathbb{N}$,
+\textbf{Subtries} [+0x25, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
 
 \quad [
 

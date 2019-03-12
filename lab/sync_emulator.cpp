@@ -34,8 +34,8 @@ void print_hints(const sync::Hints& hints) {
   std::cout << "Hints for " << hints.num_leaves * 1e-6
             << "M dust accounts with reply size <~ "
             << hints.approx_max_reply_size / 1024 << "KB:\n";
-  const int mem_depth = hints.depth_to_fit_in_memory();
-  std::cout << "depth to fit in memory " << mem_depth << " ("
+  const auto mem_depth = hints.depth_to_fit_in_memory();
+  std::cout << "depth to fit in memory " << static_cast<int>(mem_depth) << " ("
             << std::setprecision(3)
             << hints.tree_size_in_bytes(mem_depth) * 1e-6 << " MB)\n";
   const int d1 = hints.optimal_phase1_depth();

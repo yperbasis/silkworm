@@ -62,8 +62,9 @@ A key matches a prefix iff all their first nibbles are the same,
 We propose the following 3 request/reply operative pairs.
 
 \textbf{GetStorageSizes} [+0x20, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
-[account$^0$: $\mathbb{B}_{20}$, account$^1$: $\mathbb{B}_{20}$, ...]]
+[account$^0$: $\mathbb{B}_{32}$, account$^1$: $\mathbb{B}_{32}$, ...]]
 Request storage trie sizes as of block \#$\texttt{blockAtLeast}$ or newer.
+Hashes of accounts addresses are used as keys.
 
 \textbf{StorageSizes} [+0x21, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$,
 [numLeaves$^0$: $\mathbb{N} | \varnothing$, numLeaves$^1$: $\mathbb{N} | \varnothing$, ...]]
@@ -73,11 +74,11 @@ The elements returned must strictly match the accounts requested.
 The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
 
 \textbf{GetNodeData2} [+0x22, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
-[account$^0$: $\mathbb{B}_{20} | \varnothing$, prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...],
-[account$^1$: $\mathbb{B}_{20} | \varnothing$, prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...],
+[account$^0$: $\mathbb{B}_{32} | \varnothing$, prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...],
+[account$^1$: $\mathbb{B}_{32} | \varnothing$, prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...],
 ...]
 Request state or storage trie nodes as of block \#$\texttt{blockAtLeast}$ or newer.
-The empty list $\varnothing$ instead of the account address signifies the state (rather than storage) trie.
+The empty list $\varnothing$ instead of the account hash signifies the state (rather than storage) trie.
 Note that this operative is similar to $\texttt{GetNodeData}$ from Ethereum Wire Protocol PV63,
 but it uses prefixes rather than hashes as node keys\footnote{For
 a justification see Péter Szilágyi's
@@ -97,7 +98,7 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 
 \textbf{GetSubtries} [+0x24, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
 
-\quad [account$^0$: $\mathbb{B}_{20} | \varnothing$,
+\quad [account$^0$: $\mathbb{B}_{32} | \varnothing$,
 
 \qquad [prefix$^0_0$: $\mathbb{Y}$, fromLevel$^0_0$: $\mathbb{N}$, subtrieHash$^0_0$: $\mathbb{B}_{32}| \varnothing$],
 
@@ -107,7 +108,7 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 
 \quad ],
 
-\quad [account$^1$: $\mathbb{B}_{20} | \varnothing$,
+\quad [account$^1$: $\mathbb{B}_{32} | \varnothing$,
 
 \qquad [prefix$^1_0$: $\mathbb{Y}$, fromLevel$^1_0$: $\mathbb{N}$, subtrieHash$^1_0$: $\mathbb{B}_{32}| \varnothing$],
 
@@ -120,7 +121,7 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 \quad ...
 
 ] Request state or storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
-The empty list $\varnothing$ instead of the account address signifies state rather than storage trie.
+The empty list $\varnothing$ instead of the account hash signifies state rather than storage trie.
 $\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead (reply block is not newer).
 $\texttt{subtrieHash}$ is a means to avoid resending leaves that have not changed.
 
@@ -171,9 +172,10 @@ Note that state trie replies do not inline storage tries unlike Leaf Sync.\\
 
 TODO: is block number OK given chain reorgs?
 
-\section{Suggested Full Sync Algorithm}
+\section{Suggested Sync Algorithm}
 
-Here we suggest a possible algorithm for full state and storage snapshot synchronisation using the protocol specified above.
+Here we suggest a possible algorithm for full state and storage snapshot synchronisation using the protocol specified above;
+light clients are out of scope.
 We describe a modus operandi where the seeder replies with its most recent data,
 and the leecher has to handle trie data coming from different blocks.
 We suggest to perform synchronisation in two stages:
@@ -201,7 +203,7 @@ $\texttt{fromLevel}$ to the number of populated nodes down the path/prefix that 
 and $\texttt{subtrieHash}$ is not used (set to $\varnothing$).
 Having received a reply, the leecher verifies its proof.
 If the proof is valid, the leecher writes received leaves to the database and updates the nodes along the prefix/path.
-By the end of phase 1 the leecher will have all state accounts populated, albeit inconsistently.
+By the end of phase 1 the leecher will have all accounts populated, albeit inconsistently.
 
 \begin{figure}
 \begin{tikzpicture} [scale=1, auto=left]
@@ -324,7 +326,7 @@ Repeating the process for each stale node at the last level $d_2-1$ concludes th
 
 The algorithm for storage sync is similar for large storage tries.
 Its parameters $d_1$ and $d_2$ are optimised based on the storage size as described in the next section.
-Small storage tries can be obtained in bulk requesting the zero prefix (meaning the entire trie) for a number of them in one go.
+Small storage tries can be obtained in bulk requesting the empty prefix (meaning the entire trie) for a number of them in one go.
 $\texttt{GetStorageSizes}$ provides a means to finding out storage sizes.
 
 \section{Performance Analysis}

@@ -71,6 +71,7 @@ void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
 
       bytes_used += reply.byte_size();
       stats.reply_total_bytes += reply.byte_size();
+      stats.reply_total_nodes += reply.proof.size();
       if (reply.leaves) {
         stats.reply_total_leaves += reply.leaves->size();
       }
@@ -88,6 +89,7 @@ void Node::sync(const Node& peer, sync::Stats& stats, uint64_t max_bytes) {
 
       bytes_used += reply->byte_size();
       stats.reply_total_bytes += reply->byte_size();
+      stats.reply_total_nodes += reply->nodes.size();
 
       state.process_node_reply(*node_request, *reply);
     }

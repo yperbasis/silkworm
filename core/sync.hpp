@@ -31,6 +31,7 @@
   0. single-machine in-memory PoC with ~1m dust accounts
   1. describe the algo. optimal phase 2 depth
 [TODO]
+  1. remove subtrieHash
   2. theoretical convergence
   3. LMDB(?) database
   4. experimental convergence with ~100m dust accounts
@@ -153,6 +154,7 @@ struct Stats {
   uint64_t num_replies = 0;
   uint64_t reply_total_bytes = 0;
   uint64_t reply_total_leaves = 0;
+  uint64_t reply_total_nodes = 0;
 };
 
 // all sizes are in bytes

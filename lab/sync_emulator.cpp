@@ -25,23 +25,23 @@
 
 using namespace silkworm;
 
-static const auto kInitialAccounts = 10'000'000;
+static const auto kInitialAccounts = 1'000'000;
 static const auto kNewAccountsPerBlock = 300;
 static const auto kBlockTime = 15;                   // sec
-static const auto kBandwidth = 2 * 1024 * 1024 / 8;  // bytes per sec
+static const auto kBandwidth = 1 * 1024 * 1024 / 8;  // bytes per sec
 
 void print_hints(const sync::Hints& hints) {
   std::cout << "Hints for " << hints.num_leaves * 1e-6
             << "M dust accounts with reply size <~ "
             << hints.approx_max_reply_size / 1024 << "KB:\n";
-  const auto mem_depth = hints.depth_to_fit_in_memory();
+  const int mem_depth = hints.depth_to_fit_in_memory();
   std::cout << "depth to fit in memory " << mem_depth << " ("
             << std::setprecision(3)
             << hints.tree_size_in_bytes(mem_depth) * 1e-6 << " MB)\n";
-  std::cout << "optimal phase 1 depth  " << hints.optimal_phase1_depth()
-            << std::endl;
-  std::cout << "optimal phase 2 depth  " << hints.optimal_phase2_depth()
-            << std::endl;
+  const int d1 = hints.optimal_phase1_depth();
+  std::cout << "optimal phase 1 depth  " << d1 << std::endl;
+  const int d2 = hints.optimal_phase2_depth();
+  std::cout << "optimal phase 2 depth  " << d2 << std::endl;
   std::cout << "overhead (∞ bandwidth) " << std::setprecision(2)
             << hints.inf_bandwidth_reply_overhead() * 100 << "%\n\n";
 }
@@ -116,9 +116,11 @@ int main() {
   std::cout << "#replies            " << stats.num_replies << std::endl;
   std::cout << "reply total bytes   " << stats.reply_total_bytes << std::endl;
   std::cout << "reply total leaves  " << stats.reply_total_leaves << std::endl;
+  std::cout << "reply total nodes   " << stats.reply_total_nodes << std::endl;
   std::cout << "generated leaves    " << generated_leaves << std::endl;
 
-  const auto leaf_bytes = static_cast<double>(generated_leaves * sync::kLeafSize);
+  const auto leaf_bytes =
+      static_cast<double>(generated_leaves * sync::kLeafSize);
   const auto overhead = stats.reply_total_bytes / leaf_bytes - 1;
   std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
             << "%\n\n";

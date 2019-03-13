@@ -31,7 +31,6 @@
   * single-machine in-memory PoC with ~1m dust accounts
   * describe the algo
 [TODO]
-  * remove subtrieHash from the doc
   * theoretical convergence
   * LMDB(?) database
   * experimental convergence with ~100m dust accounts

@@ -79,13 +79,7 @@ int main() {
   auto generated_leaves = kInitialAccounts;
 
   while (true) {
-    std::cout << "new block " << new_blocks << " phase "
-              << (leecher.phase1_sync_done() + 1) << std::endl;
-
     leecher.sync(miner, stats, kBandwidth * kBlockTime);
-
-    std::cout << "leaves received " << stats.reply_total_leaves
-              << " vs generated " << generated_leaves << std::endl;
 
     if (leecher.sync_done()) {
       break;

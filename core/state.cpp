@@ -204,16 +204,11 @@ sync::LeavesReply State::get_leaves(
     reply.proof.push_back(sync::Proof{y.empty, y.hash});
   }
 
-  const bool leaves_required =
-      !request.hash_of_leaves || *request.hash_of_leaves != nd.hash[nibble];
-
-  if (leaves_required) {
-    reply.leaves = std::vector<sync::Leaf>{};
-    if (!nd.empty[nibble]) {
-      const auto db_leaves = db_.leaves(prefix);
-      for (auto it = db_leaves.first; it != db_leaves.second; ++it) {
-        reply.leaves->push_back(sync::Leaf{it->first, it->second});
-      }
+  reply.leaves = std::vector<sync::Leaf>{};
+  if (!nd.empty[nibble]) {
+    const auto db_leaves = db_.leaves(prefix);
+    for (auto it = db_leaves.first; it != db_leaves.second; ++it) {
+      reply.leaves->push_back(sync::Leaf{it->first, it->second});
     }
   }
 
@@ -252,7 +247,7 @@ sync::GetNodeRequest State::next_node_request() {
   auto& prefix = phase2_node_cursor_;
   const auto level = prefix.size();
 
-  if (level >= depth() - 1) {
+  if (level >= depth()) {
     return request;
   }
 
@@ -305,11 +300,6 @@ std::optional<sync::GetLeavesRequest> State::next_leaves_request(Prefix& cursor,
       }
 
       request.from_level = cpd;
-
-      if (!nd.empty[x] && nd.synced[x]) {
-        request.hash_of_leaves = nd.hash[x];
-      }
-
       return request;
     }
   } while (cursor.val() != 0);

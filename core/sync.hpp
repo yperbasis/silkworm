@@ -29,16 +29,17 @@
 /* Sync Research
 [DONE]
   * single-machine in-memory PoC with ~1m dust accounts
-  * describe the algo. optimal phase 2 depth
+  * describe the algo
 [TODO]
-  * remove subtrieHash, blockAtLeast from the protocol
+  * remove subtrieHash from the doc
   * theoretical convergence
-  * use the real protocol in the modelling code
   * LMDB(?) database
   * experimental convergence with ~100m dust accounts
   * storage tries. pack multiple accounts into 1 request/reply for small tries
   * extension/leaf nodes (prereq: Issue #7, better test coverage)
   * handle chain reorgs
+  * remove blockAtLeast from the protocol
+  * use the real protocol in the modelling code
   * network layer, p2p
   * multiple leechers, BitTorrent-like swarm
   * leaf proof checking
@@ -65,14 +66,10 @@ struct GetLeavesRequest {
   // otherwise full proof is required.
   uint8_t from_level = 0;  // <= prefix.size
 
-  // known hash(leaves), allows to avoid re-sending the same leaves
-  std::optional<Hash> hash_of_leaves;
-
   explicit GetLeavesRequest(Prefix prefix) : prefix{prefix} {}
 
   size_t byte_size() const {
-    return sizeof(*this) + (account ? kAddressBytes : 0) +
-           (hash_of_leaves ? kHashBytes : 0);
+    return sizeof(*this) + (account ? kAddressBytes : 0);
   }
 };
 

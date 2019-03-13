@@ -79,7 +79,6 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     auto request = std::get_if<sync::GetLeavesRequest>(&request_variant);
     REQUIRE(request);
     REQUIRE(!request->block_number);
-    REQUIRE(!request->hash_of_leaves);
 
     const auto no_data = leecher.get_leaves(*request);
     REQUIRE(no_data.status == sync::LeavesReply::kDontHaveData);

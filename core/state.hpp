@@ -75,10 +75,9 @@ class State {
 
   Prefix phase1_cursor_;
   Prefix phase2_cursor_;
+  int8_t phase2_level_ = 1;
 
   bool phase1_sync_done_ = false;
-
-  bool root_is_old_ = false;
 
   sync::GetNodeRequest node_request(uint8_t level);
   std::optional<sync::GetLeavesRequest> next_leaves_request(Prefix&,

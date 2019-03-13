@@ -231,8 +231,8 @@ State::next_sync_request() {
   }
 
   if (synced_block() == -1) {
-    for (uint8_t level = 0; level < depth() - 1; ++level) {
-      const auto nr = node_request(level);
+    while (phase2_level_ < depth() - 1) {
+      const auto nr = node_request(phase2_level_++);
       if (!nr.prefixes.empty()) {
         return nr;
       }
@@ -251,27 +251,22 @@ sync::GetNodeRequest State::node_request(const uint8_t level) {
   sync::GetNodeRequest request;
   request.block_number = root().block;
 
-  if (level > 0) {
-    for (uint64_t i = 0; i < 1ull << ((level - 1) * 4); ++i) {
-      const auto& parent = tree_[level - 1][i];
-      for (Nibble j = 0; j < 16; ++j) {
-        const auto node_index = i * 16 + j;
-        const auto& child = tree_[level][node_index];
-        if (parent.block == child.block) {
-          continue;
-        }
-
-        const Prefix prefix(level, node_index << (64 - level * 4));
-        update_block_at(prefix, level);
-
-        if (child.block < root().block) {
-          request.prefixes.push_back(prefix);
-        }
-      }
-    }
-  } else if (root_is_old_) {
+  if (level == 0) {
     request.prefixes.emplace_back('\0');
+    return request;
   }
+
+  Prefix prefix(level);
+  do {
+    update_block_at(prefix, level);
+
+    const auto& nd = node(level, prefix);
+    if (nd.block < root().block) {
+      request.prefixes.push_back(prefix);
+    }
+
+    ++prefix;
+  } while (prefix.val() != 0);
 
   return request;
 }
@@ -432,7 +427,8 @@ void State::process_leaves_reply(const Prefix prefix,
   }
 
   // update the nodes up the tree path
-  const auto start_from = static_cast<uint8_t>(prefix.size() - reply.proof.size());
+  const auto start_from =
+      static_cast<uint8_t>(prefix.size() - reply.proof.size());
   for (auto level = start_from; level < prefix.size(); ++level) {
     update_node(node(level, prefix), reply.proof[level - start_from], rb);
   }
@@ -467,7 +463,8 @@ void State::update_node(Node& nd, const sync::Proof& proof, int32_t new_block) {
 
 std::optional<sync::NodeReply> State::get_nodes(
     const sync::GetNodeRequest& request) const {
-  if (request.block_number && static_cast<int32_t>(*request.block_number) > root().block) {
+  if (request.block_number &&
+      static_cast<int32_t>(*request.block_number) > root().block) {
     return {};
   }
 
@@ -524,8 +521,10 @@ void State::process_node_reply(const sync::GetNodeRequest& request,
     propagate_synced_up(prefix, prefix.size());
   }
 
-  // TODO: better root_is_old_ logic
-  root_is_old_ = block_num > root().block;
+  if (block_num > root().block) {
+    // root block is stale
+    phase2_level_ = 0;
+  }
 }
 
 }  // namespace silkworm

@@ -29,6 +29,8 @@ namespace silkworm {
 
 class State {
  public:
+  static constexpr size_t kMaxNodesPerRequest = 64;
+
   State(DbBucket& db, uint8_t depth, uint8_t phase1_depth);
 
   uint8_t depth() const { return static_cast<uint8_t>(tree_.size()); }
@@ -74,12 +76,12 @@ class State {
   std::vector<std::vector<Node>> tree_;
 
   Prefix phase1_cursor_;
-  Prefix phase2_cursor_;
-  int8_t phase2_level_ = 1;
+  Prefix phase2_leaf_cursor_;
+  Prefix phase2_node_cursor_ = Prefix(1);
 
   bool phase1_sync_done_ = false;
 
-  sync::GetNodeRequest node_request(uint8_t level);
+  sync::GetNodeRequest next_node_request();
   std::optional<sync::GetLeavesRequest> next_leaves_request(Prefix&,
                                                             bool phase1);
 

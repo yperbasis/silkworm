@@ -28,22 +28,22 @@
 
 /* Sync Research
 [DONE]
-  0. single-machine in-memory PoC with ~1m dust accounts
-  1. describe the algo. optimal phase 2 depth
+  * single-machine in-memory PoC with ~1m dust accounts
+  * describe the algo. optimal phase 2 depth
 [TODO]
-  1. remove subtrieHash
-  2. theoretical convergence
-  3. LMDB(?) database
-  4. experimental convergence with ~100m dust accounts
-  5. storage tries. pack multiple accounts into 1 request/reply for small tries
-  6. extension/leaf nodes (prereq: Issue #7, better test coverage)
-  7. use the real protocol in the modelling code
-  8. handle chain reorgs
-  9. network layer, p2p
-  10. multiple leechers, BitTorrent-like swarm
-  11. proof checking
-  12. compare against geth's fast sync and parity's warp sync
-  13. real historical Ethereum data
+  * remove subtrieHash, blockAtLeast from the protocol
+  * theoretical convergence
+  * use the real protocol in the modelling code
+  * LMDB(?) database
+  * experimental convergence with ~100m dust accounts
+  * storage tries. pack multiple accounts into 1 request/reply for small tries
+  * extension/leaf nodes (prereq: Issue #7, better test coverage)
+  * handle chain reorgs
+  * network layer, p2p
+  * multiple leechers, BitTorrent-like swarm
+  * leaf proof checking
+  * compare against geth's fast sync and parity's warp sync
+  * real historical Ethereum data
 */
 
 namespace silkworm::sync {

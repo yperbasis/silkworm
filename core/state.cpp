@@ -30,7 +30,7 @@ State::State(DbBucket& db, uint8_t depth, uint8_t phase1_depth)
     : db_(db),
       tree_(depth),
       phase1_cursor_(phase1_depth),
-      phase2_cursor_(depth) {
+      phase2_leaf_cursor_(depth) {
   if (depth < 2) {
     throw std::length_error("too shallow");
   }
@@ -231,14 +231,12 @@ State::next_sync_request() {
   }
 
   if (synced_block() == -1) {
-    while (phase2_level_ < depth() - 1) {
-      const auto nr = node_request(phase2_level_++);
-      if (!nr.prefixes.empty()) {
-        return nr;
-      }
+    const auto nr = next_node_request();
+    if (!nr.prefixes.empty()) {
+      return nr;
     }
 
-    const auto lr = next_leaves_request(phase2_cursor_, false);
+    const auto lr = next_leaves_request(phase2_leaf_cursor_, false);
     if (lr) {
       return *lr;
     }
@@ -247,17 +245,24 @@ State::next_sync_request() {
   return {};
 }
 
-sync::GetNodeRequest State::node_request(const uint8_t level) {
+sync::GetNodeRequest State::next_node_request() {
   sync::GetNodeRequest request;
   request.block_number = root().block;
 
-  if (level == 0) {
-    request.prefixes.emplace_back('\0');
+  auto& prefix = phase2_node_cursor_;
+  const auto level = prefix.size();
+
+  if (level >= depth() - 1) {
     return request;
   }
 
-  Prefix prefix(level);
-  do {
+  if (level == 0) {
+    request.prefixes.emplace_back('\0');
+    prefix = Prefix(1);
+    return request;
+  }
+
+  while (true) {
     update_block_at(prefix, level);
 
     const auto& nd = node(level, prefix);
@@ -266,9 +271,16 @@ sync::GetNodeRequest State::node_request(const uint8_t level) {
     }
 
     ++prefix;
-  } while (prefix.val() != 0);
 
-  return request;
+    if (prefix.val() == 0) {
+      prefix = Prefix(level + 1);
+      return request;
+    }
+
+    if (request.prefixes.size() >= kMaxNodesPerRequest) {
+      return request;
+    }
+  }
 }
 
 std::optional<sync::GetLeavesRequest> State::next_leaves_request(Prefix& cursor,
@@ -327,6 +339,8 @@ void State::process_leaves_reply(const Prefix prefix,
   int32_t rb = reply.block_number;
   if (root().block > rb) {
     return;  // old reply
+  } else if (root().block < rb) {
+    phase2_node_cursor_ = Prefix(1);
   }
 
   // TODO verify the reply (proof hashes, etc)
@@ -523,7 +537,7 @@ void State::process_node_reply(const sync::GetNodeRequest& request,
 
   if (block_num > root().block) {
     // root block is stale
-    phase2_level_ = 0;
+    phase2_node_cursor_ = Prefix(0);
   }
 }
 

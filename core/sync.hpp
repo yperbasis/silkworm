@@ -156,14 +156,12 @@ struct Stats {
 // all sizes are in bytes
 struct Hints {
   uint64_t max_memory = 8 * 1024 * 1024 * 1024ll;
-  uint64_t num_leaves = 50'000'000;
+  uint64_t num_leaves = 53'000'000;
 
   unsigned approx_max_reply_size = 32 * 1024;
 
-  unsigned proof_size = sizeof(Proof);
-  unsigned node_size = proof_size + 8;
-  unsigned leaf_size = kLeafSize;
-  unsigned reply_overhead = sizeof(LeavesReply);
+  unsigned node_size = 530;
+  unsigned leaf_size = 115;
 
   uint8_t depth_to_fit_in_memory() const;
 

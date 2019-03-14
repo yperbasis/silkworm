@@ -30,8 +30,7 @@ uint8_t Hints::depth_to_fit_in_memory() const {
 uint8_t Hints::optimal_phase2_depth() const {
   for (uint8_t i = 1; i < 16; ++i) {
     const uint64_t num_bottom_hashes = 1ull << (i * 4);
-    if (num_bottom_hashes * (16 * proof_size + 15 * reply_overhead) >=
-        15 * num_leaves * leaf_size) {
+    if (num_bottom_hashes * 16 * node_size >= 15 * num_leaves * leaf_size) {
       return i;
     }
   }
@@ -42,8 +41,7 @@ uint8_t Hints::optimal_phase1_depth() const {
   for (uint8_t i = 1; i < 16; ++i) {
     const uint64_t num_requests = 1ull << (i * 4);
     const uint64_t reply_size_times_num_requests =
-        (reply_overhead + i * proof_size) * num_requests  +
-        num_leaves * leaf_size;
+        i * node_size * num_requests + num_leaves * leaf_size;
 
     if (reply_size_times_num_requests <= approx_max_reply_size * num_requests) {
       return i;
@@ -54,11 +52,9 @@ uint8_t Hints::optimal_phase1_depth() const {
 
 double Hints::inf_bandwidth_reply_overhead() const {
   const auto depth = optimal_phase1_depth();
-  const uint64_t num_requests = 1ull << (depth * 4);
   const uint64_t num_proofs = num_tree_nodes(depth);
   const uint64_t total_leaf_size = num_leaves * leaf_size;
-  const uint64_t total_reply_size =
-      num_proofs * proof_size + total_leaf_size + num_requests * reply_overhead;
+  const uint64_t total_reply_size = num_proofs * node_size + total_leaf_size;
 
   return static_cast<double>(total_reply_size) / total_leaf_size - 1;
 }

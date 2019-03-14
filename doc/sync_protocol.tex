@@ -295,7 +295,7 @@ By the end of phase 1, the leecher will have all accounts populated, albeit inco
 Figure~\ref{fig:phase1_example} shows an example of a phase 1 step with $d_1 = 3$ and $d_2 = 4$.
 Say the leecher is interested in prefix $<$7a3$>$.
 The trie on the left represents leecher's state before sending a request.
-Root's block is 5, so it sets $\texttt{blockAtLeast}  = 5$.
+Root's block is 5, so it sets $\texttt{blockAtLeast} = 5$.
 The leecher sets $\texttt{fromLevel}$ to 1 since there is no need to re-send the root as part of the proof.
 It cannot set $\texttt{fromLevel}$ higher as the other nodes along the path are older than the root and thus have to be refreshed.
 Suppose that the seeder replies with data as of a newer block \#6.
@@ -328,33 +328,48 @@ $\texttt{GetStorageSizes}$ provides a means of finding out storage sizes.
 In this analysis, we assume that all tries are well balanced.
 We also assume that all top nodes up to a certain trie level $i$ are branch nodes, not leaf nor extension nodes.
 This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
+And we simplify the byte size function of the replies\footnote{Total
+request size is much smaller than total reply size, so we ignore requests as well.},
+ignoring overheads caused by auxilary data such as $\texttt{reqID}$,
+RLP encoding, and the network layer.
+%TODO: internal notation consistency + cross-check against the Yellow Paper
+Let us introduce some notation:
 
-Some notation (TODO: internal notation consistency + cross-check against the Yellow Paper):
+$s_n$ -- the average node size in bytes,
+equal essentially to the size of a branch node as most nodes transferred will be branch nodes.
+530 bytes is a good estimate.
 
-$o$ -- $\texttt{Leaves}$ reply overhead in bytes.
+$s_l$ -- the average leaf size in bytes, counting both key and value.
+For the state trie it is the average account size plus the size of its hash key,
+resulting in about 115 bytes.
+TODO: storage trie.
 
-$b$ -- the size of a branch node in bytes.
+$t$ -- total number of leaves in a trie.
+For the state trie it is the number of accounts,
+which is about $53 \cdot 10^6$ as of February 2019---see \cite{akhunov_1x_workshop_part2}.
 
-$l$ -- average leaf size in bytes.
+$||R_n||$ -- the number of nodes in a reply $R$.
 
-$||R_b||$ -- the number of nodes in reply.
+$||R_l||$ -- the number of leaves in a reply $R$ (only relevant for $\texttt{Subtrie}$ replies).
 
-$||R_l||$ -- the number of leaves in reply.
-
-Thus the size of a reply, assuming the average leaf size, is
+We use the following simplified formula for the byte size of a reply $R$
 \begin{equation}
-    S(R) = o + ||R_b|| b + ||R_l|| l
+    S(R) = ||R_n|| s_n + ||R_l|| s_l
 \end{equation}
-TODO: RLP changes the formula slightly.
-
-$t$ -- total number of leaves in the trie.
 
 The overhead of the sync algorithm during phase 1, compared with Parity's warp sync, is in the proof nodes sent alongside the leaf data.
 Their number is, roughly speaking, equal to the size of a Merkle Patricia trie of depth $d_1$, times the number of block changes during phase 1.
 So, to reduce the overhead, we want $d_1$ to be as low as possible.
 On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
 Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KB).
-TODO: the formula.
+We denote that maximum size as $m$.
+During phase 1 a $\texttt{Subtrie}$ reply contains at most $d_1$ nodes
+and its average number of leaves is $\frac{t}{16^{d_1}}$,
+which gives us
+\begin{equation}
+    d_1 s_n + \frac{t}{16^{d_1}} s_l \leq m
+\end{equation}
+Fot the state trie the limit of 32 KB yields $d_1 = 5$.
 
 TODO: revisit the reasoning (and $d_2$ in the code) after subtrieHash removal.
 Now let us find the maximum size $d$ of the request prefix $\pi$ that makes sense to use when we are catching up (phase 2 of the sync).

@@ -330,16 +330,16 @@ We also assume that all top nodes up to a certain trie level $i$ are branch node
 This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
 And we simplify the byte size function of the replies\footnote{Total
 request size is much smaller than total reply size, so we ignore requests as well.},
-ignoring overheads caused by auxilary data such as $\texttt{reqID}$,
+ignoring overheads caused by auxiliary data such as $\texttt{reqID}$,
 RLP encoding, and the network layer.
 %TODO: internal notation consistency + cross-check against the Yellow Paper
 Let us introduce some notation:
 
-$s_n$ -- the average node size in bytes,
+$n$ -- the average node size in bytes,
 equal essentially to the size of a branch node as most nodes transferred will be branch nodes.
 530 bytes is a good estimate.
 
-$s_l$ -- the average leaf size in bytes, counting both key and value.
+$l$ -- the average leaf size in bytes, counting both key and value.
 For the state trie it is the average account size plus the size of its hash key,
 resulting in about 115 bytes.
 TODO: storage trie.
@@ -348,13 +348,20 @@ $t$ -- total number of leaves in a trie.
 For the state trie it is the number of accounts,
 which is about $53 \cdot 10^6$ as of February 2019---see \cite{akhunov_1x_workshop_part2}.
 
+$b$ -- the network bandwidth available to the leecher.
+
+$\tau$ -- the block time, currently 15 seconds.
+
+$\delta$ -- the average number of leaf changes per block for a trie.
+For the state trie it is in the ballpark of 300.
+
 $||R_n||$ -- the number of nodes in a reply $R$.
 
 $||R_l||$ -- the number of leaves in a reply $R$ (only relevant for $\texttt{Subtrie}$ replies).
 
 We use the following simplified formula for the byte size of a reply $R$
 \begin{equation}
-    S(R) = ||R_n|| s_n + ||R_l|| s_l
+    S(R) = ||R_n|| n + ||R_l|| l
 \end{equation}
 
 The overhead of the sync algorithm during phase 1, compared with Parity's warp sync, is in the proof nodes sent alongside the leaf data.
@@ -367,40 +374,39 @@ During phase 1 a $\texttt{Subtrie}$ reply contains at most $d_1$ nodes
 and its average number of leaves is $\frac{t}{16^{d_1}}$,
 which gives us
 \begin{equation}
-    d_1 s_n + \frac{t}{16^{d_1}} s_l \leq m
+    d_1 n + \frac{t}{16^{d_1}} l \leq m
 \end{equation}
 Fot the state trie the limit of 32 KB yields $d_1 = 5$.
 
-TODO: revisit the reasoning (and $d_2$ in the code) after subtrieHash removal.
-Now let us find the maximum size $d$ of the request prefix $\pi$ that makes sense to use when we are catching up (phase 2 of the sync).
-Let assume that only one leaf that matches $\pi$ has changed.
-(If we know that there are no changes, there is no need for a sync request.)
-That is a reasonable assumption if we are not too many blocks behind, there are not that many changes per block, and $d$ is sufficiently large.
-(For instance, if we are 100 blocks behind, and there are 500 leaf changes per block, then $d \geq 4$ will suffice.)
-Consider two options: request the prefix $\pi$ or send requests with prefixes $\pi \cdot 0, ..., \pi \cdot 15$ of size $d+1$
-(not necessarily all 16 of them).
-In the first case, we receive a reply of the size, on average,
+We now analyse the minimum bandwidth required for the algorithm to converge during phase 2.
+At the very least, "to keep in the same place",
+we need to sync all changes per 1 block no slower than the block time $\tau$.
+As previously described, the algorithm updates $d_2$ upper levels of the trie.
+No more than $\delta$ nodes per level change.
+So the upper bound on the number of nodes to be refreshed is $\delta d_2$.
+The number of subtries that need to be refreshed is no more than $\delta$;
+each subtrie has $\frac{t}{16^{d_2}}$ leaves on average.
+Summing up, the total reply size per 1 block necessary not to lag behind is less than
 \begin{equation}
-    S = o + ||R_b|| b + \frac{t}{16^d} l
+    \texttt{RQS} \overset{\underset{\mathrm{def}}{}}{=}
+    \delta d_2 n + \delta \frac{t}{16^{d_2}} l =
+    \delta \left ( d_2 n +  \frac{t l}{16^{d_2}} \right)
 \end{equation}
-For the second case, we need to send at most two requests,
-as the first reply gives us the information to identify which nibble has changed.
-(With the probability $\frac{1}{16}$ the second request is not necessary.)
-The combined size of those 1 or 2 replies, on average, is
+(RQS stands for Red Queen's Size).
+Though it is an upper bound, for our purposes $\texttt{RQS}$ is close enough to the actual value.
+Differentiating, we find the value of $d_2$ that minimises $\texttt{RQS}$
 \begin{equation}
-    S' = \left( 1 + \frac{15}{16} \right) o + (||R_b|| + 1) b + \frac{t}{16^{d+1}} l
+    d_2^* = \frac{1}{\ln 16} \ln \left( \frac{tl \ln16}{n} \right)
 \end{equation}
-It does not make sense to prefer requests with longer prefixes if $S \leq S'$.
-Solving this inequality, we obtain
+(Obviously, one has to round $d_2^*$ up or down.)
+For the state trie the optimal $d_2^* = 6$ and the entailing $\texttt{RQS}$ is about 1 MB.
+Reiterating, the convergence condition for the state trie alone is
 \begin{equation}
-    16^d (16b + 15o) \geq 15tl
+    b > \frac{\texttt{RQS}}{\tau}
 \end{equation}
-Hence we can set the sync algorithm parameter $d_2$ as
-\begin{equation}
-d_2 = \left\lceil \log_{16} \frac{15tl} {16b + 15o} \right\rceil
-\end{equation}
+For the Ethereum main net as of March 2019 this critical minimum bandwidth is about 0.5 Mbit/s.
 
-TODO: convergence analysis.
+Convergence analysis for large storage tries (e.g. CryptoKitties) is similar to the state trie analysis above.
 
 \section{Conclusion}
 

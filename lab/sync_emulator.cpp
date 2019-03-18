@@ -27,23 +27,28 @@ using namespace silkworm;
 
 static const auto kInitialAccounts = 1'000'000;
 static const auto kNewAccountsPerBlock = 300;
-static const auto kBlockTime = 15;                   // sec
-static const auto kBandwidth = 1 * 1024 * 1024 / 8;  // bytes per sec
+static const auto kBlockTime = 15;             // sec
+static const auto kBandwidth = 1'000'000 / 8;  // bytes per sec
 
 void print_hints(const sync::Hints& hints) {
+  static constexpr double kKibibyte = 1024;
+  static constexpr double kMebibyte = 1024 * 1024;
+
   std::cout << "Hints for " << hints.num_leaves * 1e-6
             << "M dust accounts with reply size <~ "
-            << hints.approx_max_reply_size / 1024 << "KB:\n";
+            << hints.approx_max_reply_size / kKibibyte << " KiB:\n";
   const auto mem_depth = hints.depth_to_fit_in_memory();
   std::cout << "depth to fit in memory " << static_cast<int>(mem_depth) << " ("
             << std::setprecision(3)
-            << hints.tree_size_in_bytes(mem_depth) * 1e-6 << " MB)\n";
+            << hints.tree_size_in_bytes(mem_depth) / kMebibyte << " MiB)\n";
   const int d1 = hints.optimal_phase1_depth();
   std::cout << "optimal phase 1 depth  " << d1 << std::endl;
   const int d2 = hints.optimal_phase2_depth();
   std::cout << "optimal phase 2 depth  " << d2 << std::endl;
   std::cout << "overhead (∞ bandwidth) " << std::setprecision(2)
-            << hints.inf_bandwidth_reply_overhead() * 100 << "%\n\n";
+            << hints.inf_bandwidth_reply_overhead() * 100 << "%\n";
+  std::cout << "RQS                    " << std::setprecision(2)
+            << hints.rqs(d2) / kMebibyte << " MiB \n\n";
 }
 
 int main() {
@@ -54,6 +59,7 @@ int main() {
   static const auto kSeed = 3548264823u;
 
   sync::Hints hints;
+  hints.changes_per_block = kNewAccountsPerBlock;
   print_hints(hints);
 
   hints.num_leaves = kInitialAccounts;

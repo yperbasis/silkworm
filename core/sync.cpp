@@ -28,13 +28,13 @@ uint8_t Hints::depth_to_fit_in_memory() const {
 }
 
 uint8_t Hints::optimal_phase2_depth() const {
-  for (uint8_t i = 1; i < 16; ++i) {
-    const uint64_t num_bottom_hashes = 1ull << (i * 4);
-    if (num_bottom_hashes * 16 * node_size >= 15 * num_leaves * leaf_size) {
-      return i;
-    }
+  std::vector<double> v;
+  for (uint8_t i = 0; i < 16; ++i) {
+    v.push_back(rqs(i));
   }
-  return 16;
+
+  const auto min = std::min_element(v.cbegin(), v.cend());
+  return std::distance(v.cbegin(), min);
 }
 
 uint8_t Hints::optimal_phase1_depth() const {
@@ -57,6 +57,18 @@ double Hints::inf_bandwidth_reply_overhead() const {
   const uint64_t total_reply_size = num_proofs * node_size + total_leaf_size;
 
   return static_cast<double>(total_reply_size) / total_leaf_size - 1;
+}
+
+double Hints::rqs(const uint8_t depth) const {
+  uint64_t c = 0;
+  for (uint8_t i = 0; i < depth; ++i) {
+    c += std::min(1ull << (i * 4), static_cast<uint64_t>(changes_per_block));
+  }
+
+  const double leaves_per_reply =
+      static_cast<double>(num_leaves) / (1ull << (depth * 4));
+
+  return c * node_size + changes_per_block * leaves_per_reply * leaf_size;
 }
 
 }  // namespace silkworm::sync

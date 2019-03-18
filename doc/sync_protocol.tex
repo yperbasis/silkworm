@@ -364,6 +364,19 @@ We use the following simplified formula for the byte size of a reply $R$
     S(R) = ||R_n|| n + ||R_l|| l
 \end{equation}
 
+The overhead of the sync algorithm during phase 1, compared with Parity's warp sync, is in the proof nodes sent alongside the leaf data.
+The overhead grows with $d_1$, so we want the trie depth to be as low as possible.
+On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
+Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KiB).
+We denote that maximum size as $m$.
+During phase~1 a $\texttt{Subtrie}$ reply contains at most $d_1$ nodes
+and its average number of leaves is $\frac{t}{16^{d_1}}$,
+which gives us
+\begin{equation}
+    d_1 n + \frac{t}{16^{d_1}} l \leq m
+\end{equation}
+Fot the state trie the limit of 32 KiB yields $d_1 = 5$.
+
 Let $C(d, \delta)$ be the maximum number of trie nodes from the upper $d$ levels of a trie that can change (on average) per block\footnote{To
 be more precise mathematically, $C(d, \delta)$ is an upper bound on the expected value.}.
 At each level at most $\delta$ nodes can change, subject to $\delta$ being smaller than the number of nodes at the level.
@@ -373,37 +386,21 @@ Thus
 \end{equation}
 If $16^2 \leq \delta \leq 16^3$ and $d \geq 3$, then
 \begin{equation}
-    C(d, \delta) = C'(d, \delta)  \overset{\underset{\mathrm{def}}{}}{=}
+    C(d, \delta) = C'(d, \delta) \overset{\underset{\mathrm{def}}{}}{=}
      \delta (d-3) + 273
 \end{equation}
-
-The overhead of the sync algorithm during phase 1, compared with Parity's warp sync, is in the proof nodes sent alongside the leaf data.
-Their number is, roughly speaking, equal to $C(d_1, \delta)$ times the number of block changes during phase 1.
-So, to reduce the overhead, we want $d_1$ to be as low as possible.
-On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
-Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KB).
-We denote that maximum size as $m$.
-During phase 1 a $\texttt{Subtrie}$ reply contains at most $d_1$ nodes
-and its average number of leaves is $\frac{t}{16^{d_1}}$,
-which gives us
-\begin{equation}
-    d_1 n + \frac{t}{16^{d_1}} l \leq m
-\end{equation}
-Fot the state trie the limit of 32 KB yields $d_1 = 5$.
 
 We now analyse the minimum bandwidth required for the algorithm to converge during phase 2.
 At the very least, "to keep in the same place",
 we need to sync all changes per 1 block no slower than the block time $\tau$.
 As previously described, the algorithm updates $d_2$ upper levels of the trie.
-No more than $\delta$ nodes per level change.
-So the upper bound on the number of nodes to be refreshed is $\delta d_2$.
+So the upper bound on the number of nodes to be refreshed is $C(d_2, \delta)$.
 The number of subtries that need to be refreshed is no more than $\delta$;
 each subtrie has $\frac{t}{16^{d_2}}$ leaves on average.
 Summing up, the total reply size per 1 block necessary not to lag behind is less than
 \begin{equation}
     \texttt{RQS} \overset{\underset{\mathrm{def}}{}}{=}
-    \delta d_2 n + \delta \frac{t}{16^{d_2}} l =
-    \delta \left ( d_2 n +  \frac{t l}{16^{d_2}} \right)
+    C(d_2, \delta) \, n + \delta \, \frac{t}{16^{d_2}} \, l
 \end{equation}
 (RQS stands for Red Queen's Size).
 Though it is an upper bound, for our purposes $\texttt{RQS}$ is close enough to the actual value.
@@ -412,12 +409,16 @@ Differentiating, we find the value of $d_2$ that minimises $\texttt{RQS}$
     d_2^* = \frac{1}{\ln 16} \ln \left( \frac{tl \ln16}{n} \right)
 \end{equation}
 (Obviously, one has to round $d_2^*$ up or down.)
-For the state trie the optimal $d_2^* = 6$ and the entailing $\texttt{RQS}$ is about 1 MB.
+For the state trie the optimal $d_2^* = 6$ and the entailing $\texttt{RQS}$ is about 0.7 MiB.
 Reiterating, the convergence condition for the state trie alone is
 \begin{equation}
     b > \frac{\texttt{RQS}}{\tau}
 \end{equation}
-For the Ethereum main net as of February 2019 this critical minimum bandwidth is about 0.5 Mbit/s.
+For the Ethereum main net as of February 2019 this critical minimum bandwidth is about 0.4 Mbit/s.
+A rough estimate of how much time it takes to catch up when the leecher is $x$ blocks behind is
+\begin{equation}
+    \frac{ \texttt{RQS} }{b\tau - \texttt{RQS}} \, x \tau
+\end{equation}
 
 Convergence analysis for large storage tries (e.g. CryptoKitties) is similar to the state trie analysis above.
 

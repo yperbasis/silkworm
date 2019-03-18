@@ -30,8 +30,8 @@
 [DONE]
   * single-machine in-memory PoC with ~1m dust accounts
   * describe the algo
-[TODO]
   * theoretical convergence
+[TODO]
   * LMDB(?) database
   * experimental convergence with ~100m dust accounts
   * storage tries. pack multiple accounts into 1 request/reply for small tries
@@ -163,11 +163,14 @@ struct Hints {
   unsigned node_size = 530;
   unsigned leaf_size = 115;
 
+  unsigned changes_per_block = 300;
+
   uint8_t depth_to_fit_in_memory() const;
 
   // not taking depth_to_fit_in_memory into account
   uint8_t optimal_phase2_depth() const;
   uint8_t optimal_phase1_depth() const;
+
   double inf_bandwidth_reply_overhead() const;  // compared to warp sync
 
   static uint64_t num_tree_nodes(uint8_t depth) {
@@ -178,6 +181,8 @@ struct Hints {
     const auto tree_overhead = depth * 8;
     return num_tree_nodes(depth) * node_size + tree_overhead;
   }
+
+  double rqs(uint8_t depth) const;
 };
 
 }  // namespace silkworm::sync

@@ -16,6 +16,8 @@
 
 #include "sync.hpp"
 
+#include <algorithm>
+
 namespace silkworm::sync {
 
 uint8_t Hints::depth_to_fit_in_memory() const {
@@ -34,7 +36,7 @@ uint8_t Hints::optimal_phase2_depth() const {
   }
 
   const auto min = std::min_element(v.cbegin(), v.cend());
-  return std::distance(v.cbegin(), min);
+  return static_cast<uint8_t>(std::distance(v.cbegin(), min));
 }
 
 uint8_t Hints::optimal_phase1_depth() const {
@@ -62,7 +64,8 @@ double Hints::inf_bandwidth_reply_overhead() const {
 double Hints::rqs(const uint8_t depth) const {
   uint64_t c = 0;
   for (uint8_t i = 0; i < depth; ++i) {
-    c += std::min(1ull << (i * 4), static_cast<uint64_t>(changes_per_block));
+    c += std::min(1ull << (i * 4),
+                  static_cast<unsigned long long>(changes_per_block));
   }
 
   const double leaves_per_reply =

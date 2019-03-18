@@ -41,10 +41,10 @@ void print_hints(const sync::Hints& hints) {
   std::cout << "depth to fit in memory " << static_cast<int>(mem_depth) << " ("
             << std::setprecision(3)
             << hints.tree_size_in_bytes(mem_depth) / kMebibyte << " MiB)\n";
-  const int d1 = hints.optimal_phase1_depth();
-  std::cout << "optimal phase 1 depth  " << d1 << std::endl;
-  const int d2 = hints.optimal_phase2_depth();
-  std::cout << "optimal phase 2 depth  " << d2 << std::endl;
+  const auto d1 = hints.optimal_phase1_depth();
+  std::cout << "optimal phase 1 depth  " << static_cast<int>(d1) << std::endl;
+  const auto d2 = hints.optimal_phase2_depth();
+  std::cout << "optimal phase 2 depth  " << static_cast<int>(d2) << std::endl;
   std::cout << "overhead (∞ bandwidth) " << std::setprecision(2)
             << hints.inf_bandwidth_reply_overhead() * 100 << "%\n";
   std::cout << "RQS                    " << std::setprecision(2)

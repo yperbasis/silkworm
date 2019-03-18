@@ -364,8 +364,21 @@ We use the following simplified formula for the byte size of a reply $R$
     S(R) = ||R_n|| n + ||R_l|| l
 \end{equation}
 
+Let $C(d, \delta)$ be the maximum number of trie nodes from the upper $d$ levels of a trie that can change (on average) per block\footnote{To
+be more precise mathematically, $C(d, \delta)$ is an upper bound on the expected value.}.
+At each level at most $\delta$ nodes can change, subject to $\delta$ being smaller than the number of nodes at the level.
+Thus
+\begin{equation}
+    C(d, \delta) = \sum_{i=0}^{d-1} \min(16^i, \delta)
+\end{equation}
+If $16^2 \leq \delta \leq 16^3$ and $d \geq 3$, then
+\begin{equation}
+    C(d, \delta) = C'(d, \delta)  \overset{\underset{\mathrm{def}}{}}{=}
+     \delta (d-3) + 273
+\end{equation}
+
 The overhead of the sync algorithm during phase 1, compared with Parity's warp sync, is in the proof nodes sent alongside the leaf data.
-Their number is, roughly speaking, equal to the size of a Merkle Patricia trie of depth $d_1$, times the number of block changes during phase 1.
+Their number is, roughly speaking, equal to $C(d_1, \delta)$ times the number of block changes during phase 1.
 So, to reduce the overhead, we want $d_1$ to be as low as possible.
 On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
 Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KB).
@@ -404,7 +417,7 @@ Reiterating, the convergence condition for the state trie alone is
 \begin{equation}
     b > \frac{\texttt{RQS}}{\tau}
 \end{equation}
-For the Ethereum main net as of March 2019 this critical minimum bandwidth is about 0.5 Mbit/s.
+For the Ethereum main net as of February 2019 this critical minimum bandwidth is about 0.5 Mbit/s.
 
 Convergence analysis for large storage tries (e.g. CryptoKitties) is similar to the state trie analysis above.
 

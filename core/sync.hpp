@@ -34,6 +34,7 @@
 [TODO]
   * LMDB(?) database
   * experimental convergence with ~100m dust accounts
+  * unify the protocol with Firehose
   * storage tries. pack multiple accounts into 1 request/reply for small tries
   * extension/leaf nodes (prereq: Issue #7, better test coverage)
   * handle chain reorgs

@@ -19,6 +19,7 @@ install:
   - cd c:\tools\vcpkg
   - vcpkg install boost:x64-windows
   - vcpkg install catch2:x64-windows
+  - vcpkg install lmdb:x64-windows
   - vcpkg integrate install
 
 cache:

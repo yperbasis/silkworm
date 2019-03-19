@@ -14,7 +14,16 @@
    limitations under the License.
 ]]
 
-find_package(Boost 1.62 REQUIRED)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+find_package(Boost 1.62 REQUIRED COMPONENTS filesystem)
+
+find_library(LMDB_LIB NAMES lmdb PATHS "$ENV{LMDB_DIR}/lib" )
+find_path(LMDB_INCLUDE_DIR NAMES lmdb.h PATHS "$ENV{LMDB_DIR}/include")
+if(NOT LMDB_LIB OR NOT LMDB_INCLUDE_DIR)
+  message(FATAL_ERROR "lmdb library not found")
+endif()
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${LMDB_INCLUDE_DIR})
+
 file(GLOB Silkworm_CORE_SRC "*.h" "*.hpp" "*.c" "*.cpp")
 add_library(silkworm ${Silkworm_CORE_SRC})
+target_link_libraries(silkworm ${Boost_LIBRARIES} ${LMDB_LIB})

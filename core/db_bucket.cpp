@@ -28,7 +28,7 @@ DbBucket::DbBucket() : env_{lmdb::env::create()} {
   auto tmp_dir = unique_path();
   create_directories(tmp_dir);
 
-  env_.open(tmp_dir.c_str(), 0, 0664);
+  env_.open(tmp_dir.string().c_str(), 0, 0664);
 }
 
 DbBucket::Range DbBucket::leaves(Prefix p) const {

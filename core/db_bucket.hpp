@@ -25,20 +25,17 @@
 #include <boost/move/utility_core.hpp>
 
 #include "common.hpp"
-#include "lmdb++.h"
 #include "prefix.hpp"
 
 namespace silkworm {
 
 class DbBucket {
  public:
-  static constexpr size_t kMaxDbSizeInGiB = 100;
-
   using Map = std::map<Hash, std::string>;
   using ConstIterator = Map::const_iterator;
   using Range = std::pair<ConstIterator, ConstIterator>;
 
-  DbBucket();
+  DbBucket() = default;
 
   void put(Hash key, std::string val) {
     data_.insert_or_assign(std::move(key), std::move(val));
@@ -52,7 +49,6 @@ class DbBucket {
   BOOST_MOVABLE_BUT_NOT_COPYABLE(DbBucket)
 
   Map data_;
-  lmdb::env env_;
 };
 
 }  // namespace silkworm

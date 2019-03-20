@@ -976,6 +976,11 @@ public:
   val& operator=(val&& other) noexcept = default;
 
   /**
+   * Copy assignment operator.
+   */
+  val& operator=(const val& other) noexcept = default;
+
+  /**
    * Destructor.
    */
   ~val() noexcept = default;

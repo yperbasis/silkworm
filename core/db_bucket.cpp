@@ -16,20 +16,7 @@
 
 #include "db_bucket.hpp"
 
-#include <boost/filesystem.hpp>
-
 namespace silkworm {
-
-DbBucket::DbBucket() : env_{lmdb::env::create()} {
-  env_.set_mapsize(kMaxDbSizeInGiB * 1024ull * 1024ull * 1024ull);
-
-  using namespace boost::filesystem;
-
-  auto tmp_dir = unique_path();
-  create_directories(tmp_dir);
-
-  env_.open(tmp_dir.string().c_str(), 0, 0664);
-}
 
 DbBucket::Range DbBucket::leaves(Prefix p) const {
   if (p.size() == 0) {

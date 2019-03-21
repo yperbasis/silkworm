@@ -22,7 +22,7 @@ else()
   find_path(LMDB_INCLUDE_DIR  NAMES lmdb.h PATHS "$ENV{LMDB_DIR}/include")
   find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "$ENV{LMDB_DIR}/lib" )
 endif()
-if(NOT LMDB_FOUND)
+if(NOT LMDB_LIBRARIES OR NOT LMDB_INCLUDE_DIR)
   message(FATAL_ERROR "lmdb library not found")
 endif()
 

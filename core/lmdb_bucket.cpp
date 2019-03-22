@@ -23,6 +23,10 @@ lmdb::val to_val(const std::string_view view) {
   return {view.data(), view.size()};
 }
 
+std::string_view from_val(const lmdb::val val) {
+  return {val.data(), val.size()};
+}
+
 lmdb::dbi create_dbi(const std::string_view name, lmdb::env& env) {
   auto wtxn = lmdb::txn::begin(env);
   auto dbi = lmdb::dbi::open(wtxn, name.data(), MDB_CREATE);
@@ -49,7 +53,8 @@ LmdbBucket::LmdbBucket(const std::string_view name, LmdbEnvironment& env)
 
 void LmdbBucket::put(const std::string_view key, const std::string_view val) {
   auto wtxn = lmdb::txn::begin(env_);
-  dbi_.put(wtxn, to_val(key), to_val(val));
+  auto data = to_val(val);
+  dbi_.put(wtxn, to_val(key), data);
   wtxn.commit();
 }
 
@@ -61,9 +66,33 @@ std::optional<std::string_view> LmdbBucket::get(
   rtxn.abort();
 
   if (res)
-    return std::string_view{val.data(), val.size()};
+    return from_val(val);
   else
     return {};
+}
+
+void LmdbBucket::get(
+    std::string_view lower, std::optional<std::string_view> upper,
+    const std::function<void(std::string_view, std::string_view)>& f) const {
+  auto rtxn = lmdb::txn::begin(env_, nullptr, MDB_RDONLY);
+  auto cursor = lmdb::cursor::open(rtxn, dbi_);
+
+  lmdb::val key = to_val(lower);
+  lmdb::val val;
+
+  if (!cursor.get(key, val, MDB_SET_RANGE)) {
+    return;
+  }
+
+  do {
+    const auto key_view = from_val(key);
+    if (upper && key_view.compare(*upper) >= 0) {
+      return;
+    }
+
+    f(key_view, from_val(val));
+
+  } while (cursor.get(key, val, MDB_NEXT));
 }
 
 }  // namespace silkworm

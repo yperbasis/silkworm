@@ -17,6 +17,7 @@
 #ifndef SILKWORM_CORE_LMDB_BUCKET_HPP_
 #define SILKWORM_CORE_LMDB_BUCKET_HPP_
 
+#include <functional>
 #include <optional>
 #include <string_view>
 
@@ -54,6 +55,12 @@ class LmdbBucket {
   void put(std::string_view key, std::string_view val);
 
   std::optional<std::string_view> get(std::string_view key) const;
+
+  // Iterate over entries with lower <= key < upper
+  // and call f(key, val) for each entry.
+  void get(
+      std::string_view lower, std::optional<std::string_view> upper,
+      const std::function<void(std::string_view, std::string_view)>& f) const;
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(LmdbBucket)

@@ -16,14 +16,17 @@
 
 #include "lmdb_bucket.hpp"
 
+#include <string>
+#include <vector>
+
 #include <catch2/catch.hpp>
 
 using namespace silkworm;
 
-TEST_CASE("put/get") {
+TEST_CASE("single put/get") {
   using namespace std::string_literals;
 
-  LmdbBucket db("test");
+  LmdbBucket db("test1");
 
   // both key & val may contain 0 chars
   const auto key = "AB\0BA"s;
@@ -36,4 +39,28 @@ TEST_CASE("put/get") {
   const auto res = db.get(key);
   REQUIRE(res);
   REQUIRE(*res == val);
+}
+
+TEST_CASE("ranges") {
+  LmdbBucket db("test2");
+
+  std::vector<std::pair<std::string, std::string>> data = {
+      {"dem", "_RER78"}, {"dehrrer", "d532742u"},     {"abba", "ffdEEo)"},
+      {"dezzz", "qqqq"}, {"e66434424z", "reyYYEIk_"}, {"dv", "-6437"},
+  };
+
+  for (const auto& x : data) {
+    db.put(x.first, x.second);
+  }
+
+  std::vector<std::string> res;
+
+  db.get("da", "df", [&res](std::string_view key, std::string_view /*val*/) {
+    res.emplace_back(key);
+  });
+
+  REQUIRE(res.size() == 3);
+  REQUIRE(res[0] == "dehrrer");
+  REQUIRE(res[1] == "dem");
+  REQUIRE(res[2] == "dezzz");
 }

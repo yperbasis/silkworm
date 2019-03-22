@@ -72,7 +72,7 @@ int main() {
   for (int i = 0; i < kInitialAccounts; ++i) {
     Hash key = keccak(byte_view(dust_gen.random_address()));
     std::string val = to_rlp(dust_gen.random_account());
-    miner_state.put(key, val);
+    miner_state.put(byte_view(key), val);
   }
   Miner miner(miner_state, hints, kStartBlock);
   const auto time1 = microsec_clock::local_time();

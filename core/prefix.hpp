@@ -59,6 +59,8 @@ class Prefix {
 
   Hash padded() const;
 
+  std::string to_string() const;
+
   bool matches(const Hash&) const;
 
   friend Prefix operator"" _prefix(const char* in, size_t n);
@@ -70,6 +72,8 @@ class Prefix {
  private:
   uint8_t size_ = 0;
   uint64_t val_ = 0;
+
+  uint8_t byte(uint8_t i) const { return (val_ << (8 * i)) >> (8 * 7); }
 };
 
 inline bool operator!=(const Prefix& a, const Prefix& b) { return !(a == b); }

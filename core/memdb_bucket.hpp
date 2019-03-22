@@ -31,14 +31,14 @@ namespace silkworm {
 
 class MemDbBucket {
  public:
-  using Map = std::map<Hash, std::string>;
+  using Map = std::map<std::string, std::string>;
   using ConstIterator = Map::const_iterator;
   using Range = std::pair<ConstIterator, ConstIterator>;
 
   MemDbBucket() = default;
 
-  void put(Hash key, std::string val) {
-    data_.insert_or_assign(std::move(key), std::move(val));
+  void put(std::string_view key, std::string_view val) {
+    data_[std::string(key)] = val;
   }
 
   void erase(Prefix);

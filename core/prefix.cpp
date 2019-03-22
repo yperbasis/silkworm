@@ -52,8 +52,7 @@ Prefix::Prefix(uint8_t size, const Hash& hash) : size_(size) {
 
 bool Prefix::matches(const Hash& hash) const {
   for (uint8_t i = 0; i < size_ / 2; ++i) {
-    const uint8_t byte = (val_ << (8 * i)) >> (8 * 7);
-    if (byte != hash[i]) {
+    if (byte(i) != hash[i]) {
       return false;
     }
   }
@@ -64,13 +63,21 @@ bool Prefix::matches(const Hash& hash) const {
   return (hash[size_ / 2] >> 4) == last_nibble;
 }
 
+std::string Prefix::to_string() const {
+  std::string str(size_ / 2 + size_ % 2, '\0');
+  for (uint8_t i = 0; i < str.size(); ++i) {
+    str[i] = byte(i);
+  }
+  return str;
+}
+
 Hash Prefix::padded() const {
   Hash array = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   };
   for (uint8_t i = 0; i < 8; ++i) {
-    array[i] = (val_ << (8 * i)) >> (8 * 7);
+    array[i] = byte(i);
   }
   return array;
 }

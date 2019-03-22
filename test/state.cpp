@@ -26,10 +26,14 @@ TEST_CASE("GetNode Request", "[sync]") {
   const auto block = 74;
 
   MemDbBucket db;
-  db.put("27407374bb099f172303644baef2dcc703c0e500b653ca82273b7b045d85a470"_x32,
-         "crypto kitties");
-  db.put("274cc374bb09f9172122dcc70c03036123e0e178b654cd82273b7b045d85a499"_x32,
-         "teh DAO");
+  db.put(
+      byte_view(
+          "27407374bb099f172303644baef2dcc703c0e500b653ca82273b7b045d85a470"_x32),
+      "crypto kitties");
+  db.put(
+      byte_view(
+          "274cc374bb09f9172122dcc70c03036123e0e178b654cd82273b7b045d85a499"_x32),
+      "teh DAO");
 
   State state(db, depth, phase1_depth);
   state.init_from_db(block);
@@ -90,10 +94,10 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     hash[30] = 0x70;
 
     MemDbBucket seeder_db;
-    seeder_db.put(hash, "crypto kitties");
+    seeder_db.put(byte_view(hash), "crypto kitties");
 
     hash[29] = 0x0b;
-    seeder_db.put(hash, "teh DAO");
+    seeder_db.put(byte_view(hash), "teh DAO");
 
     State seeder(seeder_db, depth, phase1_depth);
     seeder.init_from_db(block);

@@ -23,7 +23,7 @@ MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
     return {data_.begin(), data_.end()};
   }
 
-  auto lb = data_.lower_bound(p.padded());
+  auto lb = data_.lower_bound(p.to_string());
 
   if (lb == data_.end()) {
     return {lb, data_.end()};
@@ -34,7 +34,7 @@ MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
     return {lb, data_.end()};
   }
 
-  Hash next_hash = p.padded();
+  std::string next_hash = p.to_string();
 
   if (lb->first >= next_hash) {
     return {data_.end(), data_.end()};

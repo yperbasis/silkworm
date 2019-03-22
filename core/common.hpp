@@ -47,6 +47,8 @@ inline std::string_view byte_view(const std::array<uint8_t, N>& a) {
   return std::string_view(reinterpret_cast<const char*>(a.data()), N);
 }
 
+Hash string_to_hash(std::string_view);
+
 using Nibble = uint8_t;
 
 static constexpr auto kSzabo = 1'000'000'000'000ull;

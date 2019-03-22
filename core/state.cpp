@@ -116,7 +116,7 @@ void State::put(Hash key, std::string val) {
     nd.synced[nbl] = false;
   }
 
-  db_.put(std::move(key), std::move(val));
+  db_.put(byte_view(key), val);
 }
 
 void State::update_blocks_down_path(Prefix prefix) {
@@ -208,7 +208,8 @@ sync::LeavesReply State::get_leaves(
   if (!nd.empty[nibble]) {
     const auto db_leaves = db_.leaves(prefix);
     for (auto it = db_leaves.first; it != db_leaves.second; ++it) {
-      reply.leaves->push_back(sync::Leaf{it->first, it->second});
+      reply.leaves->push_back(
+          sync::Leaf{string_to_hash(it->first), it->second});
     }
   }
 
@@ -359,7 +360,7 @@ void State::process_leaves_reply(const Prefix prefix,
             db_.erase(nibble_prefix);
           }
           for (const auto& x : *reply.leaves) {
-            db_.put(x.first, x.second);
+            db_.put(byte_view(x.first), x.second);
           }
         }
         main_node.empty[j] = new_empty[j];
@@ -389,7 +390,7 @@ void State::process_leaves_reply(const Prefix prefix,
 
       while (it != reply.leaves->end()) {
         if (btm_prfx.matches(it->first)) {
-          db_.put(it->first, it->second);
+          db_.put(byte_view(it->first), it->second);
           ++it;
         } else {
           range_end = it;

@@ -23,7 +23,7 @@
 
 namespace {
 template <std::size_t N>
-std::array<uint8_t, N> to_byte_array(const char* in, std::size_t n) {
+std::array<uint8_t, N> nibbles_to_byte_array(const char* in, std::size_t n) {
   if (n != N * 2) {
     throw std::invalid_argument("expected " + std::to_string(N * 2) +
                                 " nibbles");
@@ -53,11 +53,20 @@ std::string hex_string_to_bytes(std::string_view in) {
 }
 
 std::array<uint8_t, 20> operator"" _x20(const char* in, std::size_t n) {
-  return to_byte_array<20>(in, n);
+  return nibbles_to_byte_array<20>(in, n);
 }
 
 std::array<uint8_t, 32> operator"" _x32(const char* in, std::size_t n) {
-  return to_byte_array<32>(in, n);
+  return nibbles_to_byte_array<32>(in, n);
+}
+
+Hash string_to_hash(std::string_view s) {
+  if (s.size() != 32) {
+    throw std::invalid_argument("expected 32 bytes");
+  }
+  Hash hash;
+  std::copy_n(s.begin(), 32, hash.begin());
+  return hash;
 }
 
 }  // namespace silkworm

@@ -31,10 +31,10 @@ TEST_CASE("Database leaves by prefix") {
       "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff475"_x32;
 
   MemDbBucket db;
-  db.put(key2, "foo");
-  db.put(key1, "val");
-  db.put(key4, "bar");
-  db.put(key3, "kittie");
+  db.put(byte_view(key2), "foo");
+  db.put(byte_view(key1), "val");
+  db.put(byte_view(key4), "bar");
+  db.put(byte_view(key3), "kittie");
 
   const Prefix null_prefix(0);
   const auto r0 = db.leaves(null_prefix);
@@ -46,10 +46,10 @@ TEST_CASE("Database leaves by prefix") {
   const auto r2 = db.leaves("15d246"_prefix);
   auto it = r2.first;
   REQUIRE(it != r2.second);
-  REQUIRE(it->first == key1);
+  REQUIRE(it->first == byte_view(key1));
   REQUIRE(it->second == "val");
   ++it;
-  REQUIRE(it->first == key2);
+  REQUIRE(it->first == byte_view(key2));
   ++it;
   REQUIRE(it == r2.second);
 
@@ -59,7 +59,7 @@ TEST_CASE("Database leaves by prefix") {
   const auto r4 = db.leaves("fffff"_prefix);
   it = r4.first;
   REQUIRE(it != r4.second);
-  REQUIRE(it->first == key4);
+  REQUIRE(it->first == byte_view(key4));
   ++it;
   REQUIRE(it == r4.second);
 

@@ -34,7 +34,7 @@ uint8_t phase1_depth(const silkworm::sync::Hints& hints) {
 
 namespace silkworm {
 
-Node::Node(DbBucket& db, const sync::Hints& hints,
+Node::Node(MemDbBucket& db, const sync::Hints& hints,
            std::optional<uint32_t> data_valid_for_block)
     : state_{db, depth(hints), phase1_depth(hints)} {
   if (data_valid_for_block) {

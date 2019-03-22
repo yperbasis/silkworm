@@ -23,7 +23,7 @@ using namespace silkworm;
 TEST_CASE("Block creation", "[miner]") {
   const auto block = 46732;
 
-  DbBucket db;
+  MemDbBucket db;
   sync::Hints perf_hints;
   perf_hints.max_memory = 8 * 1024 * 1024;
   Miner miner(db, perf_hints, block);

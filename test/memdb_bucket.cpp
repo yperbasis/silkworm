@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "db_bucket.hpp"
+#include "memdb_bucket.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -30,7 +30,7 @@ TEST_CASE("Database leaves by prefix") {
   Hash key4 =
       "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff475"_x32;
 
-  DbBucket db;
+  MemDbBucket db;
   db.put(key2, "foo");
   db.put(key1, "val");
   db.put(key4, "bar");

@@ -18,9 +18,9 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "db_bucket.hpp"
 #include "dust_generator.hpp"
 #include "keccak.hpp"
+#include "memdb_bucket.hpp"
 #include "miner.hpp"
 
 using namespace silkworm;
@@ -66,7 +66,7 @@ int main() {
   print_hints(hints);
 
   const auto time0 = microsec_clock::local_time();
-  DbBucket miner_state;
+  MemDbBucket miner_state;
   RNG rng(kSeed);
   DustGenerator dust_gen(rng);
   for (int i = 0; i < kInitialAccounts; ++i) {
@@ -78,7 +78,7 @@ int main() {
   const auto time1 = microsec_clock::local_time();
   std::cout << "Dust accounts generated in " << time1 - time0 << "\n\n";
 
-  DbBucket leecher_state;
+  MemDbBucket leecher_state;
   Node leecher(leecher_state, hints, {});
   sync::Stats stats;
   auto new_blocks = 0;

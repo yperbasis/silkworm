@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKWORM_CORE_DB_BUCKET_HPP_
-#define SILKWORM_CORE_DB_BUCKET_HPP_
+#ifndef SILKWORM_CORE_MEMDB_BUCKET_HPP_
+#define SILKWORM_CORE_MEMDB_BUCKET_HPP_
 
 #include <map>
 #include <string>
@@ -29,13 +29,13 @@
 
 namespace silkworm {
 
-class DbBucket {
+class MemDbBucket {
  public:
   using Map = std::map<Hash, std::string>;
   using ConstIterator = Map::const_iterator;
   using Range = std::pair<ConstIterator, ConstIterator>;
 
-  DbBucket() = default;
+  MemDbBucket() = default;
 
   void put(Hash key, std::string val) {
     data_.insert_or_assign(std::move(key), std::move(val));
@@ -46,11 +46,11 @@ class DbBucket {
   Range leaves(Prefix) const;
 
  private:
-  BOOST_MOVABLE_BUT_NOT_COPYABLE(DbBucket)
+  BOOST_MOVABLE_BUT_NOT_COPYABLE(MemDbBucket)
 
   Map data_;
 };
 
 }  // namespace silkworm
 
-#endif  // SILKWORM_CORE_DB_BUCKET_HPP_
+#endif  // SILKWORM_CORE_MEMDB_BUCKET_HPP_

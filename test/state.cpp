@@ -25,7 +25,7 @@ TEST_CASE("GetNode Request", "[sync]") {
   const auto phase1_depth = 3u;
   const auto block = 74;
 
-  DbBucket db;
+  MemDbBucket db;
   db.put("27407374bb099f172303644baef2dcc703c0e500b653ca82273b7b045d85a470"_x32,
          "crypto kitties");
   db.put("274cc374bb09f9172122dcc70c03036123e0e178b654cd82273b7b045d85a499"_x32,
@@ -71,7 +71,7 @@ TEST_CASE("Phase 1 sync", "[sync]") {
 
   const auto block = 74;
 
-  DbBucket leecher_db;
+  MemDbBucket leecher_db;
   State leecher(leecher_db, depth, phase1_depth);
 
   SECTION("frozen block") {
@@ -89,7 +89,7 @@ TEST_CASE("Phase 1 sync", "[sync]") {
     hash[29] = 0x19;
     hash[30] = 0x70;
 
-    DbBucket seeder_db;
+    MemDbBucket seeder_db;
     seeder_db.put(hash, "crypto kitties");
 
     hash[29] = 0x0b;

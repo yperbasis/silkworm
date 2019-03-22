@@ -22,7 +22,7 @@
 
 #include <boost/move/utility_core.hpp>
 
-#include "db_bucket.hpp"
+#include "memdb_bucket.hpp"
 #include "sync.hpp"
 
 namespace silkworm {
@@ -31,7 +31,7 @@ class State {
  public:
   static constexpr size_t kMaxNodesPerRequest = 64;
 
-  State(DbBucket& db, uint8_t depth, uint8_t phase1_depth);
+  State(MemDbBucket& db, uint8_t depth, uint8_t phase1_depth);
 
   uint8_t depth() const { return static_cast<uint8_t>(tree_.size()); }
 
@@ -69,7 +69,7 @@ class State {
     std::bitset<16> synced;
   };
 
-  DbBucket& db_;
+  MemDbBucket& db_;
 
   // TODO unify with mptrie
   // Invariant: parent.block >= child.block if parent.block != -1.

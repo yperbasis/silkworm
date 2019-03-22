@@ -14,11 +14,11 @@
    limitations under the License.
 */
 
-#include "db_bucket.hpp"
+#include "memdb_bucket.hpp"
 
 namespace silkworm {
 
-DbBucket::Range DbBucket::leaves(Prefix p) const {
+MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
   if (p.size() == 0) {
     return {data_.begin(), data_.end()};
   }
@@ -43,7 +43,7 @@ DbBucket::Range DbBucket::leaves(Prefix p) const {
   }
 }
 
-void DbBucket::erase(Prefix p) {
+void MemDbBucket::erase(Prefix p) {
   const auto range = leaves(p);
   data_.erase(range.first, range.second);
 }

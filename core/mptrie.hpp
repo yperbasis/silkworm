@@ -21,8 +21,8 @@
 #include <bitset>
 
 #include "common.hpp"
-#include "db_bucket.hpp"
 #include "keccak.hpp"
+#include "memdb_bucket.hpp"
 
 // Things related to the Modified Merkle Patricia Trie
 // https://github.com/ethereum/wiki/wiki/Patricia-Tree

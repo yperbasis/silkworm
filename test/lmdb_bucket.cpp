@@ -54,13 +54,33 @@ TEST_CASE("ranges") {
   }
 
   std::vector<std::string> res;
-
-  db.get("da", "df", [&res](std::string_view key, std::string_view /*val*/) {
+  const auto key_aggregator = [&res](std::string_view key,
+                                     std::string_view /*val*/) {
     res.emplace_back(key);
-  });
+  };
+
+  // get a range
+  db.get("da", "df", key_aggregator);
 
   REQUIRE(res.size() == 3);
   REQUIRE(res[0] == "dehrrer");
   REQUIRE(res[1] == "dem");
   REQUIRE(res[2] == "dezzz");
+
+  // get all entries
+  res.clear();
+  db.get("", {}, key_aggregator);
+  REQUIRE(res.size() == 6);
+
+  // delete a range
+  db.del("da", "df");
+
+  // get all entries
+  res.clear();
+  db.get("", {}, key_aggregator);
+
+  REQUIRE(res.size() == 3);
+  REQUIRE(res[0] == "abba");
+  REQUIRE(res[1] == "dv");
+  REQUIRE(res[2] == "e66434424z");
 }

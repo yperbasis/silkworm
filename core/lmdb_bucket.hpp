@@ -62,6 +62,9 @@ class LmdbBucket {
       std::string_view lower, std::optional<std::string_view> upper,
       const std::function<void(std::string_view, std::string_view)>& f) const;
 
+  // Delete all entries with lower <= key < upper.
+  void del(std::string_view lower, std::optional<std::string_view> upper);
+
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(LmdbBucket)
 

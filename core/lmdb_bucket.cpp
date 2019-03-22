@@ -80,7 +80,7 @@ void LmdbBucket::get(
   lmdb::val key = to_val(lower);
   lmdb::val val;
 
-  if (!cursor.get(key, val, MDB_SET_RANGE)) {
+  if (!cursor.get(key, val, lower.empty() ? MDB_FIRST : MDB_SET_RANGE)) {
     return;
   }
 
@@ -93,6 +93,31 @@ void LmdbBucket::get(
     f(key_view, from_val(val));
 
   } while (cursor.get(key, val, MDB_NEXT));
+}
+
+void LmdbBucket::del(std::string_view lower,
+                     std::optional<std::string_view> upper) {
+  auto wtxn = lmdb::txn::begin(env_);
+  auto cursor = lmdb::cursor::open(wtxn, dbi_);
+
+  lmdb::val key = to_val(lower);
+
+  if (!cursor.get(key, lower.empty() ? MDB_FIRST : MDB_SET_RANGE)) {
+    return;
+  }
+
+  do {
+    const auto key_view = from_val(key);
+    if (upper && key_view.compare(*upper) >= 0) {
+      break;
+    }
+
+    lmdb::cursor_del(cursor);
+
+  } while (cursor.get(key, MDB_NEXT));
+
+  cursor.close();
+  wtxn.commit();
 }
 
 }  // namespace silkworm

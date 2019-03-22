@@ -71,6 +71,16 @@ std::string Prefix::to_string() const {
   return str;
 }
 
+std::pair<std::string, std::optional<std::string>> Prefix::string_range()
+    const {
+  const auto first = to_string();
+  const auto next = *this + 1;
+  if (next.val() == 0)
+    return {first, {}};
+  else
+    return {first, next.to_string()};
+}
+
 Hash Prefix::padded() const {
   Hash array = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

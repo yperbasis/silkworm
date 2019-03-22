@@ -43,9 +43,21 @@ MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
   }
 }
 
+void MemDbBucket::del(std::string_view lower,
+                      std::optional<std::string_view> upper) {
+  if (upper && lower.compare(*upper) >= 0) {
+    return;
+  }
+
+  const auto first = data_.lower_bound(std::string(lower));
+  const auto last =
+      upper ? data_.lower_bound(std::string(*upper)) : data_.end();
+  data_.erase(first, last);
+}
+
 void MemDbBucket::erase(Prefix p) {
-  const auto range = leaves(p);
-  data_.erase(range.first, range.second);
+  const auto range = p.string_range();
+  del(range.first, range.second);
 }
 
 }  // namespace silkworm

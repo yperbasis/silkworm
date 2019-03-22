@@ -18,6 +18,7 @@
 #define SILKWORM_CORE_PREFIX_HPP_
 
 #include <algorithm>
+#include <optional>
 #include <utility>
 
 #include "common.hpp"
@@ -60,6 +61,8 @@ class Prefix {
   Hash padded() const;
 
   std::string to_string() const;
+
+  std::pair<std::string, std::optional<std::string>> string_range() const;
 
   bool matches(const Hash&) const;
 

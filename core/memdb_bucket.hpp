@@ -41,6 +41,9 @@ class MemDbBucket {
     data_[std::string(key)] = val;
   }
 
+  // Delete all entries with lower <= key < upper.
+  void del(std::string_view lower, std::optional<std::string_view> upper);
+
   void erase(Prefix);
 
   Range leaves(Prefix) const;

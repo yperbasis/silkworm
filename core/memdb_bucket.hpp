@@ -17,6 +17,7 @@
 #ifndef SILKWORM_CORE_MEMDB_BUCKET_HPP_
 #define SILKWORM_CORE_MEMDB_BUCKET_HPP_
 
+#include <functional>
 #include <map>
 #include <optional>
 #include <string>

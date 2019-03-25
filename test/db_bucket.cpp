@@ -80,3 +80,47 @@ TEMPLATE_TEST_CASE("has_same_data", "[db]", MemDbBucket, LmdbBucket) {
   REQUIRE(!db2.has_same_data(db1));
   REQUIRE(!db1.has_same_data(db2));
 }
+
+TEMPLATE_TEST_CASE("ranges", "[db]", MemDbBucket, LmdbBucket) {
+  TestType db("test2");
+
+  std::vector<std::pair<std::string, std::string>> data = {
+      {"dem", "_RER78"}, {"dehrrer", "d532742u"},     {"abba", "ffdEEo)"},
+      {"dezzz", "qqqq"}, {"e66434424z", "reyYYEIk_"}, {"dv", "-6437"},
+  };
+
+  for (const auto& x : data) {
+    db.put(x.first, x.second);
+  }
+
+  std::vector<std::string> res;
+  const auto key_aggregator = [&res](std::string_view key,
+                                     std::string_view /*val*/) {
+    res.emplace_back(key);
+  };
+
+  // get a range
+  db.get("da", "df", key_aggregator);
+
+  REQUIRE(res.size() == 3);
+  REQUIRE(res[0] == "dehrrer");
+  REQUIRE(res[1] == "dem");
+  REQUIRE(res[2] == "dezzz");
+
+  // get all entries
+  res.clear();
+  db.get("", {}, key_aggregator);
+  REQUIRE(res.size() == 6);
+
+  // delete a range
+  db.del("da", "df");
+
+  // get all entries
+  res.clear();
+  db.get("", {}, key_aggregator);
+
+  REQUIRE(res.size() == 3);
+  REQUIRE(res[0] == "abba");
+  REQUIRE(res[1] == "dv");
+  REQUIRE(res[2] == "e66434424z");
+}

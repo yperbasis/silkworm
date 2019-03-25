@@ -45,6 +45,12 @@ class MemDbBucket {
 
   std::optional<std::string_view> get(std::string_view key) const;
 
+  // Iterate over entries with lower <= key < upper
+  // and call f(key, val) for each entry.
+  void get(
+      std::string_view lower, std::optional<std::string_view> upper,
+      const std::function<void(std::string_view, std::string_view)>& f) const;
+
   // Delete all entries with lower <= key < upper.
   void del(std::string_view lower, std::optional<std::string_view> upper);
 

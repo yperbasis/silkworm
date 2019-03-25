@@ -28,6 +28,18 @@ std::optional<std::string_view> MemDbBucket::get(std::string_view key) const {
     return {};
 }
 
+void MemDbBucket::get(
+    std::string_view lower, std::optional<std::string_view> upper,
+    const std::function<void(std::string_view, std::string_view)>& f) const {
+  for (auto it = data_.lower_bound(std::string(lower)); it != data_.end();
+       ++it) {
+    if (upper && it->first.compare(*upper) >= 0) {
+      return;
+    }
+    f(it->first, it->second);
+  }
+}
+
 MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
   if (p.size() == 0) {
     return {data_.begin(), data_.end()};

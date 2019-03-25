@@ -120,4 +120,37 @@ void LmdbBucket::del(std::string_view lower,
   wtxn.commit();
 }
 
+bool LmdbBucket::has_same_data(const LmdbBucket& other) const {
+  if (env_ != other.env_) {
+    throw std::invalid_argument("buckets must belong to the same environment");
+  }
+
+  auto rtxn = lmdb::txn::begin(env_, nullptr, MDB_RDONLY);
+  auto cursor1 = lmdb::cursor::open(rtxn, dbi_);
+  auto cursor2 = lmdb::cursor::open(rtxn, other.dbi_);
+
+  lmdb::val key1, val1;
+  lmdb::val key2, val2;
+
+  bool next1 = cursor1.get(key1, val1, MDB_FIRST);
+  bool next2 = cursor2.get(key2, val2, MDB_FIRST);
+
+  while (true) {
+    if (next1 != next2) {
+      return false;
+    }
+
+    if (!next1) {
+      return true;
+    }
+
+    if (from_val(key1) != from_val(key2) || from_val(val1) != from_val(val2)) {
+      return false;
+    }
+
+    next1 = cursor1.get(key1, val1, MDB_NEXT);
+    next2 = cursor2.get(key2, val2, MDB_NEXT);
+  }
+}
+
 }  // namespace silkworm

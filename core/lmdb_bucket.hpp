@@ -65,6 +65,8 @@ class LmdbBucket {
   // Delete all entries with lower <= key < upper.
   void del(std::string_view lower, std::optional<std::string_view> upper);
 
+  bool has_same_data(const LmdbBucket& other) const;
+
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(LmdbBucket)
 

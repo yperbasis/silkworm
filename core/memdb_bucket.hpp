@@ -19,6 +19,7 @@
 
 #include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -35,7 +36,7 @@ class MemDbBucket {
   using ConstIterator = Map::const_iterator;
   using Range = std::pair<ConstIterator, ConstIterator>;
 
-  MemDbBucket() = default;
+  explicit MemDbBucket(std::string_view = "") {}
 
   void put(std::string_view key, std::string_view val) {
     data_[std::string(key)] = val;
@@ -47,6 +48,8 @@ class MemDbBucket {
   void erase(Prefix);
 
   Range leaves(Prefix) const;
+
+  bool has_same_data(const MemDbBucket& other) const;
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(MemDbBucket)

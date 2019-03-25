@@ -125,11 +125,8 @@ int main() {
   std::cout << "reply overhead      " << std::setprecision(2) << overhead * 100
             << "%\n\n";
 
-  const Prefix null_prefix(0);
-  const auto miner_leaves = miner_state.leaves(null_prefix);
-  const auto leecher_leaves = leecher_state.leaves(null_prefix);
-  const bool same = std::equal(miner_leaves.first, miner_leaves.second,
-                               leecher_leaves.first, leecher_leaves.second);
+  const bool same = miner_state.has_same_data(leecher_state);
+
   if (same) {
     std::cout << "Sync verified 😅\n";
   } else {

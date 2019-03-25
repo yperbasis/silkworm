@@ -16,6 +16,8 @@
 
 #include "memdb_bucket.hpp"
 
+#include <algorithm>
+
 namespace silkworm {
 
 MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
@@ -58,6 +60,11 @@ void MemDbBucket::del(std::string_view lower,
 void MemDbBucket::erase(Prefix p) {
   const auto range = p.string_range();
   del(range.first, range.second);
+}
+
+bool MemDbBucket::has_same_data(const MemDbBucket& other) const {
+  return std::equal(data_.begin(), data_.end(), other.data_.begin(),
+                    other.data_.end());
 }
 
 }  // namespace silkworm

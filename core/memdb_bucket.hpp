@@ -18,6 +18,7 @@
 #define SILKWORM_CORE_MEMDB_BUCKET_HPP_
 
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -41,6 +42,8 @@ class MemDbBucket {
   void put(std::string_view key, std::string_view val) {
     data_[std::string(key)] = val;
   }
+
+  std::optional<std::string_view> get(std::string_view key) const;
 
   // Delete all entries with lower <= key < upper.
   void del(std::string_view lower, std::optional<std::string_view> upper);

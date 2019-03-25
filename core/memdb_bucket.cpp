@@ -20,6 +20,14 @@
 
 namespace silkworm {
 
+std::optional<std::string_view> MemDbBucket::get(std::string_view key) const {
+  const auto it = data_.find(std::string(key));
+  if (it != data_.end())
+    return it->second;
+  else
+    return {};
+}
+
 MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
   if (p.size() == 0) {
     return {data_.begin(), data_.end()};

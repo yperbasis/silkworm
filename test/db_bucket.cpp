@@ -24,7 +24,25 @@
 
 using namespace silkworm;
 
-TEMPLATE_TEST_CASE("has_same_data", "db", MemDbBucket, LmdbBucket) {
+TEMPLATE_TEST_CASE("put/get", "[db]", MemDbBucket, LmdbBucket) {
+  using namespace std::string_literals;
+
+  TestType db("test1");
+
+  // both key & val may contain 0 chars
+  const auto key = "AB\0BA"s;
+  const auto val = "fghjar(#\0\0]0oo"s;
+
+  REQUIRE(!db.get(key));
+
+  db.put(key, val);
+
+  const auto res = db.get(key);
+  REQUIRE(res);
+  REQUIRE(*res == val);
+}
+
+TEMPLATE_TEST_CASE("has_same_data", "[db]", MemDbBucket, LmdbBucket) {
   TestType db1("db1");
   TestType db2("db2");
 

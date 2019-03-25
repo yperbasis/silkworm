@@ -23,24 +23,6 @@
 
 using namespace silkworm;
 
-TEST_CASE("single put/get") {
-  using namespace std::string_literals;
-
-  LmdbBucket db("test1");
-
-  // both key & val may contain 0 chars
-  const auto key = "AB\0BA"s;
-  const auto val = "fghjar(#\0\0]0oo"s;
-
-  REQUIRE(!db.get(key));
-
-  db.put(key, val);
-
-  const auto res = db.get(key);
-  REQUIRE(res);
-  REQUIRE(*res == val);
-}
-
 TEST_CASE("ranges") {
   LmdbBucket db("test2");
 

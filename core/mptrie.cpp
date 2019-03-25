@@ -18,8 +18,14 @@
 
 #include "rlp.hpp"
 
-namespace silkworm::mptrie {
+namespace silkworm {
 
+void LeafHasher::append(std::string_view, std::string_view val) {
+  empty_ = false;
+  joint_leaves_ += byte_view(keccak(val));
+}
+
+namespace mptrie {
 // https://github.com/ethereum/wiki/wiki/Patricia-Tree
 Hash branch_node_hash(std::bitset<16> empty, const std::array<Hash, 16>& hash) {
   thread_local rlp::List rlp(16, "");
@@ -39,5 +45,6 @@ Hash branch_node_hash(std::bitset<16> empty, const std::array<Hash, 16>& hash) {
 
   return keccak(out);
 }
+}  // namespace mptrie
 
-}  // namespace silkworm::mptrie
+}  // namespace silkworm

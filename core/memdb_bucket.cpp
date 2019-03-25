@@ -40,31 +40,6 @@ void MemDbBucket::get(
   }
 }
 
-MemDbBucket::Range MemDbBucket::leaves(Prefix p) const {
-  if (p.size() == 0) {
-    return {data_.begin(), data_.end()};
-  }
-
-  auto lb = data_.lower_bound(p.to_string());
-
-  if (lb == data_.end()) {
-    return {lb, data_.end()};
-  }
-
-  ++p;
-  if (p.val() == 0) {
-    return {lb, data_.end()};
-  }
-
-  std::string next_hash = p.to_string();
-
-  if (lb->first >= next_hash) {
-    return {data_.end(), data_.end()};
-  } else {
-    return {lb, data_.lower_bound(next_hash)};
-  }
-}
-
 void MemDbBucket::del(std::string_view lower,
                       std::optional<std::string_view> upper) {
   if (upper && lower.compare(*upper) >= 0) {
@@ -75,11 +50,6 @@ void MemDbBucket::del(std::string_view lower,
   const auto last =
       upper ? data_.lower_bound(std::string(*upper)) : data_.end();
   data_.erase(first, last);
-}
-
-void MemDbBucket::erase(Prefix p) {
-  const auto range = p.string_range();
-  del(range.first, range.second);
 }
 
 bool MemDbBucket::has_same_data(const MemDbBucket& other) const {

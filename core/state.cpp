@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include "db_util.hpp"
 #include "keccak.hpp"
 #include "mptrie.hpp"
 #include "rlp.hpp"
@@ -65,13 +66,12 @@ void State::init_from_db(const uint32_t data_valid_for_block) {
         continue;
       }
 
-      const auto leaves = db_.leaves(prefix);
+      const auto hasher = db_util::hasher(db_, prefix);
 
-      const bool empty = leaves.first == leaves.second;
-      nodes[i].empty[j] = empty;
+      nodes[i].empty[j] = hasher.empty();
 
-      if (!empty) {
-        nodes[i].hash[j] = mptrie::hash_of_leaves(leaves.first, leaves.second);
+      if (!hasher.empty()) {
+        nodes[i].hash[j] = hasher.hash();
       }
 
       nodes[i].synced[j] = true;
@@ -206,11 +206,10 @@ sync::LeavesReply State::get_leaves(
 
   reply.leaves = std::vector<sync::Leaf>{};
   if (!nd.empty[nibble]) {
-    const auto db_leaves = db_.leaves(prefix);
-    for (auto it = db_leaves.first; it != db_leaves.second; ++it) {
-      reply.leaves->push_back(
-          sync::Leaf{string_to_hash(it->first), it->second});
-    }
+    db_util::iterate(
+        db_, prefix, [&reply](std::string_view key, std::string_view val) {
+          reply.leaves->push_back(sync::Leaf{string_to_hash(key), val});
+        });
   }
 
   return reply;
@@ -357,7 +356,7 @@ void State::process_leaves_reply(const Prefix prefix,
       if (j == nibble) {
         if (reply.leaves) {
           if (main_node.synced[j] && !main_node.empty[j]) {
-            db_.erase(nibble_prefix);
+            db_util::del(db_, nibble_prefix);
           }
           for (const auto& x : *reply.leaves) {
             db_.put(byte_view(x.first), x.second);
@@ -368,7 +367,7 @@ void State::process_leaves_reply(const Prefix prefix,
         main_node.synced[j] = true;
       } else if (nibble_obsolete(main_node, j, new_empty[j], new_hash[j])) {
         if (main_node.synced[j] && !main_node.empty[j]) {
-          db_.erase(nibble_prefix);
+          db_util::del(db_, nibble_prefix);
         }
         main_node.synced[j] = false;
       }
@@ -376,7 +375,7 @@ void State::process_leaves_reply(const Prefix prefix,
   } else if (reply.leaves) {  // prefix.size() < depth()
     auto it = reply.leaves->begin();
 
-    db_.erase(prefix);
+    db_util::del(db_, prefix);
 
     // process bottom nodes
     auto btm_prfx = Prefix{depth(), prefix.val()};
@@ -385,25 +384,17 @@ void State::process_leaves_reply(const Prefix prefix,
       const auto nibble = btm_prfx.last();
       auto& bottom_node = node(depth() - 1, btm_prfx);
 
-      const auto range_begin = it;
-      auto range_end = reply.leaves->end();
+      LeafHasher hasher;
 
-      while (it != reply.leaves->end()) {
-        if (btm_prfx.matches(it->first)) {
-          db_.put(byte_view(it->first), it->second);
-          ++it;
-        } else {
-          range_end = it;
-          break;
-        }
+      for (; it != reply.leaves->end() && btm_prfx.matches(it->first); ++it) {
+        db_.put(byte_view(it->first), it->second);
+        hasher.append(byte_view(it->first), it->second);
       }
 
-      const bool empty = range_begin == range_end;
-      bottom_node.empty[nibble] = empty;
+      bottom_node.empty[nibble] = hasher.empty();
 
-      if (!empty) {
-        bottom_node.hash[nibble] =
-            mptrie::hash_of_leaves(range_begin, range_end);
+      if (!hasher.empty()) {
+        bottom_node.hash[nibble] = hasher.hash();
       }
 
       bottom_node.synced[nibble] = true;

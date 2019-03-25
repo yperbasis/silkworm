@@ -19,34 +19,38 @@
 
 #include <array>
 #include <bitset>
+#include <string>
+#include <string_view>
 
 #include "common.hpp"
 #include "keccak.hpp"
-#include "memdb_bucket.hpp"
 
 // Things related to the Modified Merkle Patricia Trie
 // https://github.com/ethereum/wiki/wiki/Patricia-Tree
 
-namespace silkworm::mptrie {
+namespace silkworm {
 
-// TODO implement properly (extension nodes, etc)
-// https://github.com/AlexeyAkhunov/go-ethereum/blob/a9dd04dbc1908aa43e0033d0fe00c8445a47a280/trie/resolver.go#L369
-template <class ConstIterator>
-Hash hash_of_leaves(ConstIterator begin, ConstIterator end) {
-  if (begin == end) {
-    return kEmptyStringHash;
-  }
+class LeafHasher {
+ public:
+  void append(std::string_view key, std::string_view val);
 
-  std::string joint_leaves;
-  for (auto it = begin; it != end; ++it) {
-    const auto& leaf_val = it->second;
-    joint_leaves += byte_view(keccak(leaf_val));
-  }
-  return keccak(joint_leaves);
-}
+  bool empty() const { return empty_; }
+
+  // TODO implement properly (extension nodes, etc)
+  // https://github.com/AlexeyAkhunov/go-ethereum/blob/a9dd04dbc1908aa43e0033d0fe00c8445a47a280/trie/resolver.go#L369
+  Hash hash() const { return keccak(joint_leaves_); }
+
+ private:
+  std::string joint_leaves_;
+  bool empty_ = true;
+};
+
+namespace mptrie {
 
 Hash branch_node_hash(std::bitset<16> empty, const std::array<Hash, 16>& hash);
 
-}  // namespace silkworm::mptrie
+}  // namespace mptrie
+
+}  // namespace silkworm
 
 #endif  // SILKWORM_CORE_MPTRIE_HPP_

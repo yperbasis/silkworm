@@ -21,22 +21,13 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
-#include <vector>
 
 #include <boost/move/utility_core.hpp>
-
-#include "common.hpp"
-#include "prefix.hpp"
 
 namespace silkworm {
 
 class MemDbBucket {
  public:
-  using Map = std::map<std::string, std::string>;
-  using ConstIterator = Map::const_iterator;
-  using Range = std::pair<ConstIterator, ConstIterator>;
-
   explicit MemDbBucket(std::string_view = "") {}
 
   void put(std::string_view key, std::string_view val) {
@@ -54,16 +45,12 @@ class MemDbBucket {
   // Delete all entries with lower <= key < upper.
   void del(std::string_view lower, std::optional<std::string_view> upper);
 
-  void erase(Prefix);
-
-  Range leaves(Prefix) const;
-
   bool has_same_data(const MemDbBucket& other) const;
 
  private:
   BOOST_MOVABLE_BUT_NOT_COPYABLE(MemDbBucket)
 
-  Map data_;
+  std::map<std::string, std::string> data_;
 };
 
 }  // namespace silkworm

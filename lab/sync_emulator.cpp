@@ -25,7 +25,7 @@
 
 using namespace silkworm;
 
-static const auto kInitialAccounts = 1'000'000;
+static const auto kInitialAccounts = 10'000'000;
 static const auto kNewAccountsPerBlock = 300;
 static const auto kBlockTime = 15;             // sec
 static const auto kBandwidth = 1'000'000 / 8;  // bytes per sec
@@ -70,13 +70,21 @@ int main() {
   RNG rng(kSeed);
   DustGenerator dust_gen(rng);
 
-  {  // create random dust accounts
-    int i = 0;
-    miner_state.put([&dust_gen, &i]() -> std::optional<DbBucket::KeyVal> {
-      ++i;
-      if (i > kInitialAccounts) {
+  // create random dust accounts
+  static constexpr auto kBatchSize = 5'000'000;
+  for (int i = 0; i < kInitialAccounts / kBatchSize + 1; ++i) {
+    int j = 0;
+
+    miner_state.put([&dust_gen, i, &j]() -> std::optional<DbBucket::KeyVal> {
+      auto account_num = i * kBatchSize + j;
+      if (account_num >= kInitialAccounts || j >= kBatchSize) {
         return {};
       }
+      ++j;
+      if (account_num % 1'000'000 == 0) {
+        std::cout << account_num / 1'000'000 << "M accounts generated\n";
+      }
+
       Hash key = keccak(byte_view(dust_gen.random_address()));
       std::string val = to_rlp(dust_gen.random_account());
       return std::pair{byte_view(key), val};
@@ -94,7 +102,13 @@ int main() {
   auto generated_leaves = kInitialAccounts;
 
   while (true) {
+    std::cout << "new block " << new_blocks << " phase "
+              << (leecher.phase1_sync_done() + 1) << std::endl;
+
     leecher.sync(miner, stats, kBandwidth * kBlockTime);
+
+    std::cout << "leaves received " << stats.reply_total_leaves
+              << " vs generated " << generated_leaves << std::endl;
 
     if (leecher.sync_done()) {
       break;

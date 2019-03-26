@@ -20,7 +20,7 @@
 #include <optional>
 #include <variant>
 
-#include "memdb_bucket.hpp"
+#include "db_bucket.hpp"
 #include "state.hpp"
 #include "sync.hpp"
 
@@ -28,7 +28,7 @@ namespace silkworm {
 
 class Node {
  public:
-  Node(MemDbBucket& db, const sync::Hints&,
+  Node(DbBucket& db, const sync::Hints&,
        std::optional<uint32_t> data_valid_for_block);
 
   // TODO multiple peers

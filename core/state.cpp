@@ -27,7 +27,7 @@
 namespace silkworm {
 
 // TODO randomize phase 1 & 2 cursors
-State::State(MemDbBucket& db, uint8_t depth, uint8_t phase1_depth)
+State::State(DbBucket& db, uint8_t depth, uint8_t phase1_depth)
     : db_(db),
       tree_(depth),
       phase1_cursor_(phase1_depth),

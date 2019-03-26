@@ -17,40 +17,38 @@
 #ifndef SILKWORM_CORE_MEMDB_BUCKET_HPP_
 #define SILKWORM_CORE_MEMDB_BUCKET_HPP_
 
-#include <functional>
 #include <map>
-#include <optional>
 #include <string>
-#include <string_view>
 
-#include <boost/move/utility_core.hpp>
+#include "db_bucket.hpp"
 
 namespace silkworm {
 
-class MemDbBucket {
+class MemDbBucket : public DbBucket {
  public:
   explicit MemDbBucket(std::string_view = "") {}
 
-  void put(std::string_view key, std::string_view val) {
+  virtual ~MemDbBucket() = default;
+
+  void put(std::string_view key, std::string_view val) override {
     data_[std::string(key)] = val;
   }
 
-  std::optional<std::string_view> get(std::string_view key) const;
+  std::optional<std::string_view> get(std::string_view key) const override;
 
   // Iterate over entries with lower <= key < upper
   // and call f(key, val) for each entry.
-  void get(
-      std::string_view lower, std::optional<std::string_view> upper,
-      const std::function<void(std::string_view, std::string_view)>& f) const;
+  void get(std::string_view lower, std::optional<std::string_view> upper,
+           const std::function<void(std::string_view, std::string_view)>& f)
+      const override;
 
   // Delete all entries with lower <= key < upper.
-  void del(std::string_view lower, std::optional<std::string_view> upper);
+  void del(std::string_view lower,
+           std::optional<std::string_view> upper) override;
 
   bool has_same_data(const MemDbBucket& other) const;
 
  private:
-  BOOST_MOVABLE_BUT_NOT_COPYABLE(MemDbBucket)
-
   std::map<std::string, std::string> data_;
 };
 

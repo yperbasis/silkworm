@@ -18,6 +18,8 @@
 
 #include <catch2/catch.hpp>
 
+#include "memdb_bucket.hpp"
+
 using namespace silkworm;
 
 TEST_CASE("Block creation", "[miner]") {

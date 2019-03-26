@@ -17,12 +17,7 @@
 #ifndef SILKWORM_CORE_LMDB_BUCKET_HPP_
 #define SILKWORM_CORE_LMDB_BUCKET_HPP_
 
-#include <functional>
-#include <optional>
-#include <string_view>
-
-#include <boost/move/utility_core.hpp>
-
+#include "db_bucket.hpp"
 #include "lmdb++.h"
 
 namespace silkworm {
@@ -46,30 +41,31 @@ class LmdbEnvironment {
   friend class LmdbBucket;
 };
 
-class LmdbBucket {
+class LmdbBucket : public DbBucket {
  public:
   explicit LmdbBucket(
       std::string_view name,
       LmdbEnvironment& env = LmdbEnvironment::temporaryInstance());
 
-  void put(std::string_view key, std::string_view val);
+  virtual ~LmdbBucket() = default;
 
-  std::optional<std::string_view> get(std::string_view key) const;
+  void put(std::string_view key, std::string_view val) override;
+
+  std::optional<std::string_view> get(std::string_view key) const override;
 
   // Iterate over entries with lower <= key < upper
   // and call f(key, val) for each entry.
-  void get(
-      std::string_view lower, std::optional<std::string_view> upper,
-      const std::function<void(std::string_view, std::string_view)>& f) const;
+  void get(std::string_view lower, std::optional<std::string_view> upper,
+           const std::function<void(std::string_view, std::string_view)>& f)
+      const override;
 
   // Delete all entries with lower <= key < upper.
-  void del(std::string_view lower, std::optional<std::string_view> upper);
+  void del(std::string_view lower,
+           std::optional<std::string_view> upper) override;
 
   bool has_same_data(const LmdbBucket& other) const;
 
  private:
-  BOOST_MOVABLE_BUT_NOT_COPYABLE(LmdbBucket)
-
   lmdb::env& env_;
   lmdb::dbi dbi_;
 };

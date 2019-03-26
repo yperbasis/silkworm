@@ -45,7 +45,7 @@ LmdbEnvironment::LmdbEnvironment() : env_{lmdb::env::create()} {
 
   const auto tmp_dir = unique_path();
   create_directories(tmp_dir);
-  env_.open(tmp_dir.string().c_str(), 0, 0664);
+  env_.open(tmp_dir.string().c_str(), MDB_NOSYNC, 0664);
 }
 
 LmdbBucket::LmdbBucket(const std::string_view name, LmdbEnvironment& env)

@@ -27,7 +27,7 @@ if(MSVC)
   add_compile_options(/W4 /WX)
 else(MSVC)
   add_compile_options(-Wall -Wextra -pedantic -Werror)
-  #  add_compile_options(-gline-tables-only) # for profiling
+  add_compile_options(-gline-tables-only) # for profiling
   add_compile_options(-march=native)
 endif(MSVC)
 

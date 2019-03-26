@@ -58,6 +58,18 @@ void LmdbBucket::put(const std::string_view key, const std::string_view val) {
   wtxn.commit();
 }
 
+void LmdbBucket::put(const std::function<std::optional<KeyVal>()>& gen) {
+  auto wtxn = lmdb::txn::begin(env_);
+
+  while (const auto entry = gen()) {
+    const auto key = to_val(entry->first);
+    auto data = to_val(entry->second);
+    dbi_.put(wtxn, key, data);
+  }
+
+  wtxn.commit();
+}
+
 std::optional<std::string_view> LmdbBucket::get(
     const std::string_view key) const {
   auto rtxn = lmdb::txn::begin(env_, nullptr, MDB_RDONLY);

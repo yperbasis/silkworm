@@ -20,6 +20,12 @@
 
 namespace silkworm {
 
+void MemDbBucket::put(const std::function<std::optional<KeyVal>()>& gen) {
+  while (const auto entry = gen()) {
+    put(entry->first, entry->second);
+  }
+}
+
 std::optional<std::string_view> MemDbBucket::get(std::string_view key) const {
   const auto it = data_.find(std::string(key));
   if (it != data_.end())

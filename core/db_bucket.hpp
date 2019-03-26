@@ -20,6 +20,7 @@
 #include <functional>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include <boost/move/utility_core.hpp>
 
@@ -27,9 +28,13 @@ namespace silkworm {
 
 class DbBucket {
  public:
+  using KeyVal = std::pair<std::string_view, std::string_view>;
+
   virtual ~DbBucket() = default;
 
   virtual void put(std::string_view key, std::string_view val) = 0;
+
+  virtual void put(const std::function<std::optional<KeyVal>()>& gen) = 0;
 
   virtual std::optional<std::string_view> get(std::string_view key) const = 0;
 

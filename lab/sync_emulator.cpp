@@ -20,7 +20,7 @@
 
 #include "dust_generator.hpp"
 #include "keccak.hpp"
-#include "memdb_bucket.hpp"
+#include "lmdb_bucket.hpp"
 #include "miner.hpp"
 
 using namespace silkworm;
@@ -66,19 +66,25 @@ int main() {
   print_hints(hints);
 
   const auto time0 = microsec_clock::local_time();
-  MemDbBucket miner_state;
+  LmdbBucket miner_state("miner_state");
   RNG rng(kSeed);
   DustGenerator dust_gen(rng);
-  for (int i = 0; i < kInitialAccounts; ++i) {
+  int i = 0;
+  miner_state.put([&dust_gen, &i]() -> std::optional<DbBucket::KeyVal> {
+    ++i;
+    if (i > kInitialAccounts) {
+      return {};
+    }
     Hash key = keccak(byte_view(dust_gen.random_address()));
     std::string val = to_rlp(dust_gen.random_account());
-    miner_state.put(byte_view(key), val);
-  }
+    return std::pair{byte_view(key), val};
+  });
+
   Miner miner(miner_state, hints, kStartBlock);
   const auto time1 = microsec_clock::local_time();
   std::cout << "Dust accounts generated in " << time1 - time0 << "\n\n";
 
-  MemDbBucket leecher_state;
+  LmdbBucket leecher_state("leecher_state");
   Node leecher(leecher_state, hints, {});
   sync::Stats stats;
   auto new_blocks = 0;

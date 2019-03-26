@@ -34,6 +34,8 @@ class MemDbBucket : public DbBucket {
     data_[std::string(key)] = val;
   }
 
+  void put(const std::function<std::optional<KeyVal>()>& gen) override;
+
   std::optional<std::string_view> get(std::string_view key) const override;
 
   // Iterate over entries with lower <= key < upper

@@ -358,9 +358,18 @@ void State::process_leaves_reply(const Prefix prefix,
           if (main_node.synced[j] && !main_node.empty[j]) {
             db_util::del(db_, nibble_prefix);
           }
-          for (const auto& x : *reply.leaves) {
-            db_.put(byte_view(x.first), x.second);
-          }
+
+          auto it = reply.leaves->begin();
+          const auto end = reply.leaves->end();
+
+          db_.put([&it, end]() -> std::optional<DbBucket::KeyVal> {
+            if (it == end) {
+              return {};
+            }
+            DbBucket::KeyVal x(byte_view(it->first), it->second);
+            ++it;
+            return x;
+          });
         }
         main_node.empty[j] = new_empty[j];
         main_node.hash[j] = new_hash[j];
@@ -386,10 +395,19 @@ void State::process_leaves_reply(const Prefix prefix,
 
       LeafHasher hasher;
 
+      auto it2 = it;
       for (; it != reply.leaves->end() && btm_prfx.matches(it->first); ++it) {
-        db_.put(byte_view(it->first), it->second);
         hasher.append(byte_view(it->first), it->second);
       }
+
+      db_.put([&it2, it]() -> std::optional<DbBucket::KeyVal> {
+        if (it2 == it) {
+          return {};
+        }
+        DbBucket::KeyVal x(byte_view(it2->first), it2->second);
+        ++it2;
+        return x;
+      });
 
       bottom_node.empty[nibble] = hasher.empty();
 

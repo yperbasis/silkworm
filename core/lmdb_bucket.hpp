@@ -51,6 +51,8 @@ class LmdbBucket : public DbBucket {
 
   void put(std::string_view key, std::string_view val) override;
 
+  void put(const std::function<std::optional<KeyVal>()>& gen) override;
+
   std::optional<std::string_view> get(std::string_view key) const override;
 
   // Iterate over entries with lower <= key < upper

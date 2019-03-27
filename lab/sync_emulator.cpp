@@ -20,7 +20,7 @@
 
 #include "dust_generator.hpp"
 #include "keccak.hpp"
-#include "lmdb_bucket.hpp"
+#include "memdb_bucket.hpp"
 #include "miner.hpp"
 
 using namespace silkworm;
@@ -66,36 +66,33 @@ int main() {
   print_hints(hints);
 
   const auto time0 = microsec_clock::local_time();
-  LmdbBucket miner_state("miner_state");
+  MemDbBucket miner_state("miner_state");
   RNG rng(kSeed);
   DustGenerator dust_gen(rng);
 
   // create random dust accounts
-  static constexpr auto kBatchSize = 5'000'000;
-  for (int i = 0; i < kInitialAccounts / kBatchSize + 1; ++i) {
-    int j = 0;
+  int account_num = 0;
 
-    miner_state.put([&dust_gen, i, &j]() -> std::optional<DbBucket::KeyVal> {
-      auto account_num = i * kBatchSize + j;
-      if (account_num >= kInitialAccounts || j >= kBatchSize) {
-        return {};
-      }
-      ++j;
-      if (account_num % 1'000'000 == 0) {
-        std::cout << account_num / 1'000'000 << "M accounts generated\n";
-      }
+  miner_state.put(
+      [&dust_gen, &account_num]() -> std::optional<DbBucket::KeyVal> {
+        if (account_num >= kInitialAccounts) {
+          return {};
+        }
+        if (account_num % 1'000'000 == 0) {
+          std::cout << account_num / 1'000'000 << "M accounts generated\n";
+        }
+        ++account_num;
 
-      Hash key = keccak(byte_view(dust_gen.random_address()));
-      std::string val = to_rlp(dust_gen.random_account());
-      return std::pair{byte_view(key), val};
-    });
-  }
+        Hash key = keccak(byte_view(dust_gen.random_address()));
+        std::string val = to_rlp(dust_gen.random_account());
+        return std::pair{byte_view(key), val};
+      });
 
   Miner miner(miner_state, hints, kStartBlock);
   const auto time1 = microsec_clock::local_time();
   std::cout << "Dust accounts generated in " << time1 - time0 << "\n\n";
 
-  LmdbBucket leecher_state("leecher_state");
+  MemDbBucket leecher_state("leecher_state");
   Node leecher(leecher_state, hints, {});
   sync::Stats stats;
   auto new_blocks = 0;

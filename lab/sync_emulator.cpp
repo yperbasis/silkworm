@@ -79,7 +79,8 @@ int main() {
           return {};
         }
         if (account_num % 1'000'000 == 0) {
-          std::cout << account_num / 1'000'000 << "M accounts generated\n";
+          std::cout << account_num / 1'000'000 << "M accounts generated"
+                    << std::endl;
         }
         ++account_num;
 

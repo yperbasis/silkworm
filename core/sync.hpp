@@ -31,14 +31,15 @@
   * single-machine in-memory PoC with ~1m dust accounts
   * describe the algo
   * theoretical convergence
-[TODO]
   * experimental convergence with ~100m dust accounts
+[TODO]
+  * remove blockAtLeast from the protocol
+  * revert to account addresses?
   * unify the protocol with Firehose
-  * finish the doc
+  * finish the doc and post it for discussions
   * storage tries. pack multiple accounts into 1 request/reply for small tries
   * extension/leaf nodes (prereq: Issue #7, better test coverage)
   * handle chain reorgs
-  * remove blockAtLeast from the protocol
   * use the real protocol in the modelling code
   * network layer, p2p
   * multiple leechers, BitTorrent-like swarm

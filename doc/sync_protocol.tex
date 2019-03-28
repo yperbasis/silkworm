@@ -415,10 +415,20 @@ Reiterating, the convergence condition for the state trie alone is
     b > \frac{\texttt{RQS}}{\tau}
 \end{equation}
 For the Ethereum main net as of February 2019 this critical minimum bandwidth is about 0.4 Mbit/s.
-A rough estimate of how much time it takes to catch up when the leecher is $x$ blocks behind is
-\begin{equation}
-    \frac{ \texttt{RQS} }{b\tau - \texttt{RQS}} \, x \tau
-\end{equation}
+Table~\ref{tab:emulated_time} shows performance results of an emulation of the sync protocol for various state trie sizes.
+The modelling code used is hosted at \href{https://github.com/yperbasis/silkworm/blob/master/lab/sync_emulator.cpp}{https://github.com/yperbasis/silkworm}.
+
+\begin{table}[h]
+\begin{tabular}{ r | c c c }
+    Bandwidth & 10M & 50M & 100M \\
+    \hline
+      1 Mbit/s & 03:39 & 18:44 & 39:04 \\
+     10 Mbit/s & 00:20 & 01:39 & 03:17 \\
+    100 Mbit/s & 00:02 & 00:10 & 00:20 \\
+\end{tabular}
+\caption{Emulated times of state trie sync for 10M, 50M, and 100M dust accounts.}
+\label{tab:emulated_time}
+\end{table}
 
 Convergence analysis for large storage tries (e.g. CryptoKitties) is similar to the state trie analysis above.
 

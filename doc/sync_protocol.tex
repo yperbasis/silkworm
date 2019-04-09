@@ -35,19 +35,22 @@
 
 \section{Introduction}
 
-In Red Queen's Synchronisation Protocol for Ethereum 1x seeders reply with data as of their most recent block.
-That results in an inconsistent trie on the leecher initially ("phase 1"), which we patch later ("phase 2").
+It currently takes new Ethereum full nodes a few hours
+to synchronise the blockchain state using the eth/63 protocol \cite{wire_protocol}.
+Moreover, the growing state size might potentially result in complete sync failure,
+as described in \cite{akhunov_1x_workshop_part1}.
+
+As part of the Ethereum 1x effort, we propose a new sync protocol and algorithm,
+which we call Red Queen's.
+In our sync algorithm seeders reply with data as of their most recent block.
+That results in an inconsistent trie on the leecher initially ("phase 1"),
+which is patched later on ("phase 2").
 The idea is similar to that of Leaf Sync (\cite{leaf_sync}).
+Other sources of inspiration include BitTorrent, Parity's Warp Sync \cite{warp_sync}, and Firehose Sync \cite{firehose}.
 
-TODO: mention the sync failure problem \cite{akhunov_1x_workshop_part1} and the needs of light clients like Mustekala.
-Inspirations like BitTorrent, Parity's warp sync,
-\href{https://notes.ethereum.org/eXnqtO_vQquzrFDPHjuaFQ}{Firehose Sync},
-\href{https://github.com/ethereum/wiki/wiki/Light-client-protocol}{Light Client Protocol}.
+Further, we strive to make the protocol work for light clients like Mustekala---see also \cite{light_client_protocol}.
 
-N.B. Snapshot synchronisation rather than from the Genesis block.
-
-
-% TODO https://ethereum-magicians.org/t/forming-a-ring-eth-v64-wire-protocol-ring/2857/4
+N.B. In this document, we only discuss snapshot synchronisation rather than synchronisation from the Genesis block.
 
 \section{Notation}
 

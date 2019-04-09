@@ -13,10 +13,16 @@
 
 \title{Red Queen's Sync Protocol for Ethereum}
 \author{Andrew Ashikhmin \& Alexey Akhunov}
-\date{March 2019}
+\date{April 2019}
 
 \begin{abstract}
-TODO: abstract.
+    As of early 2019, it takes new Ethereum full nodes a few hours
+    to synchronise the blockchain state using the eth/63 protocol \cite{wire_protocol}.
+    We propose a new protocol and an algorithm for Ethereum snapshot sync
+    that is faster and more robust in respect of the growing state size.
+    The new protocol is also tailored towards the needs of light clients
+    and allows data storage formats other than the canonical Merkle Patricia trie.
+    Performance results from a model implementation are encouraging.
 \end{abstract}
 
 \maketitle

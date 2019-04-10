@@ -93,7 +93,9 @@ Just like $\texttt{GetNodeData}$ from the current version (eth/63) of Ethereum W
 [code$_0$: $\mathbb{B}$, code$_1$: $\mathbb{B}$, ...]]
 \medskip
 
-Reply to $\texttt{GetBytecode}$.\\
+Reply to $\texttt{GetBytecode}$.
+Bytecode position in the response list must correspond to the position in the request list;
+the empty list $\varnothing$ should be used for omitted bytecodes.\\
 
 \textbf{GetStateNodes} (0x22)
 
@@ -103,29 +105,34 @@ Reply to $\texttt{GetBytecode}$.\\
 
 Request state trie nodes as of a specific state.
 Note that this operative is similar to $\texttt{GetNodeData}$,
-but it uses prefixes rather than hashes as node keys.
+but it uses prefixes rather than hashes as node keys\footnote{In
+a radix trie there is a trivial one-to-one correspondence between nodes and prefixes.
+Since Ethereum employs a modified radix trie with extension nodes,
+we define node's prefix as the shortest one such that
+all leaves descending from the node match the prefix
+and, conversely, all leaves that match the prefix descend from the node in question.}.
 It will also only return nodes from the state trie,
 not arbitrary node data.
-TODO: prefix--node correspondence is trivial for branch nodes, not so much for leaf or extension nodes.
-TODO: prefix encoding consistent with the Yellow Paper.\\
+The prefix encoding is described in Appendix C of \cite{yellow_paper}
+(no additional flags are utilised).\\
 
 \textbf{StateNodes} (0x23)
 
 [reqID: $\mathbb{N}$,
 [node$_0$: $\mathbb{B}$, node$_1$: $\mathbb{B}$, ...],
-[avalableState$_0$, ...]$_{opt}$]
+[availableState$_0$, ...]$_{opt}$]
 \medskip
 
 Reply to $\texttt{GetStateNodes}$.
 The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
-TODO: available state roots.\\
+In that case the peer should return state roots for which requested nodes are available.\\
 
 \textbf{GetAccounts} (0x24)
 
 [reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$, [prefix$_0$: $\mathbb{Y}$, prefix$_1$: $\mathbb{Y}$, ...]]
 \medskip
 
-TODO: description.\\
+Request state trie leaves (i.e. accounts) as of a specific state.\\
 
 \textbf{Accounts} (0x25)
 
@@ -141,12 +148,16 @@ TODO: description.\\
 
 \quad ],
 
-\quad [avalableState$_0$, ...]$_{opt}$
+\quad [availableState$_0$, ...]$_{opt}$
 
 ]
 \medskip
 
-Reply to $\texttt{GetAccounts}$.\\
+Reply to $\texttt{GetAccounts}$.
+Returns accounts that match requested prefixes as key--value pairs\footnote{It
+is feasible to return suffixes rather than full keys given that prefixes are known,
+but we deem the performance gain to be insignificant.}.
+TODO: status.\\
 
 \textbf{GetStorageSizes} (0x26)
 
@@ -160,11 +171,12 @@ Request storage trie sizes as of a specific state.\\
 
 [reqID: $\mathbb{N}$,
 [numLeaves$_0$: $\mathbb{N} | \varnothing$, numLeaves$_1$: $\mathbb{N} | \varnothing$, ...],
-[avalableState$_0$, ...]$_{opt}$]
+[availableState$_0$, ...]$_{opt}$]
 \medskip
 
 Reply to $\texttt{GetStorageSizes}$.
-The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.\\
+The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
+In that case the peer should return state roots for which requested data is available.\\
 
 \textbf{GetStorageNodes} (0x28)
 
@@ -195,7 +207,7 @@ Request storage trie nodes as of a specific state.\\
 
 \quad ],
 
-\quad [avalableState$_0$, ...]$_{opt}$
+\quad [availableState$_0$, ...]$_{opt}$
 
 ]
 \medskip
@@ -216,10 +228,7 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 ]
 \medskip
 
-Request storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
-The empty list $\varnothing$ instead of the account hash signifies state rather than storage trie.
-$\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead
-(reply block is not newer).\\
+Request storage subtrie leaves as of a specific state.\\
 
 \textbf{StorageValues} (0x2b)
 
@@ -251,27 +260,15 @@ $\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the
 
 \quad ],
 
-\quad [avalableState$_0$, ...]$_{opt}$
+\quad [availableState$_0$, ...]$_{opt}$
 
 ]
 \medskip
 
 Reply to $\texttt{GetStorageValues}$.
-Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
-If the peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
-The nodes returned are the upper nodes of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.
-The first $\texttt{fromLevel}$ upper nodes must be skipped if and only if $\texttt{blockNumber} = \texttt{blockAtLeast}$.
-(If $\texttt{fromLevel} = 0$, then the nodes must start with the root node.)
-$\texttt{tooManyLeaves}$ is a boolean flag ($0=false$, $1=true$) indicating that the subtrie requested contains too many leaves.
-TODO: how many is too many?
-The leaves are represented as the list of their keys\footnote{It
-is feasible to return suffixes rather than full keys given that prefixes are known, but we deem the performance gain to be insignificant.}
-and values.
+Returns storage values that match requested prefixes as key--value pairs.
+TODO: status; how many is too many?
 The peer may only return either all leaves of the subtrie or nothing.
-In the case of $\texttt{tooManyLeaves}$ the leaves should not be returned\footnote{In
-that case the peer must not return an empty list as that would imply that no leaves match the given prefix.}.
-Proof nodes must be sent in any case;
-they give us a means to detect faulty or malicious peers.
 Note that state trie replies do not inline storage tries, unlike Leaf Sync.
 
 \section{Suggested Sync Algorithm}

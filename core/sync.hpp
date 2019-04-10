@@ -33,8 +33,6 @@
   * theoretical convergence
   * experimental convergence with ~100m dust accounts
 [TODO]
-  * remove blockAtLeast from the protocol
-  * revert to account addresses?
   * unify the protocol with Firehose
   * finish the doc and post it for discussions
   * storage tries. pack multiple accounts into 1 request/reply for small tries

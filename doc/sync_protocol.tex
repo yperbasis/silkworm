@@ -68,44 +68,111 @@ A key matches a prefix if and only if all their first nibbles are the same,
 
 \section{Protocol Specification}
 
-We propose the following 3 request/reply operative pairs.
-
-\textbf{GetStorageSizes} [+0x20, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
-[account$^0$: $\mathbb{B}_{32}$, account$^1$: $\mathbb{B}_{32}$, ...]]
-Request storage trie sizes as of block \#$\texttt{blockAtLeast}$ or newer.
-Hashes of accounts addresses are used as keys.
-
-\textbf{StorageSizes} [+0x21, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
-[numLeaves$^0$: $\mathbb{N} | \varnothing$, numLeaves$^1$: $\mathbb{N} | \varnothing$, ...]]
-Reply to $\texttt{GetStorageSizes}$.
-Returns storage trie sizes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
-The elements returned must strictly match the accounts requested.
-The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
-
-\textbf{GetNodeData2} [+0x22, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
-[account$^0$: $\mathbb{B}_{32} | \varnothing$, prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...],
-[account$^1$: $\mathbb{B}_{32} | \varnothing$, prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...],
-...]
-Request state or storage trie nodes as of block \#$\texttt{blockAtLeast}$ or newer.
-The empty list $\varnothing$ instead of the account hash signifies the state (rather than storage) trie.
-Note that this operative is similar to $\texttt{GetNodeData}$ from Ethereum Wire Protocol PV63,
-but it uses prefixes rather than hashes as node keys\footnote{For
-a justification see Péter Szilágyi's
+We propose the following new request/reply operative pairs\footnote{For
+some extra information see Péter Szilágyi's
 \href{https://ethereum-magicians.org/t/forming-a-ring-eth-v64-wire-protocol-ring/2857/10}{comment}
-at ETH v64 Wire Protocol Ring.}.
-TODO: prefix--node correspondence is trivial for branch nodes, not so much for leaf or extension nodes.
-TODO: prefix encoding consistent with the Yellow Paper.
+at ETH v64 Wire Protocol Ring.}:\\
 
-\textbf{NodeData2} [+0x23, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
+\textbf{GetBytecode} (0x20)
+
+[reqID: $\mathbb{N}$,
+[codeHash$_0$: $\mathbb{B}_{32}$, codeHash$_1$: $\mathbb{B}_{32}$, ...]]
+\medskip
+
+Request EVM code of smart contracts.
+Just like $\texttt{GetNodeData}$ from the current version (eth/63) of Ethereum Wire Protocol \cite{wire_protocol}, except:
+\begin{enumerate}
+\item includes a request ID;
+\item will only return bytecode with the corresponding hash, not arbitrary node data.
+\end{enumerate}
+\bigskip
+
+\textbf{Bytecode} (0x21)
+
+[reqID: $\mathbb{N}$,
+[code$_0$: $\mathbb{B}$, code$_1$: $\mathbb{B}$, ...]]
+\medskip
+
+Reply to $\texttt{GetBytecode}$.\\
+
+\textbf{GetStateNodes} (0x22)
+
+[reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
+[prefix$_0$: $\mathbb{Y}$, prefix$_1$: $\mathbb{Y}$, ...]]
+\medskip
+
+Request state trie nodes as of a specific state.
+Note that this operative is similar to $\texttt{GetNodeData}$,
+but it uses prefixes rather than hashes as node keys.
+It will also only return nodes from the state trie,
+not arbitrary node data.
+TODO: prefix--node correspondence is trivial for branch nodes, not so much for leaf or extension nodes.
+TODO: prefix encoding consistent with the Yellow Paper.\\
+
+\textbf{StateNodes} (0x23)
+
+[reqID: $\mathbb{N}$,
+[node$_0$: $\mathbb{B}$, node$_1$: $\mathbb{B}$, ...]]
+\medskip
+
+Reply to $\texttt{GetStateNodes}$.
+The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
+TODO: available state roots.\\
+
+\textbf{GetAccounts} (0x24)
+
+TODO\\
+
+\textbf{Accounts} (0x25)
+
+TODO\\
+
+\textbf{GetStorageSizes} (0x26)
+
+[reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
+[addressHash$_0$: $\mathbb{B}_{32}$, addressHash$_1$: $\mathbb{B}_{32}$, ...]]
+\medskip
+
+Request storage trie sizes as of a specific state.\\
+
+\textbf{StorageSizes} (0x27)
+
+[reqID: $\mathbb{N}$,
+[numLeaves$_0$: $\mathbb{N} | \varnothing$, numLeaves$_1$: $\mathbb{N} | \varnothing$, ...]]
+\medskip
+
+Reply to $\texttt{GetStorageSizes}$.
+The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.\\
+
+\textbf{GetStorageNodes} (0x28)
+
+[reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
+
+\quad [account$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
+
+\quad [account$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
+
+\quad ...
+
+]
+\medskip
+
+Request storage trie nodes as of a specific state.\\
+
+\textbf{StorageNodes} (0x29)
+
+[reqID: $\mathbb{N}$,
 [node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ...],
 [node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ...],
 ...]
-Reply to $\texttt{GetNodeData2}$.
-Returns trie nodes as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
-The nodes returned must strictly match the prefixes requested.
-The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
+\medskip
 
-\textbf{GetSubtries} [+0x24, reqID: $\mathbb{N}$, blockAtLeast: $\mathbb{N}$,
+Reply to $\texttt{GetStorageNodes}$.
+The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.\\
+
+\textbf{GetStorageLeaves} (0x2a)
+
+[reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
 
 \quad [account$^0$: $\mathbb{B}_{32} | \varnothing$,
 
@@ -129,11 +196,17 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 
 \quad ...
 
-] Request state or storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
-The empty list $\varnothing$ instead of the account hash signifies state rather than storage trie.
-$\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead (reply block is not newer).
+]
+\medskip
 
-\textbf{Subtries} [+0x25, reqID: $\mathbb{N}$, blockNumber: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
+Request storage subtrie leaves along with proof nodes as of block \#$\texttt{blockAtLeast}$ or newer.
+The empty list $\varnothing$ instead of the account hash signifies state rather than storage trie.
+$\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead
+(reply block is not newer).\\
+
+\textbf{StorageLeaves} (0x2b)
+
+[reqID: $\mathbb{N}$,
 
 \quad [
 
@@ -157,9 +230,11 @@ $\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the
 
 \quad ...
 
-] Reply to $\texttt{GetSubtries}$.
+]
+\medskip
+
+Reply to $\texttt{GetStorageLeaves}$.
 Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
-The subtries returned must strictly match the prefixes requested.
 If the peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
 The nodes returned are the upper nodes of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.
 The first $\texttt{fromLevel}$ upper nodes must be skipped if and only if $\texttt{blockNumber} = \texttt{blockAtLeast}$.
@@ -174,9 +249,7 @@ In the case of $\texttt{tooManyLeaves}$ the leaves should not be returned\footno
 that case the peer must not return an empty list as that would imply that no leaves match the given prefix.}.
 Proof nodes must be sent in any case;
 they give us a means to detect faulty or malicious peers.
-Note that state trie replies do not inline storage tries, unlike Leaf Sync.\\
-
-TODO: is block number OK given chain reorgs?
+Note that state trie replies do not inline storage tries, unlike Leaf Sync.
 
 \section{Suggested Sync Algorithm}
 
@@ -191,7 +264,7 @@ Red Queen's race is a nice metaphor for phase 2.}.
 The idea was proposed in \cite{leaf_sync}.
 
 Let us focus on the state trie for the moment; we shall come back to storage sync later.
-For phase 1 we suggest sending $\texttt{GetSubtries}$ requests with a single prefix per request, ditto for phase 2.
+For phase 1 we suggest sending $\texttt{GetAccounts}$ requests with a single prefix per request, ditto for phase 2.
 All requested prefixes are of size $d_1$ during phase 1 and of $d_2$ during phase 2, $d_2 \geq d_1$.
 We elaborate on the values of $d_1$ and $d_2$ later.
 The leecher gradually builds the first upper $d_2$ levels of the Merkle Patricia trie\footnote{$d_2$
@@ -324,7 +397,7 @@ We analyse convergence conditions in the next section.
 
 When all trie levels from the root down to the level $d_2 - 1$ are up to date,
 the leecher knows which nibbles at that last level have changed since phase 1.
-It refreshes the leaves corresponding to such nibbles using $\texttt{GetSubtrie}$ requests. 
+It refreshes the leaves corresponding to such nibbles using $\texttt{GetAccounts}$ requests. 
 That concludes the algorithm for state trie synchronisation.
 
 The algorithm for storage sync is similar for large storage tries.
@@ -366,7 +439,7 @@ For the state trie it is in the ballpark of 300.
 
 $||R_n||$ -- the number of nodes in a reply $R$.
 
-$||R_l||$ -- the number of leaves in a reply $R$ (only relevant for $\texttt{Subtrie}$ replies).
+$||R_l||$ -- the number of leaves in a reply $R$.
 
 We use the following simplified formula for the byte size of a reply $R$
 \begin{equation}
@@ -378,7 +451,7 @@ The overhead grows with $d_1$, so we want the trie depth to be as low as possibl
 On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
 Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KiB).
 We denote that maximum size as $m$.
-During phase~1 a $\texttt{Subtrie}$ reply contains at most $d_1$ nodes
+During phase~1 a $\texttt{Accounts}$ reply contains at most $d_1$ nodes
 and its average number of leaves is $\frac{t}{16^{d_1}}$,
 which gives us
 \begin{equation}
@@ -425,7 +498,9 @@ Reiterating, the convergence condition for the state trie alone is
 \end{equation}
 For the Ethereum main net as of February 2019 this critical minimum bandwidth is about 0.4 Mbit/s.
 Table~\ref{tab:emulated_time} shows performance results of an emulation of the sync protocol for various state trie sizes.
-The modelling code used is hosted at \href{https://github.com/yperbasis/silkworm/blob/master/lab/sync_emulator.cpp}{https://github.com/yperbasis/silkworm}.
+The modelling code used is hosted at
+\href{https://github.com/yperbasis/silkworm/blob/master/lab/sync_emulator.cpp}{https://github.com/yperbasis/silkworm}.
+Network latency was ignored in the emulation.
 
 \begin{table}[h]
 \begin{tabular}{ r | c c c }

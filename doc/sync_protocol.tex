@@ -112,7 +112,8 @@ TODO: prefix encoding consistent with the Yellow Paper.\\
 \textbf{StateNodes} (0x23)
 
 [reqID: $\mathbb{N}$,
-[node$_0$: $\mathbb{B}$, node$_1$: $\mathbb{B}$, ...]]
+[node$_0$: $\mathbb{B}$, node$_1$: $\mathbb{B}$, ...],
+[avalableState$_0$, ...]$_{opt}$]
 \medskip
 
 Reply to $\texttt{GetStateNodes}$.
@@ -121,11 +122,31 @@ TODO: available state roots.\\
 
 \textbf{GetAccounts} (0x24)
 
-TODO\\
+[reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$, [prefix$_0$: $\mathbb{Y}$, prefix$_1$: $\mathbb{Y}$, ...]]
+\medskip
+
+TODO: description.\\
 
 \textbf{Accounts} (0x25)
 
-TODO\\
+[reqID: $\mathbb{N}$,
+
+\quad [
+
+\qquad [status$_0$, [[key$^0_{0}$: $\mathbb{B}_{32}$, val$^0_{0}$: $\mathbb{B}$], [key$^1_{0}$: $\mathbb{B}_{32}$, val$^1_{0}$: $\mathbb{B}$], ...]$_{opt}$],
+
+\qquad [status$_1$, [[key$^0_{1}$: $\mathbb{B}_{32}$, val$^0_{1}$: $\mathbb{B}$], [key$^1_{1}$: $\mathbb{B}_{32}$, val$^1_{1}$: $\mathbb{B}$], ...]$_{opt}$],
+
+\qquad ...
+
+\quad ],
+
+\quad [avalableState$_0$, ...]$_{opt}$
+
+]
+\medskip
+
+Reply to $\texttt{GetAccounts}$.\\
 
 \textbf{GetStorageSizes} (0x26)
 
@@ -138,7 +159,8 @@ Request storage trie sizes as of a specific state.\\
 \textbf{StorageSizes} (0x27)
 
 [reqID: $\mathbb{N}$,
-[numLeaves$_0$: $\mathbb{N} | \varnothing$, numLeaves$_1$: $\mathbb{N} | \varnothing$, ...]]
+[numLeaves$_0$: $\mathbb{N} | \varnothing$, numLeaves$_1$: $\mathbb{N} | \varnothing$, ...],
+[avalableState$_0$, ...]$_{opt}$]
 \medskip
 
 Reply to $\texttt{GetStorageSizes}$.
@@ -148,9 +170,9 @@ The peer may return the empty list $\varnothing$ instead of the number of leaves
 
 [reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
 
-\quad [account$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
+\quad [addressHash$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
 
-\quad [account$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
+\quad [addressHash$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
 
 \quad ...
 
@@ -162,37 +184,32 @@ Request storage trie nodes as of a specific state.\\
 \textbf{StorageNodes} (0x29)
 
 [reqID: $\mathbb{N}$,
-[node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ...],
-[node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ...],
-...]
+
+\quad [
+
+\qquad [node$^0_0$: $\mathbb{B}$, node$^0_1$: $\mathbb{B}$, ...],
+
+\qquad [node$^1_0$: $\mathbb{B}$, node$^1_1$: $\mathbb{B}$, ...],
+
+\qquad ...
+
+\quad ],
+
+\quad [avalableState$_0$, ...]$_{opt}$
+
+]
 \medskip
 
 Reply to $\texttt{GetStorageNodes}$.
 The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.\\
 
-\textbf{GetStorageLeaves} (0x2a)
+\textbf{GetStorageValues} (0x2a)
 
 [reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
 
-\quad [account$^0$: $\mathbb{B}_{32} | \varnothing$,
+\quad [addressHash$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
 
-\qquad [prefix$^0_0$: $\mathbb{Y}$, fromLevel$^0_0$: $\mathbb{N}$],
-
-\qquad [prefix$^0_1$: $\mathbb{Y}$, fromLevel$^0_1$: $\mathbb{N}$],
-
-\qquad ...
-
-\quad ],
-
-\quad [account$^1$: $\mathbb{B}_{32} | \varnothing$,
-
-\qquad [prefix$^1_0$: $\mathbb{Y}$, fromLevel$^1_0$: $\mathbb{N}$],
-
-\qquad [prefix$^1_1$: $\mathbb{Y}$, fromLevel$^1_1$: $\mathbb{N}$],
-
-\qquad ...
-
-\quad ],
+\quad [addressHash$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
 
 \quad ...
 
@@ -204,36 +221,42 @@ The empty list $\varnothing$ instead of the account hash signifies state rather 
 $\texttt{fromLevel}$ specifies the number of upper nodes to be excluded from the proof in case the chain has not moved ahead
 (reply block is not newer).\\
 
-\textbf{StorageLeaves} (0x2b)
+\textbf{StorageValues} (0x2b)
 
 [reqID: $\mathbb{N}$,
 
 \quad [
 
-\qquad [[node$^0_{00}$: $\mathbb{B}$, node$^0_{01}$: $\mathbb{B}$, ...], tooManyLeaves$^0_0$, [key$^0_{00}$: $\mathbb{B}_{32}$, val$^0_{00}$: $\mathbb{B}$, key$^0_{01}$: $\mathbb{B}_{32}$, val$^0_{01}$: $\mathbb{B}$, ...]$_{opt}$],
+\qquad [
 
-\qquad [[node$^0_{10}$: $\mathbb{B}$, node$^0_{11}$: $\mathbb{B}$, ...], tooManyLeaves$^0_1$, [key$^0_{10}$: $\mathbb{B}_{32}$, val$^0_{10}$: $\mathbb{B}$, key$^0_{11}$: $\mathbb{B}_{32}$, val$^0_{11}$: $\mathbb{B}$, ...]$_{opt}$],
+\quad \qquad [status$^0_0$, [[key$^0_{00}$: $\mathbb{B}_{32}$, val$^0_{00}$: $\mathbb{B}$], [key$^0_{01}$: $\mathbb{B}_{32}$, val$^0_{01}$: $\mathbb{B}$], ...]$_{opt}$],
+
+\quad \qquad [status$^0_1$, [[key$^0_{10}$: $\mathbb{B}_{32}$, val$^0_{10}$: $\mathbb{B}$], [key$^0_{11}$: $\mathbb{B}_{32}$, val$^0_{11}$: $\mathbb{B}$], ...]$_{opt}$],
+
+\quad \qquad ...
+
+\qquad ],
+
+\qquad [
+
+\quad \qquad [status$^1_0$, [[key$^1_{00}$: $\mathbb{B}_{32}$, val$^1_{00}$: $\mathbb{B}$], [key$^1_{01}$: $\mathbb{B}_{32}$, val$^1_{01}$: $\mathbb{B}$], ...]$_{opt}$],
+
+\quad \qquad [status$^1_1$, [[key$^1_{10}$: $\mathbb{B}_{32}$, val$^1_{10}$: $\mathbb{B}$], [key$^1_{11}$: $\mathbb{B}_{32}$, val$^1_{11}$: $\mathbb{B}$], ...]$_{opt}$],
+
+\quad \qquad ...
+
+\qquad ],
 
 \qquad ...
 
 \quad ],
 
-\quad [
-
-\qquad [[node$^1_{00}$: $\mathbb{B}$, node$^1_{01}$: $\mathbb{B}$, ...], tooManyLeaves$^1_0$, [key$^1_{00}$: $\mathbb{B}_{32}$, val$^1_{00}$: $\mathbb{B}$, key$^1_{01}$: $\mathbb{B}_{32}$, val$^1_{01}$: $\mathbb{B}$, ...]$_{opt}$],
-
-\qquad [[node$^1_{10}$: $\mathbb{B}$, node$^1_{11}$: $\mathbb{B}$, ...], tooManyLeaves$^1_1$, [key$^1_{10}$: $\mathbb{B}_{32}$, val$^1_{10}$: $\mathbb{B}$, key$^1_{11}$: $\mathbb{B}_{32}$, val$^1_{11}$: $\mathbb{B}$, ...]$_{opt}$],
-
-\qquad ...
-
-\quad ],
-
-\quad ...
+\quad [avalableState$_0$, ...]$_{opt}$
 
 ]
 \medskip
 
-Reply to $\texttt{GetStorageLeaves}$.
+Reply to $\texttt{GetStorageValues}$.
 Returns subtrie leaves with proofs as of block \#$\texttt{blockNumber} \geq \texttt{blockAtLeast}$.
 If the peer does not have information regarding a particular subtrie, it should return the empty list $\varnothing$ (e.g. []) rather than [nodes, tooManyLeaves, leaves] for it.
 The nodes returned are the upper nodes of the trie down to the subtrie root, so that it is possible to verify that the leaves do belong to the Merkle Patricia trie in question.

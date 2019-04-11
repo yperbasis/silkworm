@@ -156,7 +156,7 @@ from subtries corresponding to specified prefixes.\\
 \medskip
 
 Reply to $\texttt{GetAccounts}$.
-Returns accounts that match requested prefixes as key--value pairs\footnote{It
+Returns accounts that match requested prefixes as key-value pairs\footnote{It
 is feasible to return suffixes rather than full keys given that prefixes are known,
 but we deem the performance gain to be insignificant.}.
 The peer may only return either all leaves of a subtrie or nothing.
@@ -281,7 +281,7 @@ Similar to $\texttt{GetAccounts}$.\\
 \medskip
 
 Reply to $\texttt{GetStorageData}$.
-Returns storage data that match requested prefixes as key--value pairs.
+Returns storage data that match requested prefixes as key-value pairs.
 The peer may only return either all leaves of the subtrie or nothing.
 $\texttt{status}$ values are the same as in $\texttt{Accounts}$.
 
@@ -444,16 +444,16 @@ $\texttt{GetStorageSizes}$ provides a means of finding out storage sizes.
 In this analysis, we assume that all tries are well balanced.
 We also assume that all top nodes up to a certain trie level $i$ are branch nodes, not leaf nor extension nodes.
 This is a reasonable assumption if $i$ is not too big---see~\cite{akhunov_1x_workshop_part2}.
-And we simplify the byte size function of the replies\footnote{Total
+Also, we simplify the byte size function of the replies\footnote{Total
 request size is much smaller than total reply size, so we ignore requests as well.},
 ignoring overheads caused by auxiliary data such as $\texttt{reqID}$,
 RLP encoding, and the network layer.
 %TODO: internal notation consistency + cross-check against the Yellow Paper
 Let us introduce some notation:
 
-$n$ -- the average node size in bytes,
-equal essentially to the size of a branch node as most nodes transferred will be branch nodes.
-530 bytes is a good estimate.
+$n$ -- the average node size in bytes.
+$n$ is essentially equal to the size of a branch node as most nodes transferred are branch nodes.
+$n = 530$ is a reasonable estimate.
 
 $l$ -- the average leaf size in bytes, counting both key and value.
 For the state trie it is the average account size plus the size of its hash key,
@@ -491,7 +491,7 @@ which gives us
 \begin{equation}
     d_1 n + \frac{t}{16^{d_1}} l \leq m
 \end{equation}
-Fot the state trie the limit of 32 KiB yields $d_1 = 5$.
+For the state trie the limit of 32 KiB yields $d_1 = 5$.
 
 Let $C(d, \delta)$ be the maximum number of trie nodes from the upper $d$ levels of a trie that can change (on average) per block\footnote{To
 be more precise mathematically, $C(d, \delta)$ is an upper bound on the expected value.}.

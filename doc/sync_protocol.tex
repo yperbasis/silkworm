@@ -81,7 +81,7 @@ at ETH v64 Wire Protocol Ring.}:\\
 \medskip
 
 Request EVM code of smart contracts.
-Just like $\texttt{GetNodeData}$ from the current version (eth/63) of Ethereum Wire Protocol \cite{wire_protocol}, except:
+The operative is just like $\texttt{GetNodeData}$ from the current version (eth/63) of Ethereum Wire Protocol (\cite{wire_protocol}), except:
 \begin{enumerate}
 \item includes a request ID;
 \item will only return bytecode with the corresponding hash, not arbitrary node data.
@@ -96,7 +96,7 @@ Just like $\texttt{GetNodeData}$ from the current version (eth/63) of Ethereum W
 
 Reply to $\texttt{GetBytecode}$.
 Bytecode position in the response list must correspond to the position in the request list;
-the empty list $\varnothing$ should be used for omitted bytecodes.\\
+the empty list $\varnothing$ (i.e. []) should be used for omitted bytecodes.\\
 
 \textbf{GetStateNodes} (0x22)
 
@@ -133,7 +133,8 @@ In that case the peer should return blocks for which requested nodes are availab
 [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$, [prefix$_0$: $\mathbb{Y}$, prefix$_1$: $\mathbb{Y}$, ...]]
 \medskip
 
-Request state trie leaves (i.e. accounts) as of a specific block.\\
+Request state trie leaves (i.e. accounts) as of a specific block
+from subtries corresponding to specified prefixes.\\
 
 \textbf{Accounts} (0x25)
 
@@ -158,7 +159,17 @@ Reply to $\texttt{GetAccounts}$.
 Returns accounts that match requested prefixes as key--value pairs\footnote{It
 is feasible to return suffixes rather than full keys given that prefixes are known,
 but we deem the performance gain to be insignificant.}.
-TODO: status.\\
+The peer may only return either all leaves of a subtrie or nothing.
+$\texttt{status}$ must take one of the following values:
+\begin{itemize}
+\item 0 -- success;
+\item 1 -- no data as of requested block, the peer should return a list of its available blocks;
+\item 2 -- too many leaves matching the prefix.
+\end{itemize}
+We propose to support up to 4096 leaves per prefix
+and return $\texttt{status} = 2$ for bigger subtries.
+
+Note that state trie replies do not inline storage tries, unlike Leaf Sync.\\
 
 \textbf{GetStorageSizes} (0x26)
 
@@ -177,7 +188,7 @@ Request storage trie sizes as of a specific block.\\
 
 Reply to $\texttt{GetStorageSizes}$.
 The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
-In that case the peer should return state roots for which requested data is available.\\
+In that case the peer should return blocks for which requested data is available.\\
 
 \textbf{GetStorageNodes} (0x28)
 
@@ -192,7 +203,8 @@ In that case the peer should return state roots for which requested data is avai
 ]
 \medskip
 
-Request storage trie nodes as of a specific block.\\
+Request storage trie nodes as of a specific block.
+Similar to $\texttt{GetStateNodes}$.\\
 
 \textbf{StorageNodes} (0x29)
 
@@ -214,7 +226,7 @@ Request storage trie nodes as of a specific block.\\
 \medskip
 
 Reply to $\texttt{GetStorageNodes}$.
-The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.\\
+Similar to $\texttt{StateNodes}$.\\
 
 \textbf{GetStorageData} (0x2a)
 
@@ -229,9 +241,11 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 ]
 \medskip
 
-Request storage subtrie leaves as of a specific block.\\
+Request storage subtrie leaves as of a specific block.
+Similar to $\texttt{GetAccounts}$.\\
 
 \textbf{StorageData} (0x2b)
+\nopagebreak
 
 [reqID: $\mathbb{N}$,
 
@@ -268,9 +282,8 @@ Request storage subtrie leaves as of a specific block.\\
 
 Reply to $\texttt{GetStorageData}$.
 Returns storage data that match requested prefixes as key--value pairs.
-TODO: status; how many is too many?
 The peer may only return either all leaves of the subtrie or nothing.
-Note that state trie replies do not inline storage tries, unlike Leaf Sync.
+$\texttt{status}$ values are the same as in $\texttt{Accounts}$.
 
 \section{Suggested Sync Algorithm}
 
@@ -543,7 +556,5 @@ TODO: conclusion.
 
 \bibliographystyle{plainnat}
 \bibliography{biblio}
-
-% TODO reference Firehose Sync, Light client protocol, etc.
 
 \end{document}

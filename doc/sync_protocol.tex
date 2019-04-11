@@ -36,7 +36,7 @@
 \section{Introduction}
 
 It currently takes new Ethereum full nodes a few hours
-to synchronise the blockchain state using the eth/63 protocol \cite{wire_protocol}.
+to synchronise the blockchain state using the eth/63 protocol (\cite{wire_protocol}).
 Moreover, the growing state size might potentially result in complete sync failure,
 as described in \cite{akhunov_1x_workshop_part1}.
 
@@ -46,7 +46,8 @@ In our sync algorithm seeders reply with data as of their most recent block.
 That results in an inconsistent trie on the leecher initially ("phase 1"),
 which is patched later on ("phase 2").
 The idea is similar to that of Leaf Sync (\cite{leaf_sync}).
-Other sources of inspiration include BitTorrent, Parity's Warp Sync \cite{warp_sync}, and Firehose Sync \cite{firehose}.
+Other sources of inspiration include BitTorrent, Parity's Warp Sync (\cite{warp_sync}),
+and Firehose Sync (\cite{firehose}).
 
 Further, we strive to make the protocol work for light clients like Mustekala---see also \cite{light_client_protocol}.
 
@@ -120,7 +121,7 @@ The prefix encoding is described in Appendix C of \cite{yellow_paper}
 
 [reqID: $\mathbb{N}$,
 [node$_0$: $\mathbb{B}$, node$_1$: $\mathbb{B}$, ...],
-[availableState$_0$, ...]$_{opt}$]
+[availableStateRoot$_0$: $\mathbb{B}_{32}$, ...]$_{opt}$]
 \medskip
 
 Reply to $\texttt{GetStateNodes}$.
@@ -140,15 +141,15 @@ Request state trie leaves (i.e. accounts) as of a specific state.\\
 
 \quad [
 
-\qquad [status$_0$, [[key$^0_{0}$: $\mathbb{B}_{32}$, val$^0_{0}$: $\mathbb{B}$], [key$^1_{0}$: $\mathbb{B}_{32}$, val$^1_{0}$: $\mathbb{B}$], ...]$_{opt}$],
+\qquad [status$_0$: $\mathbb{N}$, [[key$^0_{0}$: $\mathbb{B}_{32}$, val$^0_{0}$: $\mathbb{B}$], [key$^1_{0}$: $\mathbb{B}_{32}$, val$^1_{0}$: $\mathbb{B}$], ...]$_{opt}$],
 
-\qquad [status$_1$, [[key$^0_{1}$: $\mathbb{B}_{32}$, val$^0_{1}$: $\mathbb{B}$], [key$^1_{1}$: $\mathbb{B}_{32}$, val$^1_{1}$: $\mathbb{B}$], ...]$_{opt}$],
+\qquad [status$_1$: $\mathbb{N}$, [[key$^0_{1}$: $\mathbb{B}_{32}$, val$^0_{1}$: $\mathbb{B}$], [key$^1_{1}$: $\mathbb{B}_{32}$, val$^1_{1}$: $\mathbb{B}$], ...]$_{opt}$],
 
 \qquad ...
 
 \quad ],
 
-\quad [availableState$_0$, ...]$_{opt}$
+\quad [availableStateRoot$_0$: $\mathbb{B}_{32}$, ...]$_{opt}$
 
 ]
 \medskip
@@ -171,7 +172,7 @@ Request storage trie sizes as of a specific state.\\
 
 [reqID: $\mathbb{N}$,
 [numLeaves$_0$: $\mathbb{N} | \varnothing$, numLeaves$_1$: $\mathbb{N} | \varnothing$, ...],
-[availableState$_0$, ...]$_{opt}$]
+[availableStateRoot$_0$: $\mathbb{B}_{32}$, ...]$_{opt}$]
 \medskip
 
 Reply to $\texttt{GetStorageSizes}$.
@@ -207,7 +208,7 @@ Request storage trie nodes as of a specific state.\\
 
 \quad ],
 
-\quad [availableState$_0$, ...]$_{opt}$
+\quad [availableStateRoot$_0$: $\mathbb{B}_{32}$, ...]$_{opt}$
 
 ]
 \medskip
@@ -215,7 +216,7 @@ Request storage trie nodes as of a specific state.\\
 Reply to $\texttt{GetStorageNodes}$.
 The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.\\
 
-\textbf{GetStorageValues} (0x2a)
+\textbf{GetStorageData} (0x2a)
 
 [reqID: $\mathbb{N}$, stateRoot: $\mathbb{B}_{32}$,
 
@@ -230,7 +231,7 @@ The empty list $\varnothing$ returned instead of a node means that the peer does
 
 Request storage subtrie leaves as of a specific state.\\
 
-\textbf{StorageValues} (0x2b)
+\textbf{StorageData} (0x2b)
 
 [reqID: $\mathbb{N}$,
 
@@ -238,9 +239,9 @@ Request storage subtrie leaves as of a specific state.\\
 
 \qquad [
 
-\quad \qquad [status$^0_0$, [[key$^0_{00}$: $\mathbb{B}_{32}$, val$^0_{00}$: $\mathbb{B}$], [key$^0_{01}$: $\mathbb{B}_{32}$, val$^0_{01}$: $\mathbb{B}$], ...]$_{opt}$],
+\quad \qquad [status$^0_0$: $\mathbb{N}$, [[key$^0_{00}$: $\mathbb{B}_{32}$, val$^0_{00}$: $\mathbb{B}$], [key$^0_{01}$: $\mathbb{B}_{32}$, val$^0_{01}$: $\mathbb{B}$], ...]$_{opt}$],
 
-\quad \qquad [status$^0_1$, [[key$^0_{10}$: $\mathbb{B}_{32}$, val$^0_{10}$: $\mathbb{B}$], [key$^0_{11}$: $\mathbb{B}_{32}$, val$^0_{11}$: $\mathbb{B}$], ...]$_{opt}$],
+\quad \qquad [status$^0_1$: $\mathbb{N}$, [[key$^0_{10}$: $\mathbb{B}_{32}$, val$^0_{10}$: $\mathbb{B}$], [key$^0_{11}$: $\mathbb{B}_{32}$, val$^0_{11}$: $\mathbb{B}$], ...]$_{opt}$],
 
 \quad \qquad ...
 
@@ -248,9 +249,9 @@ Request storage subtrie leaves as of a specific state.\\
 
 \qquad [
 
-\quad \qquad [status$^1_0$, [[key$^1_{00}$: $\mathbb{B}_{32}$, val$^1_{00}$: $\mathbb{B}$], [key$^1_{01}$: $\mathbb{B}_{32}$, val$^1_{01}$: $\mathbb{B}$], ...]$_{opt}$],
+\quad \qquad [status$^1_0$: $\mathbb{N}$, [[key$^1_{00}$: $\mathbb{B}_{32}$, val$^1_{00}$: $\mathbb{B}$], [key$^1_{01}$: $\mathbb{B}_{32}$, val$^1_{01}$: $\mathbb{B}$], ...]$_{opt}$],
 
-\quad \qquad [status$^1_1$, [[key$^1_{10}$: $\mathbb{B}_{32}$, val$^1_{10}$: $\mathbb{B}$], [key$^1_{11}$: $\mathbb{B}_{32}$, val$^1_{11}$: $\mathbb{B}$], ...]$_{opt}$],
+\quad \qquad [status$^1_1$: $\mathbb{N}$, [[key$^1_{10}$: $\mathbb{B}_{32}$, val$^1_{10}$: $\mathbb{B}$], [key$^1_{11}$: $\mathbb{B}_{32}$, val$^1_{11}$: $\mathbb{B}$], ...]$_{opt}$],
 
 \quad \qquad ...
 
@@ -260,13 +261,13 @@ Request storage subtrie leaves as of a specific state.\\
 
 \quad ],
 
-\quad [availableState$_0$, ...]$_{opt}$
+\quad [availableStateRoot$_0$: $\mathbb{B}_{32}$, ...]$_{opt}$
 
 ]
 \medskip
 
-Reply to $\texttt{GetStorageValues}$.
-Returns storage values that match requested prefixes as key--value pairs.
+Reply to $\texttt{GetStorageData}$.
+Returns storage data that match requested prefixes as key--value pairs.
 TODO: status; how many is too many?
 The peer may only return either all leaves of the subtrie or nothing.
 Note that state trie replies do not inline storage tries, unlike Leaf Sync.

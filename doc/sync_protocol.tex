@@ -458,7 +458,7 @@ $n = 530$ is a reasonable estimate.
 $l$ -- the average leaf size in bytes, counting both key and value.
 For the state trie it is the average account size plus the size of its hash key,
 resulting in about 115 bytes.
-TODO: storage trie.
+For storage tries $l \approx 50$.
 
 $t$ -- total number of leaves in a trie.
 For the state trie it is the number of accounts,
@@ -552,7 +552,12 @@ Convergence analysis for large storage tries (e.g. CryptoKitties) is similar to 
 
 \section{Conclusion}
 
-TODO: conclusion.
+Proposed Red Queen's protocol and algorithm can alleviate slow synchronisation times
+caused by the large size of the Ethereum blockchain state.
+The protocol is also flexible enough to cater for light clients, not only full nodes.
+Our emulation results are promising and corroborate protocol's good scalability and low overhead.
+A natural next step forward is to fully implement Red Queen's in a proper Ethereum client
+and fledge it into a next version of the standard Ethereum Wire Protocol.
 
 \bibliographystyle{plainnat}
 \bibliography{biblio}

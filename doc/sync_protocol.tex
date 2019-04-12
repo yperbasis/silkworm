@@ -282,7 +282,7 @@ Similar to $\texttt{GetAccounts}$.\\
 
 Reply to $\texttt{GetStorageData}$.
 Returns storage data that match requested prefixes as key-value pairs.
-The peer may only return either all leaves of the subtrie or nothing.
+The peer may only return either all leaves of a subtrie or nothing.
 $\texttt{status}$ values are the same as in $\texttt{Accounts}$.
 
 \section{Suggested Sync Algorithm}
@@ -311,10 +311,11 @@ The algorithm preserves the following invariant: parent's block is always no old
 During phase 1 the leecher requests each possible prefix of size $d_1$ exactly once
 (barring network failures and faulty peers).
 When sending a request,
-the leecher sets its $\texttt{blockAtLeast}$ to the block of the root of the current (partially populated) trie,
-$\texttt{fromLevel}$ to the number of populated nodes down the path/prefix that are of the same block as the root.
-Having received a reply, the leecher verifies its proof.
-If the proof is valid, the leecher writes received leaves to the database and updates the nodes along the prefix/path.
+the leecher sets its $\texttt{blockHash}$ to the latest block.
+For simplicity's sake, we assume that all blocks are strictly ordered and ignore chain re-orgs.
+Having received a reply,
+the leecher might choose to verify received leaves by asking for the intermediate nodes ($\texttt{GetStateNodes}$) to the subtrie root.
+Then the leecher writes the leaves to the database and updates the nodes along the prefix/path.
 By the end of phase 1, the leecher will have all accounts populated, albeit inconsistently.
 
 \begin{figure}[h]
@@ -411,16 +412,15 @@ By the end of phase 1, the leecher will have all accounts populated, albeit inco
 Figure~\ref{fig:phase1_example} shows an example of a phase 1 step with $d_1 = 3$ and $d_2 = 4$.
 Say the leecher is interested in prefix $<$7a3$>$.
 The trie on the left represents leecher's state before sending a request.
-Root's block is 5, so it sets $\texttt{blockAtLeast} = 5$.
-The leecher sets $\texttt{fromLevel}$ to 1 since there is no need to re-send the root as part of the proof.
-It cannot set $\texttt{fromLevel}$ higher as the other nodes along the path are older than the root and thus have to be refreshed.
-Suppose that the seeder replies with data as of a newer block \#6.
-Since the block has changed, the seeder ignores $\texttt{fromLevel}$ and sends full proof.
-The leecher saves received leaves to its database and updates the nodes  ($<>$, $<$7$>$, $<$7a$>$, $<$7a3$>$).
+Root's block is 5, so the leecher sets $\texttt{blockHash}$ accordingly.
+Suppose that the seeder replies that it only has data as of a newer block \#6.
+The leecher sends $\texttt{GetAccounts}$ again with updated $\texttt{blockHash}$.
+Then it saves received leaves to its database and updates the nodes  ($<>$, $<$7$>$, $<$7a$>$, $<$7a3$>$).
 The result is displayed on the right of Figure~\ref{fig:phase1_example}.
 
 At the beginning of phase 2, the leecher updates the trie in order to figure out which subtries have to be refreshed.
-For that, it uses the $\texttt{GetNodeData2}$ operative.
+% TODO: double check the articles
+For that, it uses the $\texttt{GetStateNodes}$ operative.
 The leecher refreshes the trie level by level, starting from the root (level 0) and descending to the level $d_2 - 1$.
 Nodes at the same level may be requested in batch.
 Having refreshed nodes for a level, it knows which child nodes one level below have to be refreshed since the leecher can compare their hashes it currently holds with received fresh data.

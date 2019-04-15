@@ -42,10 +42,8 @@ uint8_t Hints::optimal_phase2_depth() const {
 uint8_t Hints::optimal_phase1_depth() const {
   for (uint8_t i = 1; i < 16; ++i) {
     const uint64_t num_requests = 1ull << (i * 4);
-    const uint64_t reply_size_times_num_requests =
-        i * node_size * num_requests + num_leaves * leaf_size;
 
-    if (reply_size_times_num_requests <= approx_max_reply_size * num_requests) {
+    if (num_leaves * leaf_size <= approx_max_reply_size * num_requests) {
       return i;
     }
   }

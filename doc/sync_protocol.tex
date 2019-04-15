@@ -17,10 +17,10 @@
 
 \begin{abstract}
     As of early 2019, it takes new Ethereum full nodes a few hours
-    to synchronise the blockchain state using the eth/63 protocol \cite{wire_protocol}.
-    We propose a new protocol and an algorithm for Ethereum snapshot sync
-    that is faster and more robust in respect of the growing state size.
-    The new protocol is also tailored towards the needs of light clients
+    to synchronise the blockchain state using eth/63 protocol.
+    We propose a new protocol and an algorithm for Ethereum snapshot synchronisation
+    that is faster and more robust with respect to the growing state size.
+    The new protocol is also tailored towards needs of light clients
     and allows data storage formats other than the canonical Merkle Patricia trie.
     Performance results from a model implementation are encouraging.
 \end{abstract}
@@ -36,14 +36,14 @@
 \section{Introduction}
 
 It currently takes new Ethereum full nodes a few hours
-to synchronise the blockchain state using the eth/63 protocol (\cite{wire_protocol}).
+to synchronise the blockchain state using eth/63 protocol (\cite{wire_protocol}).
 Moreover, the growing state size might potentially result in complete sync failure,
 as described in \cite{akhunov_1x_workshop_part1}.
 
 As part of the Ethereum 1x effort, we propose a new sync protocol and algorithm,
 which we call Red Queen's.
 In our sync algorithm seeders reply with data as of their most recent block.
-That results in an inconsistent trie on the leecher initially ("phase 1"),
+That results in an inconsistent trie on a leecher initially ("phase 1"),
 which is patched later on ("phase 2").
 The idea is similar to that of Leaf Sync (\cite{leaf_sync}).
 Other sources of inspiration include BitTorrent, Parity's Warp Sync (\cite{warp_sync}),
@@ -55,8 +55,8 @@ N.B. In this document, we only discuss snapshot synchronisation rather than sync
 
 \section{Notation}
 
-We mostly follow the conventions and notations of the Yellow Paper (\cite{yellow_paper}),
-for instance, $\mathbb{Y}$ denotes the set of nibble sequences.
+We mostly follow the conventions and notations of the Yellow Paper (\cite{yellow_paper}).
+For instance, $\mathbb{Y}$ denotes the set of nibble sequences.
 We use the letter $\pi$ for prefixes of state or storage trie keys $\mathbf{k} \in \mathbb{B}_{32}$,
 \begin{equation}
     \pi \in \mathbb{Y} \; \land \; ||\pi|| \leq 64
@@ -96,7 +96,7 @@ The operative is just like $\texttt{GetNodeData}$ from the current version (eth/
 
 Reply to $\texttt{GetBytecode}$.
 Bytecode position in the response list must correspond to the position in the request list;
-the empty list $\varnothing$ (i.e. []) should be used for omitted bytecodes.\\
+an empty list $\varnothing$ (i.e. []) should be used for omitted bytecodes.\\
 
 \textbf{GetStateNodes} (0x22)
 
@@ -125,7 +125,7 @@ The prefix encoding is described in Appendix C of \cite{yellow_paper}
 \medskip
 
 Reply to $\texttt{GetStateNodes}$.
-The empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
+An empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
 In that case the peer should return blocks for which requested nodes are available.\\
 
 \textbf{GetAccounts} (0x24)
@@ -163,7 +163,7 @@ The peer may only return either all leaves of a subtrie or nothing.
 $\texttt{status}$ must take one of the following values:
 \begin{itemize}
 \item 0 -- success;
-\item 1 -- no data as of requested block, the peer should return a list of its available blocks;
+\item 1 -- no data as of the requested block, the peer should return a list of its available blocks;
 \item 2 -- too many leaves matching the prefix.
 \end{itemize}
 We propose to support up to 4096 leaves per prefix
@@ -187,7 +187,7 @@ Request storage trie sizes as of a specific block.\\
 \medskip
 
 Reply to $\texttt{GetStorageSizes}$.
-The peer may return the empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
+The peer may return an empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
 In that case the peer should return blocks for which requested data is available.\\
 
 \textbf{GetStorageNodes} (0x28)
@@ -289,16 +289,17 @@ $\texttt{status}$ values are the same as in $\texttt{Accounts}$.
 
 Here we suggest a possible algorithm for full state and storage snapshot synchronisation using the protocol specified above;
 light clients are out of scope.
-We describe a modus operandi where the seeder replies with its most recent data,
-and the leecher has to handle trie data coming from different blocks.
+We describe a modus operandi where a seeder replies with its most recent data,
+and a leecher has to handle trie data coming from different blocks.
 We suggest to perform synchronisation in two stages:
-during phase~1 the leecher obtains leaf data (with the necessary proof nodes) as of any reasonable block height,
+during phase~1 the leecher obtains leaf data\footnote{possibly with necessary proof nodes},
+probably as of different blocks,
 while during phase~2 it patches up the trie in order to catch up to the most recent block\footnote{The
 Red Queen's race is a nice metaphor for phase 2.}.
 The idea was proposed in \cite{leaf_sync}.
 
 Let us focus on the state trie for the moment; we shall come back to storage sync later.
-For phase 1 we suggest sending $\texttt{GetAccounts}$ requests with a single prefix per request, ditto for phase 2.
+For phase~1 we suggest sending $\texttt{GetAccounts}$ requests with a single prefix per request, ditto for phase 2.
 All requested prefixes are of size $d_1$ during phase 1 and of $d_2$ during phase 2, $d_2 \geq d_1$.
 We elaborate on the values of $d_1$ and $d_2$ later.
 The leecher gradually builds the first upper $d_2$ levels of the Merkle Patricia trie\footnote{$d_2$
@@ -306,16 +307,16 @@ is small enough so that we can reasonably assume that (almost) all nodes in ques
 see \cite{akhunov_1x_workshop_part2}.}.
 (The full trie can be constructed if so desired, but only the upper $d_2$ levels are necessary for our algorithm.)
 Populated nodes are marked with the block number as of they are valid.
+For simplicity's sake, we assume that all blocks are strictly ordered and ignore chain re-orgs.
 The algorithm preserves the following invariant: parent's block is always no older than child's block.
 
 During phase 1 the leecher requests each possible prefix of size $d_1$ exactly once
 (barring network failures and faulty peers).
 When sending a request,
 the leecher sets its $\texttt{blockHash}$ to the latest block.
-For simplicity's sake, we assume that all blocks are strictly ordered and ignore chain re-orgs.
 Having received a reply,
 the leecher might choose to verify received leaves by asking for the intermediate nodes ($\texttt{GetStateNodes}$) to the subtrie root.
-Then the leecher writes the leaves to the database and updates the nodes along the prefix/path.
+Then the leecher saves the leaves to the database and updates the nodes along the prefix/path.
 By the end of phase 1, the leecher will have all accounts populated, albeit inconsistently.
 
 \begin{figure}[h]
@@ -405,25 +406,28 @@ By the end of phase 1, the leecher will have all accounts populated, albeit inco
   \node at (3.1, 3.6) {7};
   \node at (5.4, 3.6) {9};
 \end{tikzpicture}
-\caption{Illustration of phase 1 sync. Nodes are labelled with block numbers, and edges are labelled with nibbles.}
+\caption{Illustration of phase 1 sync. Nodes are labelled with block heights, and edges are labelled with prefix nibbles.}
 \label{fig:phase1_example}
 \end{figure}
 
 Figure~\ref{fig:phase1_example} shows an example of a phase 1 step with $d_1 = 3$ and $d_2 = 4$.
 Say the leecher is interested in prefix $<$7a3$>$.
 The trie on the left represents leecher's state before sending a request.
-Root's block is 5, so the leecher sets $\texttt{blockHash}$ accordingly.
-Suppose that the seeder replies that it only has data as of a newer block \#6.
-The leecher sends $\texttt{GetAccounts}$ again with updated $\texttt{blockHash}$.
-Then it saves received leaves to its database and updates the nodes  ($<>$, $<$7$>$, $<$7a$>$, $<$7a3$>$).
+Root's block is 5,
+but there is a newer block \#6,
+so the leecher sets $\texttt{blockHash}$ accordingly.
+After a reply from the seeder,
+the leecher saves received leaves to its database and updates the nodes  ($<>$, $<$7$>$, $<$7a$>$, $<$7a3$>$).
 The result is displayed on the right of Figure~\ref{fig:phase1_example}.
 
-At the beginning of phase 2, the leecher updates the trie in order to figure out which subtries have to be refreshed.
+At the beginning of phase 2, the leecher updates the trie in order to figure out which subtries have to be refreshed
+(to the most recent block).
 % TODO: double check the articles
 For that, it uses the $\texttt{GetStateNodes}$ operative.
 The leecher refreshes the trie level by level, starting from the root (level 0) and descending to the level $d_2 - 1$.
 Nodes at the same level may be requested in batch.
-Having refreshed nodes for a level, it knows which child nodes one level below have to be refreshed since the leecher can compare their hashes it currently holds with received fresh data.
+Having refreshed nodes for a level,
+the leecher knows which child nodes one level below have to be refreshed since the leecher can compare their hashes it currently holds with received recent data.
 Therefore, only the nodes that have actually changed need to be requested.
 The leecher might have to restart the node refresh process from the root if new blocks are mined in between;
 however, provided a certain network bandwidth, the process converges.
@@ -436,8 +440,8 @@ That concludes the algorithm for state trie synchronisation.
 
 The algorithm for storage sync is similar for large storage tries.
 Its parameters $d_1$ and $d_2$ are optimised based on the storage size as described in the next section.
-Small storage tries can be obtained in bulk requesting the empty prefix (meaning the entire trie) for a number of them in one go.
 $\texttt{GetStorageSizes}$ provides a means of finding out storage sizes.
+Small storage tries can be obtained in bulk requesting the empty prefix (meaning the entire trie) for a bunch of them in one go.
 
 \section{Performance Analysis}
 
@@ -471,9 +475,9 @@ $\tau$ -- the block time, currently 15 seconds.
 $\delta$ -- the average number of leaf changes per block for a trie.
 For the state trie it is in the ballpark of 300.
 
-$||R_n||$ -- the number of nodes in a reply $R$.
+$||R_n||$ -- the number of nodes in a reply $R$ (relevant for $\texttt{StateNodes}$ and $\texttt{StorageNodes}$).
 
-$||R_l||$ -- the number of leaves in a reply $R$.
+$||R_l||$ -- the number of leaves in a reply $R$ (relevant for $\texttt{Accounts}$ and $\texttt{StorageData}$).
 
 We use the following simplified formula for the byte size of a reply $R$
 \begin{equation}
@@ -485,11 +489,11 @@ The overhead grows with $d_1$, so we want the trie depth to be as low as possibl
 On the other hand, small $d_1$ implies a large number of leaves per reply, which can be brittle or inefficient.
 Thus we set $d_1$ to the smallest value possible such that the replies are, on average, no larger than a certain size (say 32 KiB).
 We denote that maximum size as $m$.
-During phase~1 a $\texttt{Accounts}$ reply contains at most $d_1$ nodes
-and its average number of leaves is $\frac{t}{16^{d_1}}$,
+During phase~1 a $\texttt{Accounts}$ reply
+contains $\frac{t}{16^{d_1}}$ leaves on average,
 which gives us
 \begin{equation}
-    d_1 n + \frac{t}{16^{d_1}} l \leq m
+    \frac{t}{16^{d_1}} l \leq m
 \end{equation}
 For the state trie the limit of 32 KiB yields $d_1 = 5$.
 
@@ -513,7 +517,7 @@ As previously described, the algorithm updates $d_2$ upper levels of the trie.
 So the upper bound on the number of nodes to be refreshed is $C(d_2, \delta)$.
 The number of subtries that need to be refreshed is no more than $\delta$;
 each subtrie has $\frac{t}{16^{d_2}}$ leaves on average.
-Summing up, the total reply size per 1 block necessary not to lag behind is less than
+Summing up, the total reply size per 1 block necessary not to lag behind is no more than
 \begin{equation}
     \texttt{RQS} \overset{\underset{\mathrm{def}}{}}{=}
     C(d_2, \delta) \, n + \delta \, \frac{t}{16^{d_2}} \, l
@@ -531,7 +535,7 @@ Reiterating, the convergence condition for the state trie alone is
     b > \frac{\texttt{RQS}}{\tau}
 \end{equation}
 For the Ethereum main net as of February 2019 this critical minimum bandwidth is about 0.4 Mbit/s.
-Table~\ref{tab:emulated_time} shows performance results of an emulation of the sync protocol for various state trie sizes.
+Table~\ref{tab:emulated_time} shows the performance results of an emulation of the sync algorithm for various state trie sizes.
 The modelling code used is hosted at
 \href{https://github.com/yperbasis/silkworm/blob/master/lab/sync_emulator.cpp}{https://github.com/yperbasis/silkworm}.
 Network latency was ignored in the emulation.

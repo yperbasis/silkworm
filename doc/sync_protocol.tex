@@ -308,7 +308,7 @@ see \cite{akhunov_1x_workshop_part2}.}.
 (The full trie can be constructed if so desired, but only the upper $d_2$ levels are necessary for our algorithm.)
 Populated nodes are marked with the block number as of they are valid.
 For simplicity's sake, we assume that all blocks are strictly ordered and ignore chain re-orgs.
-The algorithm preserves the following invariant: parent's block is always no older than child's block.
+The algorithm preserves a following invariant: parent's block is always no older than child's block.
 
 During phase 1 the leecher requests each possible prefix of size $d_1$ exactly once
 (barring network failures and faulty peers).
@@ -422,8 +422,7 @@ The result is displayed on the right of Figure~\ref{fig:phase1_example}.
 
 At the beginning of phase 2, the leecher updates the trie in order to figure out which subtries have to be refreshed
 (to the most recent block).
-% TODO: double check the articles
-For that, it uses the $\texttt{GetStateNodes}$ operative.
+For that, it uses $\texttt{GetStateNodes}$ operative.
 The leecher refreshes the trie level by level, starting from the root (level 0) and descending to the level $d_2 - 1$.
 Nodes at the same level may be requested in batch.
 Having refreshed nodes for a level,

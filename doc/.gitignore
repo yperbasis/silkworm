@@ -7,3 +7,6 @@
 *.fls
 *.fdb_latexmk
 *_temp.tex
+*.snm
+*.nav
+*.toc

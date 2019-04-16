@@ -126,7 +126,8 @@ The prefix encoding is described in Appendix C of \cite{yellow_paper}
 
 Reply to $\texttt{GetStateNodes}$.
 An empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
-In that case the peer should return blocks for which requested nodes are available.\\
+In that case the peer should return blocks for which requested nodes are available
+(as a list of $\texttt{availableBlock}$ hashes).\\
 
 \textbf{GetAccounts} (0x24)
 
@@ -169,12 +170,14 @@ $\texttt{status}$ must take one of the following values:
 We propose to support up to 4096 leaves per prefix
 and return $\texttt{status} = 2$ for bigger subtries.
 
-Note that state trie replies do not inline storage tries, unlike Leaf Sync.\\
+N.B. The list of available block (hashes) is not specific to a prefix,
+but should rather indicate blocks for which most (ideally all) requested prefixes are available.
+Also note that state trie replies do not inline storage tries, unlike Leaf Sync.\\
 
 \textbf{GetStorageSizes} (0x26)
 
 [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
-[addressHash$_0$: $\mathbb{B}_{32}$, addressHash$_1$: $\mathbb{B}_{32}$, ...]]
+[accountAddress$_0$: $\mathbb{B}_{20}$, accountAddress$_1$: $\mathbb{B}_{20}$, ...]]
 \medskip
 
 Request storage trie sizes as of a specific block.\\
@@ -194,9 +197,9 @@ In that case the peer should return blocks for which requested data is available
 
 [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
 
-\quad [addressHash$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
+\quad [accountAddress$^0$: $\mathbb{B}_{20}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
 
-\quad [addressHash$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
+\quad [accountAddress$^1$: $\mathbb{B}_{20}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
 
 \quad ...
 
@@ -232,9 +235,9 @@ Similar to $\texttt{StateNodes}$.\\
 
 [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
 
-\quad [addressHash$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
+\quad [accountAddress$^0$: $\mathbb{B}_{20}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
 
-\quad [addressHash$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
+\quad [accountAddress$^1$: $\mathbb{B}_{20}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
 
 \quad ...
 
@@ -306,7 +309,7 @@ The leecher gradually builds the first upper $d_2$ levels of the Merkle Patricia
 is small enough so that we can reasonably assume that (almost) all nodes in question are branch nodes;
 see \cite{akhunov_1x_workshop_part2}.}.
 (The full trie can be constructed if so desired, but only the upper $d_2$ levels are necessary for our algorithm.)
-Populated nodes are marked with the block number as of they are valid.
+Populated nodes are marked with the block number as of which they are valid.
 For simplicity's sake, we assume that all blocks are strictly ordered and ignore chain re-orgs.
 The algorithm preserves a following invariant: parent's block is always no older than child's block.
 
@@ -492,7 +495,7 @@ During phase~1 a $\texttt{Accounts}$ reply
 contains $\frac{t}{16^{d_1}}$ leaves on average,
 which gives us
 \begin{equation}
-    \frac{t}{16^{d_1}} l \leq m
+    \frac{tl}{16^{d_1}} \leq m
 \end{equation}
 For the state trie the limit of 32 KiB yields $d_1 = 5$.
 
@@ -519,7 +522,7 @@ each subtrie has $\frac{t}{16^{d_2}}$ leaves on average.
 Summing up, the total reply size per 1 block necessary not to lag behind is no more than
 \begin{equation}
     \texttt{RQS} \overset{\underset{\mathrm{def}}{}}{=}
-    C(d_2, \delta) \, n + \delta \, \frac{t}{16^{d_2}} \, l
+    C(d_2, \delta) \, n + \delta \, \frac{tl}{16^{d_2}}
 \end{equation}
 (RQS stands for Red Queen's Size).
 Though it is an upper bound, for our purposes $\texttt{RQS}$ is close enough to the actual value.

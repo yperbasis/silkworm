@@ -19,7 +19,7 @@
       \item A number of similar proposals are emerging: Leaf Sync, Firehose.
       \item We also propose a sync algorithm with an in-depth performance and convergence analysis.
       \item The new protocol caters for light clients (e.g. Mustekala).
-      \item Grand vision: a swarm of light Ethereum nodes running on mobile, not unlike BitTorrent and Pied Piper :)
+      \item Grand vision: swarms of light Ethereum nodes running on mobile, not unlike BitTorrent and Pied Piper :)
       \end{itemize}
   \end{frame}
 
@@ -225,7 +225,21 @@ $\texttt{status}$ must take one of the following values:
 \end{frame}
 
 \begin{frame}
-  \frametitle{Suggested Sync Algorithm}
+  \frametitle{Suggested Sync Algorithm 1/2}
+
+  \begin{itemize}
+    \item Always request data as of the most recent block.
+    \item Phase 1: get all leaves, probably as of different blocks.
+    \item Simultaneously request necessary intermediate nodes to verify the leaves.
+    \item Keep the top of the trie in memory.
+    \item Phase 2: patch up the trie.
+    \item Descend from the root level by level to find out stale nodes and subtries. 
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Suggested Sync Algorithm 2/2}
 
   \begin{tikzpicture} [scale=1, auto=left]
     \tikzstyle{selected edge} = [draw,line width=2pt,-,red!50]
@@ -412,8 +426,8 @@ For the state trie the limit of 32 KiB yields $d_1 = 5$.
     \end{tabular}
 
     \bigskip
-  Modelling emulation code and a more formal paper are hosted at
-  \href{https://github.com/yperbasis/silkworm/blob/master/lab/sync_emulator.cpp}{https://github.com/yperbasis/silkworm}.
+  Modelling code and a more formal paper are hosted at
+  \href{https://github.com/yperbasis/silkworm/}{https://github.com/yperbasis/silkworm}.
 
 
 \end{frame}

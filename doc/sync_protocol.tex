@@ -191,7 +191,10 @@ Request storage trie sizes as of a specific block.\\
 
 Reply to $\texttt{GetStorageSizes}$.
 The peer may return an empty list $\varnothing$ instead of the number of leaves for accounts it does not have enough information about.
-In that case the peer should return blocks for which requested data is available.\\
+In that case the peer should return blocks for which requested data is available.
+
+Our sync algorithm does not require precise storage size.
+\cite{size_estimation} proposes a fast way of approximate estimation.\\
 
 \textbf{GetStorageNodes} (0x28)
 

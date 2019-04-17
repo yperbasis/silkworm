@@ -127,7 +127,7 @@ $\texttt{status}$ must take one of the following values:
   \textbf{GetStorageSizes} (0x26)
 
   [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
-  [accountAddress$_0$: $\mathbb{B}_{20}$, accountAddress$_1$: $\mathbb{B}_{20}$, ...]]
+  [addressHash$_0$: $\mathbb{B}_{32}$, addressHash$_1$: $\mathbb{B}_{32}$, ...]]
   \medskip
   
   Request storage trie sizes as of a specific block.
@@ -154,9 +154,9 @@ $\texttt{status}$ must take one of the following values:
 
   [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
   
-  \quad [accountAddress$^0$: $\mathbb{B}_{20}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
+  \quad [addressHash$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
   
-  \quad [accountAddress$^1$: $\mathbb{B}_{20}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
+  \quad [addressHash$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
   
   \quad ...
   
@@ -190,9 +190,9 @@ $\texttt{status}$ must take one of the following values:
 
   [reqID: $\mathbb{N}$, blockHash: $\mathbb{B}_{32}$,
   
-  \quad [accountAddress$^0$: $\mathbb{B}_{20}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
+  \quad [addressHash$^0$: $\mathbb{B}_{32}$, [prefix$^0_0$: $\mathbb{Y}$, prefix$^0_1$: $\mathbb{Y}$, ...]],
   
-  \quad [accountAddress$^1$: $\mathbb{B}_{20}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
+  \quad [addressHash$^1$: $\mathbb{B}_{32}$, [prefix$^1_0$: $\mathbb{Y}$, prefix$^1_1$: $\mathbb{Y}$, ...]],
   
   \quad ...
   

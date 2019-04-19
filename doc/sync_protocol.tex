@@ -127,7 +127,19 @@ The prefix encoding is described in Appendix C of \cite{yellow_paper}
 Reply to $\texttt{GetStateNodes}$.
 An empty list $\varnothing$ returned instead of a node means that the peer does not have enough information about the node requested.
 In that case the peer should return blocks for which requested nodes are available
-(as a list of $\texttt{availableBlock}$ hashes).\\
+(as a list of $\texttt{availableBlock}$ hashes).
+
+%TODO: Matthew's comment
+% Is another way of saying "An empty list returned ... peer does not have enough information ..."
+% that the requested data cannot fit in a single response message?
+% Or are there other reasons the empty list would be returned?
+% If there are multiple reasons it may be worth considering response codes here.
+
+We suggest to use $\texttt{StateNodes}$ primarily to obtain top trie nodes, which will mostly be branch nodes.
+Instead of fetching intermediate and bottom nodes with $\texttt{GetStateNodes}$,
+we suggest to obtain leaves with $\texttt{GetAccounts}$ operative described below
+and build intermediate nodes from subtrie leaves if necessary.
+Leaves returned in $\texttt{Accounts}$ contain full 32 byte keys rather than key tails as in leaf nodes.\\
 
 \textbf{GetAccounts} (0x24)
 

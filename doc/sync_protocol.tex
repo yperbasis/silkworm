@@ -8,12 +8,25 @@
 \usepackage{hyperref}
 \usepackage{tikz}
 
+% https://tex.stackexchange.com/questions/36466/moving-the-date-in-amsart/36488
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@maketitle}
+  {\ifx\@empty\@dedicatory}
+  {\ifx\@empty\@date \else {\vskip3ex \centering\footnotesize\@date\par\vskip1ex}\fi
+   \ifx\@empty\@dedicatory}
+  {}{}
+\patchcmd{\@adminfootnotes}
+  {\ifx\@empty\@date\else \@footnotetext{\@setdate}\fi}
+  {}{}{}
+\makeatother
+
 \begin{document}
 \pagecolor{white}
 
 \title{Red Queen's Sync Protocol for Ethereum}
 \author{Andrew Ashikhmin \& Alexey Akhunov}
-\date{April 2019}
+\date{April 2019. Version 1}
 
 \begin{abstract}
     As of early 2019, it takes new Ethereum full nodes a few hours
